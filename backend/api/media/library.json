@@ -1,0 +1,12 @@
+[
+  {
+    "id": 900001,
+    "title": "Add your full song here",
+    "artist": "Audiq Library",
+    "album": "Local Full Tracks",
+    "cover": "http://localhost:5000/media/audiq-logo.png",
+    "file": "",
+    "duration": 0,
+    "enabled": false
+  }
+]

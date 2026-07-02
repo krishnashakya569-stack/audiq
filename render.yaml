@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: audiq-api
+    runtime: node
+    rootDir: backend/api
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: PORT
+        value: 5000
+      - key: API_PUBLIC_URL
+        sync: false
+      - key: AUDIUS_APP_NAME
+        value: Audiq
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
+      - key: YOUTUBE_API_KEY
+        sync: false
+      - key: JIOSAAVN_API_BASE_URL
+        sync: false
+      - key: JIOSAAVN_SEARCH_PATH
+        value: /search
+      - key: JIOSAAVN_QUERY_PARAM
+        value: q
+      - key: JIOSAAVN_API_KEY
+        sync: false
