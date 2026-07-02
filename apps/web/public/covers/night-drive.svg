@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+      <stop stop-color="#5c0921"/>
+      <stop offset=".5" stop-color="#b01340"/>
+      <stop offset="1" stop-color="#070607"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="640" fill="url(#g)"/>
+  <path d="M0 426h640v214H0z" fill="#050505" opacity=".64"/>
+  <path d="M320 96l218 418H102z" fill="none" stroke="#fff7fb" stroke-width="18" opacity=".34"/>
+  <path d="M76 514h488M122 460h396M176 406h288" stroke="#ffb3c8" stroke-width="12" stroke-linecap="round" opacity=".6"/>
+  <text x="64" y="560" fill="#fff7fb" font-family="Arial, sans-serif" font-size="54" font-weight="800">Night Drive</text>
+</svg>
