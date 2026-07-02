@@ -20,6 +20,7 @@ import { mockSongs } from "@/services/music/mock";
 import { createAiDjPlan, type AiDjPlan } from "@/services/ai";
 import { searchMusic } from "@/services/music";
 import type { Song } from "@/services/music/types";
+import { resolveMediaUrl } from "@/services/api";
 import { useLibraryStore } from "@/store/library";
 import { type Track, usePlayerStore } from "@/store/player";
 
@@ -69,8 +70,8 @@ function songToTrack(song: Song): Track {
     id: song.id,
     title: song.title,
     artist: song.artist.name,
-    albumArt: song.album.cover_medium,
-    audio: song.preview,
+    albumArt: resolveMediaUrl(song.album.cover_medium),
+    audio: resolveMediaUrl(song.preview),
     duration: song.duration,
     isPreview: song.isPreview,
     source: song.source,

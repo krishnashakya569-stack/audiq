@@ -14,6 +14,10 @@ services:
         value: 5000
       - key: API_PUBLIC_URL
         sync: false
+      - key: YTDLP_COOKIES_PATH
+        sync: false
+      - key: YTDLP_PROXY_URL
+        sync: false
       - key: AUDIUS_APP_NAME
         value: Audiq
       - key: OPENAI_API_KEY

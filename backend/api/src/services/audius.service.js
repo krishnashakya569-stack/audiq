@@ -1,13 +1,14 @@
+import { publicUrl } from "../utils/publicUrl.js";
+
 const AUDIUS_API = process.env.AUDIUS_API_URL || "https://discoveryprovider.audius.co/v1";
 const AUDIUS_APP_NAME = process.env.AUDIUS_APP_NAME || "Audiq";
-const API_BASE_URL = process.env.API_PUBLIC_URL || "http://localhost:5000";
 
 function getArtwork(track) {
   return (
     track.artwork?.["1000x1000"] ||
     track.artwork?.["480x480"] ||
     track.artwork?.["150x150"] ||
-    `${API_BASE_URL}/media/audiq-logo.png`
+    publicUrl("/media/audiq-logo.png")
   );
 }
 
@@ -46,7 +47,7 @@ export async function searchAudiusTracks(query) {
         title: track.genre || "Audius",
         cover_medium: getArtwork(track),
       },
-      preview: `${API_BASE_URL}/api/music/stream/audius/${encodeURIComponent(track.id)}`,
+      preview: publicUrl(`/api/music/stream/audius/${encodeURIComponent(track.id)}`),
       duration: track.duration || 0,
       isPreview: false,
       source: "audius",

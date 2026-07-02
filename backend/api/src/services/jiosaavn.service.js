@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.API_PUBLIC_URL || "http://localhost:5000";
+import { publicUrl } from "../utils/publicUrl.js";
 
 function pickAudioUrl(song) {
   return song.audioUrl || song.mediaUrl || song.streamUrl || "";
@@ -6,7 +6,7 @@ function pickAudioUrl(song) {
 
 function pickCover(song) {
   if (Array.isArray(song.image)) {
-    return song.image.at(-1)?.url || `${API_BASE_URL}/media/audiq-logo.png`;
+    return song.image.at(-1)?.url || publicUrl("/media/audiq-logo.png");
   }
 
   return (
@@ -14,7 +14,7 @@ function pickCover(song) {
     song.cover ||
     song.artwork ||
     song.albumArt ||
-    `${API_BASE_URL}/media/audiq-logo.png`
+    publicUrl("/media/audiq-logo.png")
   );
 }
 

@@ -19,6 +19,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import AddToPlaylistModal from "@/components/library/AddToPlaylistModal";
 import { usePlayerStore } from "@/store/player";
 import { useLibraryStore } from "@/store/library";
+import { buildApiUrl, resolveMediaUrl } from "@/services/api";
 
 function formatTime(seconds: number) {
   if (!Number.isFinite(seconds) || seconds <= 0) {
@@ -128,8 +129,10 @@ export default function MusicPlayer() {
       const src =
         currentTrack.source === "youtube" &&
         currentTrack.videoId
-          ? `http://localhost:5000/api/stream/play/${currentTrack.videoId}`
-          : currentTrack.audio;
+          ? buildApiUrl(
+              `/stream/play/${encodeURIComponent(currentTrack.videoId)}`
+            )
+          : resolveMediaUrl(currentTrack.audio);
 
       audio.src = src;
 

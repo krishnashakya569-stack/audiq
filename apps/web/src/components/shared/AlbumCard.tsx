@@ -16,6 +16,7 @@ import {
 } from "@/store/player";
 
 import { useLibraryStore } from "@/store/library";
+import { resolveMediaUrl } from "@/services/api";
 
 export type DeezerSong = {
   id: number | string;
@@ -55,8 +56,8 @@ function toTrack(
     title: song.title,
     artist: song.artist.name,
     albumArt:
-      song.album.cover_medium,
-    audio: song.preview,
+      resolveMediaUrl(song.album.cover_medium),
+    audio: resolveMediaUrl(song.preview),
     duration: song.duration,
     isPreview:
       song.isPreview ?? true,
@@ -133,7 +134,7 @@ export default function AlbumCard({
       <div className="relative aspect-square overflow-hidden">
 
         <Image
-          src={song.album.cover_medium}
+          src={resolveMediaUrl(song.album.cover_medium)}
           alt={song.title}
           fill
           sizes="(min-width:1280px) 25vw, 50vw"

@@ -1,6 +1,7 @@
+import { publicUrl } from "../utils/publicUrl.js";
+
 const YOUTUBE_SEARCH_API = "https://www.googleapis.com/youtube/v3/search";
 const YOUTUBE_VIDEOS_API = "https://www.googleapis.com/youtube/v3/videos";
-const API_BASE_URL = process.env.API_PUBLIC_URL || "http://localhost:5000";
 
 export async function searchYouTubeVideos(query) {
   const key = process.env.YOUTUBE_API_KEY;
@@ -88,7 +89,7 @@ export async function searchYouTubeVideos(query) {
             snippet.thumbnails?.high?.url ||
             snippet.thumbnails?.medium?.url ||
             snippet.thumbnails?.default?.url ||
-            `${API_BASE_URL}/media/audiq-logo.png`,
+            publicUrl("/media/audiq-logo.png"),
         },
         preview: `https://www.youtube.com/watch?v=${item.id.videoId}`,
         duration: toSeconds(details?.contentDetails?.duration),

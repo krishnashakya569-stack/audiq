@@ -5,13 +5,13 @@ import axios from "axios";
 import { searchAudiusTracks } from "./audius.service.js";
 import { searchJioSaavnTracks } from "./jiosaavn.service.js";
 import { searchYouTubeVideos } from "./youtube.service.js";
+import { publicUrl } from "../utils/publicUrl.js";
 
 const API = "https://itunes.apple.com/search";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const MEDIA_DIR = path.resolve(__dirname, "../../media");
 const LIBRARY_FILE = path.join(MEDIA_DIR, "library.json");
-const API_BASE_URL = process.env.API_PUBLIC_URL || "http://localhost:5000";
 const QUERY_ALIASES = new Map([
   ["rabata", "raabta"],
   ["rabta", "raabta"],
@@ -103,9 +103,9 @@ function toLocalTrack(track) {
     },
     album: {
       title: track.album,
-      cover_medium: track.cover || `${API_BASE_URL}/media/audiq-logo.png`,
+      cover_medium: track.cover || publicUrl("/media/audiq-logo.png"),
     },
-    preview: `${API_BASE_URL}/media/${encodeURIComponent(track.file)}`,
+    preview: publicUrl(`/media/${encodeURIComponent(track.file)}`),
     duration: track.duration || 0,
     isPreview: false,
     source: "local",

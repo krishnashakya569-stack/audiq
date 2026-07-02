@@ -1,8 +1,9 @@
 import axios from "axios";
 import type { Track } from "@/store/player";
+import { API_BASE_URL } from "@/services/api";
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api",
+  baseURL: API_BASE_URL,
 });
 
 export type AiDjPlan = {
