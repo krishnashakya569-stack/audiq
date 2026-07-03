@@ -1,4 +1,7 @@
 import youtubedl from "yt-dlp-exec";
+import fs from "node:fs";
+import path from "node:path";
+import os from "node:os";
 
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
@@ -43,8 +46,12 @@ function getExtractorOptions() {
   ],
 };
   if (process.env.YTDLP_COOKIES_PATH) {
-    options.cookies = process.env.YTDLP_COOKIES_PATH;
-  }
+  const tempCookies = path.join(os.tmpdir(), "cookies.txt");
+
+  fs.copyFileSync(process.env.YTDLP_COOKIES_PATH, tempCookies);
+
+  options.cookies = tempCookies;
+}
 
   if (process.env.YTDLP_PROXY_URL) {
     options.proxy = process.env.YTDLP_PROXY_URL;
