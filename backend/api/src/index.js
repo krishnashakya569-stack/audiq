@@ -31,7 +31,7 @@ app.use("/api/ai", aiRoutes);
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Audiq API running on http://localhost:${PORT}`);
+  console.log(`🚀 Audiq API listening on port ${PORT}`);
 });
 
 import { errorHandler } from "./middleware/errorHandler.js";
