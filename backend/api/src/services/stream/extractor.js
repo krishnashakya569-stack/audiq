@@ -6,24 +6,42 @@ const USER_AGENT =
 
 function getExtractorOptions() {
   const options = {
-    dumpSingleJson: true,
-    noWarnings: true,
-    noCheckCertificates: true,
-    noPlaylist: true,
-    preferFreeFormats: true,
-    geoBypass: true,
-    forceIpv4: true,
-    format: "bestaudio[ext=m4a]/bestaudio[acodec!=none]/bestaudio/best",
-    userAgent: USER_AGENT,
-    referer: "https://www.youtube.com/",
-    addHeader: [
-      `User-Agent: ${USER_AGENT}`,
-      "Referer: https://www.youtube.com/",
-      "Origin: https://www.youtube.com",
-      "Accept-Language: en-US,en;q=0.9",
-    ],
-  };
+  dumpSingleJson: true,
 
+  noWarnings: true,
+
+  noPlaylist: true,
+
+  geoBypass: true,
+
+  forceIpv4: true,
+
+  noCheckCertificates: true,
+
+  preferFreeFormats: true,
+
+  format:
+    "bestaudio[ext=m4a]/bestaudio[acodec!=none]/bestaudio/best",
+
+  extractorRetries: 5,
+
+  retries: 10,
+
+  fragmentRetries: 10,
+
+  socketTimeout: 30,
+
+  userAgent: USER_AGENT,
+
+  referer: "https://www.youtube.com/",
+
+  addHeader: [
+    `User-Agent: ${USER_AGENT}`,
+    "Referer: https://www.youtube.com/",
+    "Origin: https://www.youtube.com",
+    "Accept-Language: en-US,en;q=0.9",
+  ],
+};
   if (process.env.YTDLP_COOKIES_PATH) {
     options.cookies = process.env.YTDLP_COOKIES_PATH;
   }
