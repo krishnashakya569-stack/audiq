@@ -8,7 +8,7 @@ export type Track = {
   audio: string;
   duration?: number;
   isPreview?: boolean;
-  source?: "audius" | "itunes" | "jiosaavn" | "local" | "youtube";
+  source?: string;
   videoId?: string;
   externalUrl?: string;
 };

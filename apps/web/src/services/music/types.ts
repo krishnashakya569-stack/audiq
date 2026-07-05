@@ -1,35 +1,51 @@
-export interface MusicArtist {
+export interface SongArtist {
+  id: string;
   name: string;
 }
 
-export interface MusicAlbum {
-  title?: string;
-  cover_medium: string;
+export interface SongAlbum {
+  id: string;
+  title: string;
+}
+
+export interface SongArtwork {
+  small: string | null;
+  medium: string | null;
+  large: string | null;
+}
+
+export interface SongProvider {
+  provider: string;
+  id: string;
+  playable: boolean;
 }
 
 export interface Song {
-  id: number | string;
+  id: string;
+
+  provider: string;
+
   title: string;
-  artist: MusicArtist;
-  album: MusicAlbum;
+
+  artists: SongArtist[];
+
+  album: SongAlbum;
+
+  artwork: SongArtwork;
+
   duration: number;
-  preview: string;
-  isPreview?: boolean;
-  rank?: number;
-  source?: "audius" | "itunes" | "jiosaavn" | "local" | "youtube";
-  videoId?: string;
-  externalUrl?: string;
-}
 
-export interface Artist {
-  id: string;
-  name: string;
-  image: string;
-}
+  playable: boolean;
 
-export interface Playlist {
-  id: string;
-  title: string;
-  description: string;
-  cover: string;
+  streamUrl: string | null;
+
+  previewUrl: string | null;
+
+  explicit: boolean;
+
+  lyricsAvailable: boolean;
+
+  language: string | null;
+
+  providers?: SongProvider[];
 }

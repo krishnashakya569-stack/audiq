@@ -126,15 +126,15 @@ export default function MusicPlayer() {
       lastTrackKey.current = trackKey;
       addRecentlyPlayed(currentTrack);
 
-      const src =
-        currentTrack.source === "youtube" &&
-        currentTrack.videoId
-          ? buildApiUrl(
-              `/stream/play/${encodeURIComponent(currentTrack.videoId)}`
-            )
-          : resolveMediaUrl(currentTrack.audio);
+      let src = resolveMediaUrl(currentTrack.audio);
+      
+    if (currentTrack.source === "youtube" && currentTrack.videoId) {
+      src = buildApiUrl(
+        `/stream/play/${encodeURIComponent(currentTrack.source)}/${encodeURIComponent(currentTrack.videoId)}`
+      );
+}
 
-      audio.src = src;
+    audio.src = src;
 
       audio.load();
 
