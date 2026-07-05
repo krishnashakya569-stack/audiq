@@ -1,52 +1,163 @@
-import { Song } from "./types";
+import type { Song } from "./types";
 
 export const mockSongs: Song[] = [
   {
-    id: 1,
+    id: "mock:1",
+
+    provider: "local",
+
     title: "Starboy",
-    artist: { name: "The Weeknd" },
+
+    artists: [
+      {
+        id: "artist:1",
+        name: "The Weeknd",
+      },
+    ],
+
     album: {
+      id: "album:1",
       title: "Starboy",
-      cover_medium: "/covers/after-hours.svg",
     },
+
+    artwork: {
+      small: "/covers/after-hours.svg",
+      medium: "/covers/after-hours.svg",
+      large: "/covers/after-hours.svg",
+    },
+
     duration: 230,
-    preview: "",
-    isPreview: true,
+
+    playable: false,
+
+    streamUrl: null,
+
+    previewUrl: null,
+
+    explicit: false,
+
+    lyricsAvailable: false,
+
+    language: "en",
   },
+
   {
-    id: 2,
+    id: "mock:2",
+
+    provider: "local",
+
     title: "Husn",
-    artist: { name: "Anuv Jain" },
+
+    artists: [
+      {
+        id: "artist:2",
+        name: "Anuv Jain",
+      },
+    ],
+
     album: {
+      id: "album:2",
       title: "Husn",
-      cover_medium: "/covers/lofi-beats.svg",
     },
+
+    artwork: {
+      small: "/covers/lofi-beats.svg",
+      medium: "/covers/lofi-beats.svg",
+      large: "/covers/lofi-beats.svg",
+    },
+
     duration: 205,
-    preview: "",
-    isPreview: true,
+
+    playable: false,
+
+    streamUrl: null,
+
+    previewUrl: null,
+
+    explicit: false,
+
+    lyricsAvailable: false,
+
+    language: "hi",
   },
+
   {
-    id: 3,
+    id: "mock:3",
+
+    provider: "local",
+
     title: "Blinding Lights",
-    artist: { name: "The Weeknd" },
+
+    artists: [
+      {
+        id: "artist:3",
+        name: "The Weeknd",
+      },
+    ],
+
     album: {
+      id: "album:3",
       title: "After Hours",
-      cover_medium: "/covers/night-drive.svg",
     },
+
+    artwork: {
+      small: "/covers/night-drive.svg",
+      medium: "/covers/night-drive.svg",
+      large: "/covers/night-drive.svg",
+    },
+
     duration: 201,
-    preview: "",
-    isPreview: true,
+
+    playable: false,
+
+    streamUrl: null,
+
+    previewUrl: null,
+
+    explicit: false,
+
+    lyricsAvailable: false,
+
+    language: "en",
   },
+
   {
-    id: 4,
+    id: "mock:4",
+
+    provider: "local",
+
     title: "Kesariya",
-    artist: { name: "Arijit Singh" },
+
+    artists: [
+      {
+        id: "artist:4",
+        name: "Arijit Singh",
+      },
+    ],
+
     album: {
+      id: "album:4",
       title: "Brahmastra",
-      cover_medium: "/covers/indie-vibes.svg",
     },
+
+    artwork: {
+      small: "/covers/indie-vibes.svg",
+      medium: "/covers/indie-vibes.svg",
+      large: "/covers/indie-vibes.svg",
+    },
+
     duration: 244,
-    preview: "",
-    isPreview: true,
+
+    playable: false,
+
+    streamUrl: null,
+
+    previewUrl: null,
+
+    explicit: false,
+
+    lyricsAvailable: false,
+
+    language: "hi",
   },
 ];

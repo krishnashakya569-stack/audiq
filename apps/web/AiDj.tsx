@@ -1,5 +1,5 @@
 "use client";
-
+import { songToTrack } from "@/lib/songAdapter";
 import {
   Brain,
   Heart,
@@ -20,7 +20,7 @@ import { mockSongs } from "@/services/music/mock";
 import { createAiDjPlan, type AiDjPlan } from "@/services/ai";
 import { searchMusic } from "@/services/music";
 import type { Song } from "@/services/music/types";
-import { songToTrack } from "@/lib/songAdapter";
+import { resolveMediaUrl } from "@/services/api";
 import { useLibraryStore } from "@/store/library";
 import { type Track, usePlayerStore } from "@/store/player";
 
@@ -64,6 +64,7 @@ const moods: Array<{
 ];
 
 const fallbackTracks = mockSongs.map(songToTrack);
+
 
 function uniqueTracks(tracks: Track[]) {
   const unique = new Map<string, Track>();
