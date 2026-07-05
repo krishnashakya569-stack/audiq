@@ -1,4 +1,4 @@
-import { musicEngine } from "../services/music/engine.js";
+import providerManager from "../providers/index.js";
 import { audiusStreamUrl } from "../services/audius.service.js";
 
 export async function search(req, res) {
@@ -11,7 +11,7 @@ export async function search(req, res) {
       });
     }
 
-    const songs = await musicEngine.search(q);
+    const songs = await providerManager.search(q);
 
     res.json(songs);
   } catch (err) {

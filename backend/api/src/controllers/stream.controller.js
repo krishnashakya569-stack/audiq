@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getAudioStream } from "../services/stream.service.js";
+import providerManager from "../providers/index.js";
 
 const STREAM_HEADERS = {
   "User-Agent":
@@ -19,9 +19,13 @@ const SKIPPED_UPSTREAM_HEADERS = new Set([
 
 export async function info(req, res) {
   try {
-    const data = await getAudioStream(req.params.videoId);
+    const { provider, id } = req.params;
+
+    const data = await providerManager.getStream(provider, id);
 
     res.json({
+      provider,
+      id,
       title: data.title,
       artist: data.artist,
       duration: data.duration,
@@ -29,6 +33,7 @@ export async function info(req, res) {
     });
   } catch (err) {
     console.error(err);
+
     res.status(500).json({
       error: err.message,
     });
@@ -37,41 +42,39 @@ export async function info(req, res) {
 
 export async function play(req, res) {
   try {
-    const data = await getAudioStream(req.params.videoId);
+    const { provider, id } = req.params;
 
-    console.log("Streaming:", {
-      videoId: req.params.videoId,
-      title: data.title,
-    });
+    const data = await providerManager.getStream(provider, id);
 
-    const requestHeaders = {
+    console.log(`[${provider}] Streaming: ${data.title}`);
+
+    const headers = {
       ...STREAM_HEADERS,
     };
 
     if (req.headers.range) {
-      requestHeaders.Range = req.headers.range;
+      headers.Range = req.headers.range;
     }
 
     const response = await axios({
       method: "GET",
       url: data.streamUrl,
       responseType: "stream",
-      headers: requestHeaders,
+      headers,
       validateStatus: () => true,
     });
 
-    console.log("STATUS:", response.status);
-    console.log("TYPE:", response.headers["content-type"]);
-
     if (response.status !== 200 && response.status !== 206) {
-      console.log(response.headers);
-      return res.status(response.status).send("YouTube rejected stream");
+      return res.status(response.status).send("Upstream rejected stream");
     }
 
     res.status(response.status);
 
     Object.entries(response.headers).forEach(([key, value]) => {
-      if (value && !SKIPPED_UPSTREAM_HEADERS.has(key.toLowerCase())) {
+      if (
+        value &&
+        !SKIPPED_UPSTREAM_HEADERS.has(key.toLowerCase())
+      ) {
         res.setHeader(key, value);
       }
     });
@@ -82,7 +85,6 @@ export async function play(req, res) {
 
     response.data.pipe(res);
   } catch (err) {
-    console.error("STREAM ERROR");
     console.error(err);
 
     res.status(500).json({
