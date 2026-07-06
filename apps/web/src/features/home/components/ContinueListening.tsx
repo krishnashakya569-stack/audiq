@@ -1,42 +1,11 @@
 "use client";
 
-import AlbumCard, { type DeezerSong } from "@/components/shared/AlbumCard";
+import AlbumCard from "@/components/shared/AlbumCard";
+import type { Song } from "@/services/music/types";
 import { useMusic } from "@/hooks/useMusic";
 
-const fallbackSongs: DeezerSong[] = [
-  {
-    id: 901,
-    title: "After Hours",
-    preview: "",
-    rank: 12000,
-    artist: { name: "The Weeknd" },
-    album: { cover_medium: "/covers/after-hours.svg" },
-  },
-  {
-    id: 902,
-    title: "Lo-fi Beats",
-    preview: "",
-    rank: 9800,
-    artist: { name: "Audiq AI" },
-    album: { cover_medium: "/covers/lofi-beats.svg" },
-  },
-  {
-    id: 903,
-    title: "Indie Vibes",
-    preview: "",
-    rank: 7600,
-    artist: { name: "Community Mix" },
-    album: { cover_medium: "/covers/indie-vibes.svg" },
-  },
-  {
-    id: 904,
-    title: "Night Drive",
-    preview: "",
-    rank: 15400,
-    artist: { name: "Audiq Radio" },
-    album: { cover_medium: "/covers/night-drive.svg" },
-  },
-];
+const fallbackSongs: Song[] = [];
+  
 
 type ContinueListeningProps = {
   query: string;
@@ -45,7 +14,7 @@ type ContinueListeningProps = {
 export default function ContinueListening({ query }: ContinueListeningProps) {
   const { data: songs = [], isLoading, isError } = useMusic(query);
   const hasLiveSongs = !isError && songs.length > 0;
-  const displayedSongs = hasLiveSongs ? (songs as DeezerSong[]).slice(0, 4) : fallbackSongs;
+  const displayedSongs = hasLiveSongs ? (songs as Song[]).slice(0, 4) : fallbackSongs;
   const title = query === "starboy" ? "Continue listening" : `Search results for "${query}"`;
 
   return (

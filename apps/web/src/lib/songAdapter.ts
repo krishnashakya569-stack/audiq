@@ -23,12 +23,11 @@ export function songToTrack(song: any): Track {
     song.providers?.[0]?.provider ??
     song.provider ??
     song.source ??
-    "youtube";
+    "local";
 
   const rawId =
     song.providers?.[0]?.id ??
-    song.id ??
-    "";
+    song.id;
 
   const id = String(rawId);
 
@@ -52,6 +51,7 @@ export function songToTrack(song: any): Track {
   const artist =
     song.artists?.[0]?.name ??
     song.artist?.name ??
+    song.artist ??
     "Unknown Artist";
 
   const artwork =
@@ -61,15 +61,13 @@ export function songToTrack(song: any): Track {
     song.album?.cover_xl ??
     song.album?.cover_big ??
     song.album?.cover_medium ??
-    song.album?.cover ??
-    "/media/audiq-logo.png";
+    song.albumArt ??
+    "/covers/default.png";
 
   return {
-    id,
+    id: song.id,
 
-    title:
-      song.title ??
-      "Unknown",
+    title: song.title,
 
     artist,
 
@@ -77,12 +75,11 @@ export function songToTrack(song: any): Track {
 
     audio,
 
-    duration:
-      Number(song.duration) || 0,
+    duration: song.duration,
 
     isPreview:
       song.isPreview ??
-      false,
+      !song.streamUrl,
 
     source: provider,
 
