@@ -14,7 +14,11 @@ function resolve(url?: string | null) {
     return url;
   }
 
-  return `${API}${url}`;
+  // Ensure we don't accidentally double-slash if API already has a trailing slash
+  const cleanApi = API.endsWith("/") ? API.slice(0, -1) : API;
+  const cleanUrl = url.startsWith("/") ? url : `/${url}`;
+  
+  return `${cleanApi}${cleanUrl}`;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -37,8 +41,11 @@ export function songToTrack(song: any): Track {
 
   let audio = "";
 
+  // The NEXT_PUBLIC_API_URL already contains the /api suffix, 
+  // so we just append the rest of the route here!
   if (provider === "youtube") {
-    audio = `${API}/api/stream/play/youtube/${realId}`;
+    const cleanApi = API.endsWith("/") ? API.slice(0, -1) : API;
+    audio = `${cleanApi}/stream/play/youtube/${realId}`;
   } else {
     audio = resolve(
       song.streamUrl ??
