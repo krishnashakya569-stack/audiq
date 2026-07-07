@@ -1,4 +1,3 @@
-import type { Song } from "@/services/music/types";
 import type { Track } from "@/store/player";
 
 const API =
@@ -18,6 +17,7 @@ function resolve(url?: string | null) {
   return `${API}${url}`;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function songToTrack(song: any): Track {
   const provider =
     song.providers?.[0]?.provider ??

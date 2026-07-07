@@ -5,7 +5,6 @@ import type { Song } from "@/services/music/types";
 import { useMusic } from "@/hooks/useMusic";
 
 const fallbackSongs: Song[] = [];
-  
 
 type ContinueListeningProps = {
   query: string;
@@ -14,10 +13,14 @@ type ContinueListeningProps = {
 export default function ContinueListening({ query }: ContinueListeningProps) {
   const { data: songs = [], isLoading, isError } = useMusic(query);
   const hasLiveSongs = !isError && songs.length > 0;
+  
   const displayedSongs = hasLiveSongs ? (songs as Song[]).slice(0, 4) : fallbackSongs;
   const title = query === "starboy" ? "Continue listening" : `Search results for "${query}"`;
 
   return (
+      // ... keep your existing JSX return code here
+
+  
     <section className="mb-8">
       <div className="mb-4 flex items-end justify-between gap-4">
         <div>

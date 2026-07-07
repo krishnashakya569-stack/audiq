@@ -19,7 +19,6 @@ import { useMemo, useState } from "react";
 import { mockSongs } from "@/services/music/mock";
 import { createAiDjPlan, type AiDjPlan } from "@/services/ai";
 import { searchMusic } from "@/services/music";
-import type { Song } from "@/services/music/types";
 import { songToTrack } from "@/lib/songAdapter";
 import { useLibraryStore } from "@/store/library";
 import { type Track, usePlayerStore } from "@/store/player";
