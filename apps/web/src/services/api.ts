@@ -1,5 +1,5 @@
 const DEV_API_BASE_URL = ["http://localhost", "5000/api"].join(":");
-const PRODUCTION_API_BASE_URL = "https://audiq.onrender.com/api";
+const PRODUCTION_API_BASE_URL = "/api";
 
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
