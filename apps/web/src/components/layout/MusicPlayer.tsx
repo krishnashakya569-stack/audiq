@@ -130,13 +130,23 @@ export default function MusicPlayer() {
 
       let src = resolveMediaUrl(currentTrack.audio);
       
-    if (currentTrack.source === "youtube" && currentTrack.videoId) {
-      src = buildApiUrl(
-        `/stream/play/${encodeURIComponent(currentTrack.source)}/${encodeURIComponent(currentTrack.videoId)}`
-      );
-}
+      if (currentTrack.source === "youtube" && currentTrack.videoId) {
+        src = buildApiUrl(
+          `/stream/play/${encodeURIComponent(currentTrack.source)}/${encodeURIComponent(currentTrack.videoId)}`
+        );
+      }
 
-    audio.src = src;
+      if (!src) {
+        audio.pause();
+        audio.removeAttribute("src");
+        audio.load();
+        setCurrentTime(0);
+        setDuration(0);
+        setPlaying(false);
+        return;
+      }
+
+      audio.src = src;
 
       audio.load();
 

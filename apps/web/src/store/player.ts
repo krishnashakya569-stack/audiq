@@ -61,6 +61,15 @@ type PlayerState = {
   clearQueue: () => void;
 };
 
+function canPlayTrack(track: Track | null | undefined) {
+  if (!track) return false;
+
+  return (
+    !!track.audio ||
+    (track.source === "youtube" && !!track.videoId)
+  );
+}
+
 export const usePlayerStore =
 create<PlayerState>((set) => ({
 
@@ -78,11 +87,16 @@ create<PlayerState>((set) => ({
 
   playTrack: (track, queue) =>
     set((state) => {
+      if (!canPlayTrack(track)) {
+        return {
+          isPlaying: false,
+        };
+      }
 
       const activeQueue =
         queue && queue.length > 0
-          ? [...queue]
-          : [...state.queue];
+          ? queue.filter(canPlayTrack)
+          : state.queue.filter(canPlayTrack);
 
       let index = activeQueue.findIndex(
         (item) =>
@@ -116,24 +130,39 @@ create<PlayerState>((set) => ({
     }),
 
   setQueue: (queue) =>
-    set((state) => ({
-      queue,
-      currentIndex:
-        state.currentTrack == null
-          ? -1
-          : queue.findIndex(
-              (song) =>
-                song.id ===
-                state.currentTrack?.id
-            ),
-    })),
+    set((state) => {
+      const playableQueue = queue.filter(canPlayTrack);
+
+      return {
+        queue: playableQueue,
+        currentIndex:
+          state.currentTrack == null
+            ? -1
+            : playableQueue.findIndex(
+                (song) =>
+                  song.id ===
+                  state.currentTrack?.id
+              ),
+      };
+    }),
       nextTrack: () =>
     set((state) => {
+      const playableQueue =
+        state.queue.filter(canPlayTrack);
+
+      const currentIndex = playableQueue.findIndex(
+        (track) =>
+          track.id === state.currentTrack?.id &&
+          track.videoId === state.currentTrack?.videoId
+      );
+
       if (
-        state.queue.length === 0 ||
-        state.currentIndex === -1
+        playableQueue.length === 0 ||
+        currentIndex === -1
       ) {
         return {
+          queue: playableQueue,
+          currentIndex: -1,
           isPlaying: false,
         };
       }
@@ -147,33 +176,35 @@ create<PlayerState>((set) => ({
 
       if (
         state.isShuffling &&
-        state.queue.length > 1
+        playableQueue.length > 1
       ) {
-        let randomIndex = state.currentIndex;
+        let randomIndex = currentIndex;
 
         while (
-          randomIndex === state.currentIndex
+          randomIndex === currentIndex
         ) {
           randomIndex = Math.floor(
-            Math.random() * state.queue.length
+            Math.random() * playableQueue.length
           );
         }
 
         return {
+          queue: playableQueue,
           currentTrack:
-            state.queue[randomIndex],
+            playableQueue[randomIndex],
           currentIndex: randomIndex,
           isPlaying: true,
         };
       }
 
       const nextIndex =
-        state.currentIndex + 1;
+        currentIndex + 1;
 
-      if (nextIndex < state.queue.length) {
+      if (nextIndex < playableQueue.length) {
         return {
+          queue: playableQueue,
           currentTrack:
-            state.queue[nextIndex],
+            playableQueue[nextIndex],
           currentIndex: nextIndex,
           isPlaying: true,
         };
@@ -181,7 +212,8 @@ create<PlayerState>((set) => ({
 
       if (state.repeatMode === "all") {
         return {
-          currentTrack: state.queue[0],
+          queue: playableQueue,
+          currentTrack: playableQueue[0],
           currentIndex: 0,
           isPlaying: true,
         };
@@ -201,13 +233,34 @@ create<PlayerState>((set) => ({
         return {};
       }
 
+      const playableQueue =
+        state.queue.filter(canPlayTrack);
+
+      const currentIndex = playableQueue.findIndex(
+        (track) =>
+          track.id === state.currentTrack?.id &&
+          track.videoId === state.currentTrack?.videoId
+      );
+
+      if (
+        playableQueue.length === 0 ||
+        currentIndex === -1
+      ) {
+        return {
+          queue: playableQueue,
+          currentIndex: -1,
+          isPlaying: false,
+        };
+      }
+
       const previousIndex =
-        state.currentIndex - 1;
+        currentIndex - 1;
 
       if (previousIndex >= 0) {
         return {
+          queue: playableQueue,
           currentTrack:
-            state.queue[previousIndex],
+            playableQueue[previousIndex],
           currentIndex: previousIndex,
           isPlaying: true,
         };
@@ -215,18 +268,20 @@ create<PlayerState>((set) => ({
 
       if (state.repeatMode === "all") {
         const last =
-          state.queue.length - 1;
+          playableQueue.length - 1;
 
         return {
+          queue: playableQueue,
           currentTrack:
-            state.queue[last],
+            playableQueue[last],
           currentIndex: last,
           isPlaying: true,
         };
       }
 
       return {
-        currentTrack: state.queue[0],
+        queue: playableQueue,
+        currentTrack: playableQueue[0],
         currentIndex: 0,
         isPlaying: true,
       };
@@ -250,6 +305,10 @@ create<PlayerState>((set) => ({
 
   addToQueue: (track) =>
     set((state) => {
+      if (!canPlayTrack(track)) {
+        return {};
+      }
+
       const exists = state.queue.some(
         (song, index) =>
           index !== state.currentIndex &&

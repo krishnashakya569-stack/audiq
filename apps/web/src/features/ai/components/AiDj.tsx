@@ -62,7 +62,9 @@ const moods: Array<{
   },
 ];
 
-const fallbackTracks = mockSongs.map(songToTrack);
+const fallbackTracks = mockSongs
+  .map(songToTrack)
+  .filter((track) => track.audio || (track.source === "youtube" && track.videoId));
 
 function uniqueTracks(tracks: Track[]) {
   const unique = new Map<string, Track>();
