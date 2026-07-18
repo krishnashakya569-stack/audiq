@@ -2,6 +2,7 @@ import youtubedl from "yt-dlp-exec";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
+import { isYouTubeStreamingEnabled } from "./availability.js";
 
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
@@ -31,11 +32,11 @@ function getOptions() {
     ],
   };
 
-  if (process.env.YTDLP_COOKIES_PATH) {
+  const cookiesPath = process.env.YTDLP_COOKIES_PATH;
+
+  if (cookiesPath && fs.existsSync(cookiesPath)) {
     const temp = path.join(os.tmpdir(), "cookies.txt");
-
-    fs.copyFileSync(process.env.YTDLP_COOKIES_PATH, temp);
-
+    fs.copyFileSync(cookiesPath, temp);
     options.cookies = temp;
   }
 
@@ -47,6 +48,12 @@ function getOptions() {
 }
 
 export async function getYouTubeStream(videoId) {
+  if (!isYouTubeStreamingEnabled()) {
+    throw new Error(
+      "YouTube streaming is disabled until YTDLP_COOKIES_PATH, YTDLP_PROXY_URL, or YTDLP_ALLOW_UNAUTHENTICATED=true is configured."
+    );
+  }
+
   const cached = cache.get(videoId);
 
   if (cached && cached.expiresAt > Date.now()) {

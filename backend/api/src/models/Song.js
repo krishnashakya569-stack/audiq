@@ -13,6 +13,7 @@ export default class Song {
     explicit = false,
     lyricsAvailable = false,
     language = null,
+    sourceRank = null,
   }) {
     this.id = id;
     this.provider = provider;
@@ -38,5 +39,7 @@ export default class Song {
     this.lyricsAvailable = lyricsAvailable;
 
     this.language = language;
+
+    this.sourceRank = sourceRank;
   }
 }

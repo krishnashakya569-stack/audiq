@@ -6,6 +6,7 @@ export type Track = {
   artist: string;
   albumArt: string;
   audio: string;
+  fallbackAudio?: string;
   duration?: number;
   isPreview?: boolean;
   source?: string;

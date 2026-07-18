@@ -51,11 +51,13 @@ function scoreTitle(query, song) {
   const q = normalize(query);
   const title = normalize(song.title);
 
-  if (title === q) score += 250;
-
-  if (title.startsWith(q)) score += 120;
-
-  if (title.includes(q)) score += 80;
+  if (title === q) {
+    score += 140;
+  } else if (title.startsWith(q)) {
+    score += 120;
+  } else if (title.includes(q)) {
+    score += 80;
+  }
 
   return score;
 }
@@ -143,7 +145,10 @@ function scoreProvider(song) {
       return 30;
 
     case "youtube":
-      return 25;
+      return 45;
+
+    case "itunes":
+      return 35;
 
     case "audius":
       return 20;
@@ -151,6 +156,14 @@ function scoreProvider(song) {
     default:
       return 0;
   }
+}
+
+function scoreSourceRank(song) {
+  if (typeof song.sourceRank !== "number") {
+    return 0;
+  }
+
+  return Math.max(0, 260 - song.sourceRank * 18);
 }
 
 function calculateScore(query, song) {
@@ -161,6 +174,7 @@ function calculateScore(query, song) {
     scoreMetadata(song) +
     scoreDuration(song) +
     scoreProvider(song) +
+    scoreSourceRank(song) +
     scorePenalty(song)
   );
 }

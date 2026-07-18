@@ -57,6 +57,7 @@ export default function MusicPlayer() {
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const lastTrackKey = useRef<string | null>(null);
+  const fallbackKey = useRef<string | null>(null);
 
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -124,6 +125,7 @@ export default function MusicPlayer() {
 
     if (lastTrackKey.current !== trackKey) {
       lastTrackKey.current = trackKey;
+      fallbackKey.current = null;
       addRecentlyPlayed(currentTrack);
 
       let src = resolveMediaUrl(currentTrack.audio);
@@ -191,8 +193,35 @@ export default function MusicPlayer() {
         preload="metadata"
 
         onError={(e) => {
-          console.log("Audio Error");
-          console.log(e.currentTarget.error);
+          const audio = e.currentTarget;
+          const fallback = resolveMediaUrl(currentTrack?.fallbackAudio);
+          const key = currentTrack
+            ? [
+                currentTrack.source,
+                currentTrack.id,
+                currentTrack.videoId,
+                "fallback",
+              ].join(":")
+            : null;
+
+          if (
+            fallback &&
+            key &&
+            fallbackKey.current !== key &&
+            audio.src !== fallback
+          ) {
+            fallbackKey.current = key;
+            audio.src = fallback;
+            audio.load();
+
+            if (isPlaying) {
+              audio.play().catch(() => setPlaying(false));
+            }
+
+            return;
+          }
+
+          setPlaying(false);
         }}
 
         onLoadedMetadata={(e) => {

@@ -1,25 +1,5 @@
 import type { Track } from "@/store/player";
-
-const API =
-  process.env.NEXT_PUBLIC_API_URL ??
-  "http://localhost:5000";
-
-function resolve(url?: string | null) {
-  if (!url) return "";
-
-  if (
-    url.startsWith("http://") ||
-    url.startsWith("https://")
-  ) {
-    return url;
-  }
-
-  // Ensure we don't accidentally double-slash if API already has a trailing slash
-  const cleanApi = API.endsWith("/") ? API.slice(0, -1) : API;
-  const cleanUrl = url.startsWith("/") ? url : `/${url}`;
-  
-  return `${cleanApi}${cleanUrl}`;
-}
+import { buildApiUrl, resolveMediaUrl } from "@/services/api";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function songToTrack(song: any): Track {
@@ -39,20 +19,21 @@ export function songToTrack(song: any): Track {
     ? id.split(":")[1]
     : id;
 
-  let audio = "";
+  const directAudio = resolveMediaUrl(
+    song.streamUrl ??
+    song.previewUrl ??
+    song.preview ??
+    ""
+  );
 
-  // The NEXT_PUBLIC_API_URL already contains the /api suffix, 
-  // so we just append the rest of the route here!
+  let audio = directAudio;
+  let fallbackAudio = "";
+
   if (provider === "youtube") {
-    const cleanApi = API.endsWith("/") ? API.slice(0, -1) : API;
-    audio = `${cleanApi}/stream/play/youtube/${realId}`;
-  } else {
-    audio = resolve(
-      song.streamUrl ??
-      song.previewUrl ??
-      song.preview ??
-      ""
+    audio = buildApiUrl(
+      `/stream/play/youtube/${encodeURIComponent(realId)}`
     );
+    fallbackAudio = directAudio;
   }
 
   const artist =
@@ -78,9 +59,10 @@ export function songToTrack(song: any): Track {
 
     artist,
 
-    albumArt: resolve(artwork),
+    albumArt: resolveMediaUrl(artwork),
 
     audio,
+    fallbackAudio,
 
     duration: song.duration,
 

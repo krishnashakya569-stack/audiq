@@ -33,7 +33,7 @@ class ProviderManager {
       merged
     );  
 
-    const deduplicated = deduplicateSongs(merged);
+    const deduplicated = deduplicateSongs(filtered);
 
     const ranked = rankSongs(query, deduplicated);
 

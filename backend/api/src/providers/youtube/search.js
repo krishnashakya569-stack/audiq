@@ -1,5 +1,6 @@
 import Song from "../../models/Song.js";
 import { publicUrl } from "../../utils/publicUrl.js";
+import { isYouTubeStreamingEnabled } from "./availability.js";
 
 const YOUTUBE_SEARCH_API = "https://www.googleapis.com/youtube/v3/search";
 const YOUTUBE_VIDEOS_API = "https://www.googleapis.com/youtube/v3/videos";
@@ -17,7 +18,10 @@ function toSeconds(duration = "") {
 }
 
 export async function searchYouTube(query) {
-  console.log(">>> searchYouTube() called");
+  if (!isYouTubeStreamingEnabled()) {
+    return [];
+  }
+
   const key = process.env.YOUTUBE_API_KEY;
 
   if (!key) {
@@ -48,8 +52,6 @@ export async function searchYouTube(query) {
 }
 
   const searchData = await searchResponse.json();
-  console.log("Search API returned:", searchData.items?.length);
-
   const items = Array.isArray(searchData.items)
     ? searchData.items
     : [];
@@ -79,41 +81,24 @@ export async function searchYouTube(query) {
   }
 
   const detailsData = await detailsResponse.json();
-  console.log(JSON.stringify(detailsData, null, 2));
-  console.log("Details API returned:", detailsData.items?.length);
-
   const detailsMap = new Map(
     (detailsData.items || []).map((item) => [item.id, item])
   );
   const filtered = items.filter((item) => {
   const details = detailsMap.get(item.id.videoId);
 
-  console.log("----------------");
-
-  console.log(item.snippet.title);
-
-  console.log("Embeddable:", details?.status?.embeddable);
-
-  console.log("Privacy:", details?.status?.privacyStatus);
-
-  console.log("Upload:", details?.status?.uploadStatus);
-
-  console.log(
-    "Blocked:",
-    details?.contentDetails?.regionRestriction?.blocked
+  return (
+    item.id?.videoId &&
+    item.snippet?.title &&
+    details?.status?.embeddable === true &&
+    details?.status?.privacyStatus === "public" &&
+    details?.status?.uploadStatus === "processed" &&
+    !details?.contentDetails?.regionRestriction?.blocked?.includes("IN") &&
+    toSeconds(details?.contentDetails?.duration) > 45
   );
-
-  console.log(
-    "Duration:",
-    toSeconds(details?.contentDetails?.duration)
-  );
-
-  return true;
 });
 
-console.log(filtered.length);
-
-return filtered.map((item) => {
+return filtered.map((item, index) => {
       const details = detailsMap.get(item.id.videoId);
 
       const snippet = details.snippet;
@@ -164,6 +149,8 @@ return filtered.map((item) => {
         lyricsAvailable: false,
 
         language: null,
+
+        sourceRank: index,
       });
     });
 }

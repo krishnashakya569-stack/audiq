@@ -1,16 +1,19 @@
 const PRIORITY = [
-  "spotify",
-  "jiosaavn",
   "youtube",
+  "jiosaavn",
+  "itunes",
   "audius",
+  "spotify",
 ];
+
+function priorityOf(provider) {
+  const index = PRIORITY.indexOf(provider);
+  return index === -1 ? PRIORITY.length : index;
+}
 
 export function sortProviders(providers = []) {
   return [...providers].sort((a, b) => {
-    return (
-      PRIORITY.indexOf(a.provider) -
-      PRIORITY.indexOf(b.provider)
-    );
+    return priorityOf(a.provider) - priorityOf(b.provider);
   });
 }
 
