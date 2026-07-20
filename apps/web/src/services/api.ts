@@ -1,11 +1,16 @@
 const DEV_API_BASE_URL = ["http://localhost", "5000/api"].join(":");
 const PRODUCTION_API_BASE_URL = "/api";
 
+function getApiBaseUrl() {
+  if (process.env.NODE_ENV === "production") {
+    return PRODUCTION_API_BASE_URL;
+  }
+
+  return process.env.NEXT_PUBLIC_API_URL || DEV_API_BASE_URL;
+}
+
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  (process.env.NODE_ENV === "production"
-    ? PRODUCTION_API_BASE_URL
-    : DEV_API_BASE_URL);
+  getApiBaseUrl();
 
 const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, "");
 

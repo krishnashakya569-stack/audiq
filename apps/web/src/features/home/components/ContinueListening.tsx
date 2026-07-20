@@ -38,11 +38,21 @@ export default function ContinueListening({ query }: ContinueListeningProps) {
         </p>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-        {displayedSongs.map((song) => (
-          <AlbumCard key={song.id} song={song} queue={displayedSongs} />
-        ))}
-      </div>
+      {isError ? (
+        <div className="rounded-lg border border-red-400/20 bg-red-500/10 p-4 text-sm text-red-100">
+          Music search is not reachable right now. Try refreshing the page.
+        </div>
+      ) : displayedSongs.length > 0 ? (
+        <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+          {displayedSongs.map((song) => (
+            <AlbumCard key={song.id} song={song} queue={displayedSongs} />
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-lg border border-white/10 bg-white/[0.035] p-4 text-sm text-zinc-500">
+          No playable songs found for this search.
+        </div>
+      )}
     </section>
   );
 }
