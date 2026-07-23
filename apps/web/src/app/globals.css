@@ -120,16 +120,35 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    box-sizing: border-box;
+  }
+  html {
+    @apply font-sans;
+    min-width: 0;
+    overflow-x: hidden;
   }
   body {
     @apply bg-background text-foreground;
+    min-width: 0;
+    overflow-x: hidden;
+    overscroll-behavior-y: none;
+    min-height: 100dvh;
     background:
       radial-gradient(circle at 18% -10%, rgb(176 19 64 / 0.28), transparent 32rem),
       radial-gradient(circle at 90% 12%, rgb(255 45 103 / 0.16), transparent 28rem),
       linear-gradient(180deg, #050505 0%, #0d0d0d 46%, #12070b 100%);
   }
-  html {
-    @apply font-sans;
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+  img,
+  video,
+  canvas,
+  svg {
+    max-width: 100%;
   }
 }
 

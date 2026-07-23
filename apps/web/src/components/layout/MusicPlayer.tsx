@@ -196,7 +196,7 @@ export default function MusicPlayer() {
   };
 
   return (
-    <footer className="mx-3 mb-3 grid min-h-28 grid-cols-1 items-center gap-4 rounded-lg border border-white/10 bg-[#0d0d10]/95 px-4 py-4 shadow-2xl shadow-black/40 backdrop-blur-xl md:mx-5 md:grid-cols-[1fr_1.5fr_1fr] md:px-6">
+    <footer className="mx-2 mb-2 grid grid-cols-1 items-center gap-2 rounded-lg border border-white/10 bg-[#0d0d10]/95 px-3 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-2xl shadow-black/40 backdrop-blur-xl md:mx-5 md:mb-3 md:min-h-28 md:grid-cols-[1fr_1.5fr_1fr] md:gap-4 md:px-6 md:py-4">
 
       <audio
         ref={audioRef}
@@ -272,27 +272,27 @@ export default function MusicPlayer() {
       />
 
       <div className="flex min-w-0 items-center gap-3">
-              <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-gradient-to-br from-[#b01340] via-[#5c0921] to-black">
+              <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md bg-gradient-to-br from-[#b01340] via-[#5c0921] to-black sm:h-12 sm:w-12 md:h-16 md:w-16">
           <Image
             src={cover}
             alt=""
             fill
-            sizes="64px"
+            sizes="(min-width:768px) 64px, (min-width:640px) 48px, 40px"
             unoptimized
             className="object-cover"
           />
         </div>
 
         <div className="min-w-0">
-          <h3 className="truncate font-semibold text-white">
+          <h3 className="truncate text-sm font-semibold text-white md:text-base">
             {currentTrack?.title || "Choose a track"}
           </h3>
 
-          <p className="truncate text-sm text-zinc-400">
+          <p className="truncate text-xs text-zinc-400 md:text-sm">
             {currentTrack?.artist || "Search and press play"}
           </p>
 
-          <p className="mt-1 text-xs text-[#f5c2ce]">
+          <p className="text-[11px] text-[#f5c2ce] md:mt-1 md:text-xs">
             {sourceLabel}
           </p>
         </div>
@@ -300,11 +300,11 @@ export default function MusicPlayer() {
 
       <div className="min-w-0">
 
-        <div className="flex items-center justify-center gap-4 text-zinc-300">
+        <div className="flex items-center justify-center gap-1.5 text-zinc-300 sm:gap-3 md:gap-4">
 
           <button
             onClick={toggleShuffle}
-            className={`rounded-md p-2 transition hover:bg-white/10 ${
+            className={`hidden rounded-md p-2 transition hover:bg-white/10 sm:block ${
               isShuffling ? "text-[#ff5c8a]" : ""
             }`}
           >
@@ -322,7 +322,7 @@ export default function MusicPlayer() {
           <button
             onClick={() => jumpBy(-10)}
             disabled={!currentTrack}
-            className="rounded-md p-2 hover:bg-white/10 disabled:opacity-40"
+            className="hidden rounded-md p-2 hover:bg-white/10 disabled:opacity-40 sm:block"
           >
             <Rewind className="h-4 w-4" />
           </button>
@@ -330,7 +330,7 @@ export default function MusicPlayer() {
           <button
             onClick={togglePlay}
             disabled={!currentTrack}
-            className="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-[#ff2d67] to-[#b01340] text-white shadow-lg"
+            className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-[#ff2d67] to-[#b01340] text-white shadow-lg md:h-12 md:w-12"
           >
             {isPlaying ? (
               <Pause className="h-5 w-5" />
@@ -342,7 +342,7 @@ export default function MusicPlayer() {
           <button
             onClick={() => jumpBy(10)}
             disabled={!currentTrack}
-            className="rounded-md p-2 hover:bg-white/10 disabled:opacity-40"
+            className="hidden rounded-md p-2 hover:bg-white/10 disabled:opacity-40 sm:block"
           >
             <FastForward className="h-4 w-4" />
           </button>
@@ -357,7 +357,7 @@ export default function MusicPlayer() {
 
           <button
             onClick={toggleRepeat}
-            className={`relative rounded-md p-2 hover:bg-white/10 ${
+            className={`relative hidden rounded-md p-2 hover:bg-white/10 sm:block ${
               repeatMode !== "off"
                 ? "text-[#ff5c8a]"
                 : ""
@@ -374,7 +374,7 @@ export default function MusicPlayer() {
 
         </div>
 
-        <div className="mt-3 grid grid-cols-[3rem_1fr_4rem] items-center gap-3 text-xs text-zinc-500">
+        <div className="mt-1 grid grid-cols-[2.5rem_1fr_3.5rem] items-center gap-2 text-[11px] text-zinc-500 md:mt-3 md:grid-cols-[3rem_1fr_4rem] md:gap-3 md:text-xs">
 
           <span>{formatTime(currentTime)}</span>
 
@@ -388,7 +388,7 @@ export default function MusicPlayer() {
               seekTo(e.target.value)
             }
             disabled={!currentTrack}
-            className="h-1 w-full cursor-pointer accent-[#ff2d67]"
+            className="h-2 w-full cursor-pointer accent-[#ff2d67] md:h-1"
             style={{
               background: `linear-gradient(to right,#ff2d67 ${progress}%,rgb(255 255 255 / 0.12) ${progress}%)`,
             }}
