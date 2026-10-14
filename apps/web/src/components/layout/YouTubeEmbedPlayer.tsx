@@ -262,7 +262,7 @@ const YouTubeEmbedPlayer = forwardRef<
   }, [isPlaying, isMuted, isReady, volume]);
 
   return (
-    <div className="relative aspect-video min-h-[200px] w-full overflow-hidden rounded-md bg-black">
+    <div className="relative aspect-video w-full overflow-hidden rounded-md bg-black">
       <div ref={containerRef} className="h-full w-full" />
       {hasError ? (
         <div className="absolute inset-0 grid place-items-center bg-black/90 p-4 text-center">

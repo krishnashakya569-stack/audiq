@@ -238,27 +238,11 @@ export default function MusicPlayer() {
 
   return (
     <>
-    {isYouTubeTrack && currentTrack?.videoId ? (
-      <section className="mx-2 mb-2 flex shrink-0 justify-center md:mx-5 md:justify-end">
-        <div className="w-full max-w-[480px] rounded-lg border border-white/10 bg-[#0d0d10]/95 p-2 shadow-2xl shadow-black/40">
-          <p className="mb-2 px-1 text-xs text-zinc-300">
-            Now playing on YouTube
-          </p>
-          <YouTubeEmbedPlayer
-            ref={youtubePlayerRef}
-            videoId={currentTrack.videoId}
-            isPlaying={isPlaying}
-            volume={volume}
-            isMuted={isMuted}
-            onPlayingChange={setPlaying}
-            onTimeUpdate={setCurrentTime}
-            onDurationChange={setDuration}
-            onEnded={nextTrack}
-          />
-        </div>
-      </section>
-    ) : null}
-    <footer className="mx-2 mb-2 grid grid-cols-1 items-center gap-2 rounded-lg border border-white/10 bg-[#0d0d10]/95 px-3 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-2xl shadow-black/40 backdrop-blur-xl md:mx-5 md:mb-3 md:min-h-28 md:grid-cols-[1fr_1.5fr_1fr] md:gap-4 md:px-6 md:py-4">
+    <footer className={`mx-2 mb-2 grid grid-cols-1 items-center gap-2 rounded-lg border border-white/10 bg-[#0d0d10]/95 px-3 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-2xl shadow-black/40 backdrop-blur-xl md:mx-5 md:mb-3 md:min-h-28 md:gap-4 md:px-6 md:py-4 ${
+      isYouTubeTrack
+        ? "md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] lg:grid-cols-[minmax(0,1fr)_minmax(250px,1.4fr)_minmax(200px,0.9fr)_minmax(180px,1fr)]"
+        : "md:grid-cols-[1fr_1.5fr_1fr]"
+    }`}>
 
       <audio
         ref={audioRef}
@@ -476,7 +460,27 @@ export default function MusicPlayer() {
         </div>
 
       </div>
-            <div className="hidden items-center justify-end gap-4 text-zinc-400 md:flex">
+
+      {isYouTubeTrack && currentTrack?.videoId ? (
+        <div className="flex min-w-0 items-center justify-center md:justify-start lg:justify-center">
+          <div className="w-full max-w-[240px]">
+            <span className="sr-only">Now playing on YouTube</span>
+            <YouTubeEmbedPlayer
+              ref={youtubePlayerRef}
+              videoId={currentTrack.videoId}
+              isPlaying={isPlaying}
+              volume={volume}
+              isMuted={isMuted}
+              onPlayingChange={setPlaying}
+              onTimeUpdate={setCurrentTime}
+              onDurationChange={setDuration}
+              onEnded={nextTrack}
+            />
+          </div>
+        </div>
+      ) : null}
+
+      <div className="hidden items-center justify-end gap-4 text-zinc-400 md:flex">
 
         <button
           disabled={!currentTrack}
