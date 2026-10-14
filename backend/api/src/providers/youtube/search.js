@@ -1,6 +1,5 @@
 import Song from "../../models/Song.js";
 import { publicUrl } from "../../utils/publicUrl.js";
-import { isYouTubeStreamingEnabled } from "./availability.js";
 
 const YOUTUBE_SEARCH_API = "https://www.googleapis.com/youtube/v3/search";
 const YOUTUBE_VIDEOS_API = "https://www.googleapis.com/youtube/v3/videos";
@@ -18,10 +17,6 @@ function toSeconds(duration = "") {
 }
 
 export async function searchYouTube(query) {
-  if (!isYouTubeStreamingEnabled()) {
-    return [];
-  }
-
   const key = process.env.YOUTUBE_API_KEY;
 
   if (!key) {

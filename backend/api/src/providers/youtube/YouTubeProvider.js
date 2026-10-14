@@ -1,6 +1,5 @@
 import BaseProvider from "../base/BaseProvider.js";
 import { searchYouTube } from "./search.js";
-import { getYouTubeStream } from "./stream.js";
 
 export default class YouTubeProvider extends BaseProvider {
   constructor() {
@@ -11,8 +10,10 @@ export default class YouTubeProvider extends BaseProvider {
     return searchYouTube(query);
   }
 
-  async getStream(id) {
-    return getYouTubeStream(id);
+  async getStream() {
+    throw new Error(
+      "YouTube playback must use the visible YouTube embedded player."
+    );
   }
 
   async getSong(id) {

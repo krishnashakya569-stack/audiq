@@ -25,6 +25,8 @@ Environment variables:
 - `NEXT_PUBLIC_API_URL=https://YOUR_RENDER_API_URL/api`
 - `NEXT_PUBLIC_SUPABASE_URL=https://YOUR_SUPABASE_PROJECT.supabase.co`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY`
+- `YOUTUBE_API_KEY` (server-side key for YouTube search; do not prefix it with `NEXT_PUBLIC_`)
+- `YOUTUBE_REGION_CODE=IN` (optional; defaults to `IN`)
 
 Add custom domain:
 

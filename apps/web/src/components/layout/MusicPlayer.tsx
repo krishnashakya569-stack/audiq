@@ -19,7 +19,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import AddToPlaylistModal from "@/components/library/AddToPlaylistModal";
 import { usePlayerStore } from "@/store/player";
 import { useLibraryStore } from "@/store/library";
-import { buildApiUrl, resolveMediaUrl } from "@/services/api";
+import { resolveMediaUrl } from "@/services/api";
+import YouTubeEmbedPlayer, {
+  type YouTubeEmbedControls,
+} from "./YouTubeEmbedPlayer";
 
 function formatTime(seconds: number) {
   if (!Number.isFinite(seconds) || seconds <= 0) {
@@ -56,8 +59,10 @@ export default function MusicPlayer() {
   } = useLibraryStore();
 
   const audioRef = useRef<HTMLAudioElement>(null);
+  const youtubePlayerRef = useRef<YouTubeEmbedControls | null>(null);
   const lastTrackKey = useRef<string | null>(null);
   const fallbackKey = useRef<string | null>(null);
+  const ignoreAudioPause = useRef(false);
 
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -123,34 +128,46 @@ export default function MusicPlayer() {
       currentTrack.audio,
     ].join(":");
 
-    if (lastTrackKey.current !== trackKey) {
+    const trackChanged = lastTrackKey.current !== trackKey;
+
+    if (trackChanged) {
       lastTrackKey.current = trackKey;
       fallbackKey.current = null;
       addRecentlyPlayed(currentTrack);
+      setCurrentTime(0);
+      setDuration(
+        currentTrack.source === "youtube"
+          ? currentTrack.duration || 0
+          : 0
+      );
+    }
 
-      let src = resolveMediaUrl(currentTrack.audio);
-      
-      if (currentTrack.source === "youtube" && currentTrack.videoId) {
-        src = buildApiUrl(
-          `/stream/play/${encodeURIComponent(currentTrack.source)}/${encodeURIComponent(currentTrack.videoId)}`
-        );
+    if (currentTrack.source === "youtube" && currentTrack.videoId) {
+      if (!audio.paused) {
+        ignoreAudioPause.current = true;
+        audio.pause();
       }
 
+      audio.removeAttribute("src");
+      audio.load();
+      return;
+    }
+
+    if (trackChanged) {
+      let src = resolveMediaUrl(currentTrack.audio);
+
       if (!src) {
+        if (!audio.paused) ignoreAudioPause.current = true;
         audio.pause();
         audio.removeAttribute("src");
         audio.load();
-        setCurrentTime(0);
-        setDuration(0);
         setPlaying(false);
         return;
       }
 
+      if (!audio.paused) ignoreAudioPause.current = true;
       audio.src = src;
-
       audio.load();
-
-      setCurrentTime(0);
     }
 
     if (isPlaying) {
@@ -169,33 +186,78 @@ export default function MusicPlayer() {
   ]);
 
   const seekTo = (value: string) => {
-    const audio = audioRef.current;
-
-    if (!audio) return;
-
     const time = Number(value);
 
-    audio.currentTime = time;
+    if (currentTrack?.source === "youtube") {
+      youtubePlayerRef.current?.seekTo(time);
+    } else {
+      const audio = audioRef.current;
+      if (!audio) return;
+      audio.currentTime = time;
+    }
 
     setCurrentTime(time);
   };
 
   const jumpBy = (seconds: number) => {
     const audio = audioRef.current;
+    if (currentTrack?.source !== "youtube" && !audio) return;
 
-    if (!audio) return;
-
+    const playbackTime =
+      currentTrack?.source === "youtube"
+        ? currentTime
+        : audio?.currentTime || 0;
     const next = Math.min(
-      Math.max(audio.currentTime + seconds, 0),
-      audio.duration || duration
+      Math.max(playbackTime + seconds, 0),
+      duration || audio?.duration || playbackTime + seconds
     );
 
-    audio.currentTime = next;
+    if (currentTrack?.source === "youtube") {
+      youtubePlayerRef.current?.seekTo(next);
+    } else if (audio) {
+      audio.currentTime = next;
+    }
 
     setCurrentTime(next);
   };
 
+  const handleTogglePlay = () => {
+    if (currentTrack?.source === "youtube") {
+      if (isPlaying) {
+        youtubePlayerRef.current?.pause();
+      } else {
+        youtubePlayerRef.current?.play();
+      }
+    }
+
+    togglePlay();
+  };
+
+  const isYouTubeTrack =
+    currentTrack?.source === "youtube" && !!currentTrack.videoId;
+
   return (
+    <>
+    {isYouTubeTrack && currentTrack?.videoId ? (
+      <section className="mx-2 mb-2 flex shrink-0 justify-center md:mx-5 md:justify-end">
+        <div className="w-full max-w-[480px] rounded-lg border border-white/10 bg-[#0d0d10]/95 p-2 shadow-2xl shadow-black/40">
+          <p className="mb-2 px-1 text-xs text-zinc-300">
+            Now playing on YouTube
+          </p>
+          <YouTubeEmbedPlayer
+            ref={youtubePlayerRef}
+            videoId={currentTrack.videoId}
+            isPlaying={isPlaying}
+            volume={volume}
+            isMuted={isMuted}
+            onPlayingChange={setPlaying}
+            onTimeUpdate={setCurrentTime}
+            onDurationChange={setDuration}
+            onEnded={nextTrack}
+          />
+        </div>
+      </section>
+    ) : null}
     <footer className="mx-2 mb-2 grid grid-cols-1 items-center gap-2 rounded-lg border border-white/10 bg-[#0d0d10]/95 px-3 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-2xl shadow-black/40 backdrop-blur-xl md:mx-5 md:mb-3 md:min-h-28 md:grid-cols-[1fr_1.5fr_1fr] md:gap-4 md:px-6 md:py-4">
 
       <audio
@@ -203,6 +265,8 @@ export default function MusicPlayer() {
         preload="metadata"
 
         onError={(e) => {
+          if (currentTrack?.source === "youtube") return;
+
           const audio = e.currentTarget;
           const fallback = resolveMediaUrl(currentTrack?.fallbackAudio);
           const key = currentTrack
@@ -235,12 +299,14 @@ export default function MusicPlayer() {
         }}
 
         onLoadedMetadata={(e) => {
+          if (currentTrack?.source === "youtube") return;
           setDuration(
             e.currentTarget.duration || 0
           );
         }}
 
         onDurationChange={(e) => {
+          if (currentTrack?.source === "youtube") return;
           setDuration(
             e.currentTarget.duration || 0
           );
@@ -251,11 +317,15 @@ export default function MusicPlayer() {
         }}
 
         onPlay={() => {
-          setPlaying(true);
+          if (currentTrack?.source !== "youtube") setPlaying(true);
         }}
 
         onPause={() => {
-          setPlaying(false);
+          if (ignoreAudioPause.current) {
+            ignoreAudioPause.current = false;
+            return;
+          }
+          if (currentTrack?.source !== "youtube") setPlaying(false);
         }}
 
         onWaiting={() => {
@@ -263,12 +333,15 @@ export default function MusicPlayer() {
         }}
 
         onTimeUpdate={(e) => {
+          if (currentTrack?.source === "youtube") return;
           setCurrentTime(
             e.currentTarget.currentTime
           );
         }}
 
-        onEnded={nextTrack}
+        onEnded={() => {
+          if (currentTrack?.source !== "youtube") nextTrack();
+        }}
       />
 
       <div className="flex min-w-0 items-center gap-3">
@@ -328,7 +401,7 @@ export default function MusicPlayer() {
           </button>
 
           <button
-            onClick={togglePlay}
+            onClick={handleTogglePlay}
             disabled={!currentTrack}
             className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-[#ff2d67] to-[#b01340] text-white shadow-lg md:h-12 md:w-12"
           >
@@ -478,5 +551,6 @@ export default function MusicPlayer() {
       ) : null}
 
     </footer>
+    </>
   );
 }

@@ -56,7 +56,11 @@ export default function AlbumCard({
 
     const playableQueue = queue
       .map(songToTrack)
-      .filter((item) => !!item.audio);
+      .filter(
+        (item) =>
+          !!item.audio ||
+          (item.source === "youtube" && !!item.videoId)
+      );
 
     playTrack(track, playableQueue);
   };
@@ -70,7 +74,11 @@ export default function AlbumCard({
   };
     return (
     <article className="group cursor-pointer overflow-hidden rounded-lg border border-white/10 bg-white/[0.045] transition-all duration-300 hover:-translate-y-1 hover:border-[#ff2d67]/50 hover:bg-white/[0.07] hover:shadow-xl hover:shadow-[#b01340]/20">
-      <div className="relative aspect-square overflow-hidden">
+      <div
+        className={`relative overflow-hidden ${
+          song.provider === "youtube" ? "aspect-video" : "aspect-square"
+        }`}
+      >
         <Image
           src={track.albumArt || "/media/audiq-logo.png"}
           alt={song.title}
@@ -80,17 +88,19 @@ export default function AlbumCard({
           className="object-cover transition duration-500 group-hover:scale-105"
         />
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/5 to-transparent" />
+        {song.provider !== "youtube" ? (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/5 to-transparent" />
+        ) : null}
 
-        <span className="absolute left-3 top-3 rounded-full border border-white/10 bg-black/65 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white/85 backdrop-blur">
-          {song.isPreview || song.provider === "itunes"
-            ? "30s Preview"
-            : song.provider === "youtube"
-            ? "Full"
-            : song.playable
-            ? "Playable"
-            : "Preview"}
-        </span>
+        {song.provider !== "youtube" ? (
+          <span className="absolute left-3 top-3 rounded-full border border-white/10 bg-black/65 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white/85 backdrop-blur">
+            {song.isPreview || song.provider === "itunes"
+              ? "30s Preview"
+              : song.playable
+              ? "Playable"
+              : "Preview"}
+          </span>
+        ) : null}
 
         {canOpenExternal ? (
           <a

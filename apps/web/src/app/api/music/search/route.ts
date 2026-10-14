@@ -28,6 +28,163 @@ type AudiusTrack = {
   user?: { handle?: string; id?: string; name?: string };
 };
 
+type YouTubeVideo = {
+  id?: string;
+  snippet?: {
+    channelId?: string;
+    channelTitle?: string;
+    thumbnails?: {
+      default?: { url?: string };
+      medium?: { url?: string };
+      high?: { url?: string };
+    };
+    title?: string;
+  };
+  contentDetails?: {
+    duration?: string;
+    regionRestriction?: { blocked?: string[] };
+  };
+  status?: {
+    embeddable?: boolean;
+    privacyStatus?: string;
+    uploadStatus?: string;
+  };
+};
+
+function youtubeDuration(value = "") {
+  const match = value.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+
+  if (!match) return 0;
+
+  return (
+    Number(match[1] || 0) * 3600 +
+    Number(match[2] || 0) * 60 +
+    Number(match[3] || 0)
+  );
+}
+
+async function searchYouTube(query: string, key: string) {
+  const searchParams = new URLSearchParams({
+    key,
+    part: "snippet",
+    q: `${query} official song`,
+    type: "video",
+    videoCategoryId: "10",
+    videoEmbeddable: "true",
+    videoSyndicated: "true",
+    regionCode: process.env.YOUTUBE_REGION_CODE || "IN",
+    maxResults: "10",
+  });
+  const searchResponse = await fetch(
+    `https://www.googleapis.com/youtube/v3/search?${searchParams.toString()}`,
+    { next: { revalidate: 300 } }
+  );
+
+  if (!searchResponse.ok) {
+    throw new Error(`YouTube search failed (${searchResponse.status})`);
+  }
+
+  const searchPayload = (await searchResponse.json()) as {
+    items?: Array<{
+      id?: { videoId?: string };
+      snippet?: YouTubeVideo["snippet"];
+    }>;
+  };
+  const videos = searchPayload.items || [];
+  const videoIds = videos
+    .map((video) => video.id?.videoId)
+    .filter((id): id is string => Boolean(id));
+
+  if (videoIds.length === 0) return [];
+
+  const detailsParams = new URLSearchParams({
+    key,
+    id: videoIds.join(","),
+    part: "contentDetails,snippet,status",
+  });
+  const detailsResponse = await fetch(
+    `https://www.googleapis.com/youtube/v3/videos?${detailsParams.toString()}`,
+    { next: { revalidate: 300 } }
+  );
+
+  if (!detailsResponse.ok) {
+    throw new Error(`YouTube video details failed (${detailsResponse.status})`);
+  }
+
+  const detailsPayload = (await detailsResponse.json()) as {
+    items?: YouTubeVideo[];
+  };
+  const detailsById = new Map(
+    (detailsPayload.items || []).map((video) => [video.id, video])
+  );
+
+  return videos.flatMap((video, index) => {
+    const videoId = video.id?.videoId;
+    if (!videoId) return [];
+
+    const details = detailsById.get(videoId);
+    const snippet = details?.snippet || video.snippet;
+    const status = details?.status;
+    const duration = youtubeDuration(details?.contentDetails?.duration);
+
+    if (
+      !snippet?.title ||
+      !details ||
+      status?.embeddable !== true ||
+      status.privacyStatus !== "public" ||
+      status.uploadStatus !== "processed" ||
+      details.contentDetails?.regionRestriction?.blocked?.includes(
+        process.env.YOUTUBE_REGION_CODE || "IN"
+      ) ||
+      duration < 45
+    ) {
+      return [];
+    }
+
+    const thumbnail =
+      snippet.thumbnails?.high?.url ||
+      snippet.thumbnails?.medium?.url ||
+      snippet.thumbnails?.default?.url ||
+      null;
+    const trackId = `youtube:${videoId}`;
+
+    return [{
+      id: trackId,
+      provider: "youtube",
+      title: snippet.title,
+      artists: [
+        {
+          id: snippet.channelId || "youtube",
+          name: snippet.channelTitle || "YouTube",
+        },
+      ],
+      album: { id: "youtube", title: "YouTube" },
+      artwork: {
+        small: snippet.thumbnails?.default?.url || thumbnail,
+        medium: snippet.thumbnails?.medium?.url || thumbnail,
+        large: thumbnail,
+      },
+      duration,
+      playable: true,
+      streamUrl: null,
+      previewUrl: `https://www.youtube.com/watch?v=${videoId}`,
+      isPreview: false,
+      explicit: false,
+      lyricsAvailable: false,
+      language: null,
+      providers: [
+        { provider: "youtube", id: trackId, playable: true },
+      ],
+      preferredProvider: {
+        provider: "youtube",
+        id: trackId,
+        playable: true,
+      },
+      sourceRank: index,
+    }];
+  });
+}
+
 function artwork(url = "") {
   return url ? url.replace("100x100", "600x600") : null;
 }
@@ -93,20 +250,30 @@ export async function GET(request: Request) {
   });
 
   const audiusAppName = process.env.AUDIUS_APP_NAME || "Audiq";
+  const youtubeApiKey = process.env.YOUTUBE_API_KEY;
   const audiusParams = new URLSearchParams({
     query,
     app_name: audiusAppName,
   });
 
-  const [itunesResult, audiusResult] = await Promise.allSettled([
-    fetch(`https://itunes.apple.com/search?${params.toString()}`, {
-      next: { revalidate: 300 },
-    }),
-    fetch(
-      `https://discoveryprovider.audius.co/v1/tracks/search?${audiusParams.toString()}`,
-      { next: { revalidate: 300 } }
-    ),
+  const [providerResults, youtubeResult] = await Promise.all([
+    Promise.allSettled([
+      fetch(`https://itunes.apple.com/search?${params.toString()}`, {
+        next: { revalidate: 300 },
+      }),
+      fetch(
+        `https://discoveryprovider.audius.co/v1/tracks/search?${audiusParams.toString()}`,
+        { next: { revalidate: 300 } }
+      ),
+    ]),
+    youtubeApiKey
+      ? searchYouTube(query, youtubeApiKey).then(
+          (tracks) => ({ status: "fulfilled" as const, value: tracks }),
+          (reason: unknown) => ({ status: "rejected" as const, reason })
+        )
+      : Promise.resolve({ status: "fulfilled" as const, value: [] }),
   ]);
+  const [itunesResult, audiusResult] = providerResults;
 
   let itunesTracks: ItunesTrack[] = [];
   if (itunesResult.status === "fulfilled" && itunesResult.value.ok) {
@@ -122,6 +289,12 @@ export async function GET(request: Request) {
       data?: AudiusTrack[];
     };
     audiusTracks = payload.data || [];
+  }
+
+  const youtubeTracks =
+    youtubeResult.status === "fulfilled" ? youtubeResult.value : [];
+  if (youtubeResult.status === "rejected") {
+    console.error("YouTube search failed:", youtubeResult.reason);
   }
 
   const previewSongs = itunesTracks
@@ -222,5 +395,9 @@ export async function GET(request: Request) {
       };
     });
 
-  return NextResponse.json([...fullTrackSongs, ...previewSongs]);
+  return NextResponse.json([
+    ...fullTrackSongs,
+    ...youtubeTracks,
+    ...previewSongs,
+  ]);
 }

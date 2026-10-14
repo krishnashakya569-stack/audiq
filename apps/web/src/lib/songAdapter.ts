@@ -1,5 +1,5 @@
 import type { Track } from "@/store/player";
-import { buildApiUrl, resolveMediaUrl } from "@/services/api";
+import { resolveMediaUrl } from "@/services/api";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function songToTrack(song: any): Track {
@@ -30,10 +30,8 @@ export function songToTrack(song: any): Track {
   let fallbackAudio = "";
 
   if (provider === "youtube") {
-    audio = buildApiUrl(
-      `/stream/play/youtube/${encodeURIComponent(realId)}`
-    );
-    fallbackAudio = directAudio;
+    // YouTube plays through its visible IFrame player; never extract its audio.
+    audio = "";
   }
 
   const artist =
