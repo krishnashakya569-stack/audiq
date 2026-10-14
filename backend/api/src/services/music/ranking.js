@@ -151,7 +151,7 @@ function scoreProvider(song) {
       return 35;
 
     case "audius":
-      return 20;
+      return 50;
 
     default:
       return 0;

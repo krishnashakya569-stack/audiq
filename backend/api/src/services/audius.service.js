@@ -35,7 +35,13 @@ export async function searchAudiusTracks(query) {
   const tracks = Array.isArray(payload.data) ? payload.data : [];
 
   return tracks
-    .filter((track) => track.id && track.title)
+    .filter(
+      (track) =>
+        track.id &&
+        track.title &&
+        !track.is_stream_gated &&
+        track.access?.stream !== false
+    )
     .slice(0, 12)
     .map((track) => ({
       id: `audius:${track.id}`,

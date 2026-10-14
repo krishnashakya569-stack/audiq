@@ -83,7 +83,9 @@ export default function AlbumCard({
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/5 to-transparent" />
 
         <span className="absolute left-3 top-3 rounded-full border border-white/10 bg-black/65 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white/85 backdrop-blur">
-          {song.provider === "youtube"
+          {song.isPreview || song.provider === "itunes"
+            ? "30s Preview"
+            : song.provider === "youtube"
             ? "Full"
             : song.playable
             ? "Playable"

@@ -1,4 +1,5 @@
 const PRIORITY = [
+  "audius",
   "youtube",
   "jiosaavn",
   "itunes",

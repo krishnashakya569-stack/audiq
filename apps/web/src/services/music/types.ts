@@ -41,6 +41,8 @@ export interface Song {
 
   previewUrl: string | null;
 
+  isPreview?: boolean;
+
   explicit: boolean;
 
   lyricsAvailable: boolean;

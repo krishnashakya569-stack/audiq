@@ -10,6 +10,7 @@ export default class Song {
     playable = false,
     streamUrl = null,
     previewUrl = null,
+    isPreview = false,
     explicit = false,
     lyricsAvailable = false,
     language = null,
@@ -33,6 +34,8 @@ export default class Song {
     this.streamUrl = streamUrl;
 
     this.previewUrl = previewUrl;
+
+    this.isPreview = isPreview;
 
     this.explicit = explicit;
 

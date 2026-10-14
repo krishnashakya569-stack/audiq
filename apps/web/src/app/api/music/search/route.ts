@@ -13,6 +13,21 @@ type ItunesTrack = {
   trackTimeMillis?: number;
 };
 
+type AudiusTrack = {
+  access?: { stream?: boolean };
+  artwork?: {
+    "1000x1000"?: string;
+    "480x480"?: string;
+    "150x150"?: string;
+  };
+  duration?: number;
+  genre?: string;
+  id?: string;
+  is_stream_gated?: boolean;
+  title?: string;
+  user?: { handle?: string; id?: string; name?: string };
+};
+
 function artwork(url = "") {
   return url ? url.replace("100x100", "600x600") : null;
 }
@@ -77,27 +92,39 @@ export async function GET(request: Request) {
     country: "US",
   });
 
-  const response = await fetch(
-    `https://itunes.apple.com/search?${params.toString()}`,
-    {
-      next: {
-        revalidate: 300,
-      },
-    }
-  );
+  const audiusAppName = process.env.AUDIUS_APP_NAME || "Audiq";
+  const audiusParams = new URLSearchParams({
+    query,
+    app_name: audiusAppName,
+  });
 
-  if (!response.ok) {
-    return NextResponse.json(
-      { message: "Music search failed" },
-      { status: 502 }
-    );
+  const [itunesResult, audiusResult] = await Promise.allSettled([
+    fetch(`https://itunes.apple.com/search?${params.toString()}`, {
+      next: { revalidate: 300 },
+    }),
+    fetch(
+      `https://discoveryprovider.audius.co/v1/tracks/search?${audiusParams.toString()}`,
+      { next: { revalidate: 300 } }
+    ),
+  ]);
+
+  let itunesTracks: ItunesTrack[] = [];
+  if (itunesResult.status === "fulfilled" && itunesResult.value.ok) {
+    const payload = (await itunesResult.value.json()) as {
+      results?: ItunesTrack[];
+    };
+    itunesTracks = payload.results || [];
   }
 
-  const payload = (await response.json()) as {
-    results?: ItunesTrack[];
-  };
+  let audiusTracks: AudiusTrack[] = [];
+  if (audiusResult.status === "fulfilled" && audiusResult.value.ok) {
+    const payload = (await audiusResult.value.json()) as {
+      data?: AudiusTrack[];
+    };
+    audiusTracks = payload.data || [];
+  }
 
-  const songs = (payload.results || [])
+  const previewSongs = itunesTracks
     .filter((track) => track.trackId && track.trackName && track.previewUrl)
     .map((track, index) => ({
       id: `itunes:${track.trackId}`,
@@ -120,8 +147,9 @@ export async function GET(request: Request) {
       },
       duration: Math.floor((track.trackTimeMillis || 0) / 1000),
       playable: true,
-      streamUrl: track.previewUrl || null,
+      streamUrl: null,
       previewUrl: track.previewUrl || null,
+      isPreview: true,
       explicit: track.trackExplicitness === "explicit",
       lyricsAvailable: false,
       language: null,
@@ -137,10 +165,62 @@ export async function GET(request: Request) {
         id: `itunes:${track.trackId}`,
         playable: true,
       },
-      score: rank(query, track, index),
+      score: rank(query, track, index) - 80,
     }))
     .sort((a, b) => b.score - a.score)
     .map(({ score, ...song }) => song);
 
-  return NextResponse.json(songs);
+  const fullTrackSongs = audiusTracks
+    .filter(
+      (track) =>
+        track.id &&
+        track.title &&
+        !track.is_stream_gated &&
+        track.access?.stream !== false
+    )
+    .slice(0, 12)
+    .map((track, index) => {
+      const id = track.id as string;
+      const streamParams = new URLSearchParams({ app_name: audiusAppName });
+      const streamUrl =
+        `https://discoveryprovider.audius.co/v1/tracks/${encodeURIComponent(id)}/stream?` +
+        streamParams.toString();
+      const cover =
+        track.artwork?.["1000x1000"] ||
+        track.artwork?.["480x480"] ||
+        track.artwork?.["150x150"] ||
+        null;
+      const providerId = `audius:${id}`;
+
+      return {
+        id: providerId,
+        provider: "audius",
+        title: track.title as string,
+        artists: [
+          {
+            id: track.user?.id || "audius",
+            name: track.user?.name || track.user?.handle || "Audius Artist",
+          },
+        ],
+        album: { id: "audius", title: track.genre || "Audius" },
+        artwork: { small: cover, medium: cover, large: cover },
+        duration: Number(track.duration) || 0,
+        playable: true,
+        streamUrl,
+        previewUrl: null,
+        isPreview: false,
+        explicit: false,
+        lyricsAvailable: false,
+        language: null,
+        providers: [{ provider: "audius", id: providerId, playable: true }],
+        preferredProvider: {
+          provider: "audius",
+          id: providerId,
+          playable: true,
+        },
+        sourceRank: index,
+      };
+    });
+
+  return NextResponse.json([...fullTrackSongs, ...previewSongs]);
 }

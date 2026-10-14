@@ -94,7 +94,7 @@ export default function MusicPlayer() {
         return "Audius";
 
       case "itunes":
-        return "iTunes";
+        return "iTunes Preview";
 
       default:
         return currentTrack.isPreview
