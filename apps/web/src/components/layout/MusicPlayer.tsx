@@ -238,10 +238,10 @@ export default function MusicPlayer() {
 
   return (
     <>
-    <footer className={`mx-2 mb-2 grid grid-cols-1 items-center gap-2 rounded-lg border border-white/10 bg-[#0d0d10]/95 px-3 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-2xl shadow-black/40 backdrop-blur-xl md:mx-5 md:mb-3 md:min-h-28 md:gap-4 md:px-6 md:py-4 ${
+    <footer className={`mb-2 grid items-center rounded-lg border border-white/10 bg-[#0d0d10]/95 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-2xl shadow-black/40 backdrop-blur-xl md:mb-3 md:min-h-28 md:py-4 ${
       isYouTubeTrack
-        ? "md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] lg:grid-cols-[minmax(0,1fr)_minmax(250px,1.4fr)_minmax(200px,0.9fr)_minmax(180px,1fr)]"
-        : "md:grid-cols-[1fr_1.5fr_1fr]"
+        ? "mx-1 grid-cols-[minmax(0,1fr)_200px] grid-rows-2 gap-1 px-2 md:mx-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] md:grid-rows-none md:gap-4 md:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(250px,1.4fr)_minmax(200px,0.9fr)_minmax(180px,1fr)]"
+        : "mx-2 grid-cols-1 gap-2 px-3 md:mx-5 md:grid-cols-[1fr_1.5fr_1fr] md:gap-4 md:px-6"
     }`}>
 
       <audio
@@ -328,7 +328,7 @@ export default function MusicPlayer() {
         }}
       />
 
-      <div className="flex min-w-0 items-center gap-3">
+    <div className="flex min-w-0 items-center gap-2 md:gap-3">
               <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md bg-gradient-to-br from-[#b01340] via-[#5c0921] to-black sm:h-12 sm:w-12 md:h-16 md:w-16">
           <Image
             src={cover}
@@ -355,9 +355,9 @@ export default function MusicPlayer() {
         </div>
       </div>
 
-      <div className="min-w-0">
+      <div className={`min-w-0 ${isYouTubeTrack ? "col-start-1 row-start-2 md:col-auto md:row-auto" : ""}`}>
 
-        <div className="flex items-center justify-center gap-1.5 text-zinc-300 sm:gap-3 md:gap-4">
+        <div className={`flex items-center justify-center text-zinc-300 ${isYouTubeTrack ? "gap-0 sm:gap-1 md:gap-4" : "gap-1.5 sm:gap-3 md:gap-4"}`}>
 
           <button
             onClick={toggleShuffle}
@@ -371,7 +371,7 @@ export default function MusicPlayer() {
           <button
             onClick={previousTrack}
             disabled={!currentTrack}
-            className="rounded-md p-2 hover:bg-white/10 disabled:opacity-40"
+            className={`rounded-md hover:bg-white/10 disabled:opacity-40 ${isYouTubeTrack ? "p-1 sm:p-2" : "p-2"}`}
           >
             <SkipBack className="h-5 w-5" />
           </button>
@@ -387,7 +387,7 @@ export default function MusicPlayer() {
           <button
             onClick={handleTogglePlay}
             disabled={!currentTrack}
-            className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-[#ff2d67] to-[#b01340] text-white shadow-lg md:h-12 md:w-12"
+            className={`grid place-items-center rounded-full bg-gradient-to-br from-[#ff2d67] to-[#b01340] text-white shadow-lg ${isYouTubeTrack ? "h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12" : "h-10 w-10 md:h-12 md:w-12"}`}
           >
             {isPlaying ? (
               <Pause className="h-5 w-5" />
@@ -407,7 +407,7 @@ export default function MusicPlayer() {
           <button
             onClick={nextTrack}
             disabled={!currentTrack}
-            className="rounded-md p-2 hover:bg-white/10 disabled:opacity-40"
+            className={`rounded-md hover:bg-white/10 disabled:opacity-40 ${isYouTubeTrack ? "p-1 sm:p-2" : "p-2"}`}
           >
             <SkipForward className="h-5 w-5" />
           </button>
@@ -431,9 +431,9 @@ export default function MusicPlayer() {
 
         </div>
 
-        <div className="mt-1 grid grid-cols-[2.5rem_1fr_3.5rem] items-center gap-2 text-[11px] text-zinc-500 md:mt-3 md:grid-cols-[3rem_1fr_4rem] md:gap-3 md:text-xs">
+        <div className={`mt-1 grid items-center gap-2 text-[11px] text-zinc-500 md:mt-3 md:gap-3 md:text-xs ${isYouTubeTrack ? "grid-cols-1 md:grid-cols-[3rem_1fr_4rem]" : "grid-cols-[2.5rem_1fr_3.5rem] md:grid-cols-[3rem_1fr_4rem]"}`}>
 
-          <span>{formatTime(currentTime)}</span>
+          <span className={isYouTubeTrack ? "hidden md:inline" : ""}>{formatTime(currentTime)}</span>
 
           <input
             type="range"
@@ -451,7 +451,7 @@ export default function MusicPlayer() {
             }}
           />
 
-          <span className="text-right">
+          <span className={`text-right ${isYouTubeTrack ? "hidden md:inline" : ""}`}>
             {duration
               ? formatTime(duration)
               : "--:--"}
@@ -462,8 +462,8 @@ export default function MusicPlayer() {
       </div>
 
       {isYouTubeTrack && currentTrack?.videoId ? (
-        <div className="flex min-w-0 items-center justify-center md:justify-start lg:justify-center">
-          <div className="w-full max-w-[240px]">
+        <div className="col-start-2 row-span-2 row-start-1 flex h-[200px] w-[200px] min-w-0 items-center justify-center md:col-start-1 md:row-span-1 md:row-start-2 lg:col-start-3 lg:row-start-1">
+          <div className="h-[200px] w-[200px]">
             <span className="sr-only">Now playing on YouTube</span>
             <YouTubeEmbedPlayer
               ref={youtubePlayerRef}
