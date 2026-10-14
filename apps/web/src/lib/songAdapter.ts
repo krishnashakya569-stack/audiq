@@ -27,7 +27,7 @@ export function songToTrack(song: any): Track {
   );
 
   let audio = directAudio;
-  let fallbackAudio = "";
+  const fallbackAudio = "";
 
   if (provider === "youtube") {
     // YouTube plays through its visible IFrame player; never extract its audio.

@@ -154,7 +154,7 @@ export default function MusicPlayer() {
     }
 
     if (trackChanged) {
-      let src = resolveMediaUrl(currentTrack.audio);
+      const src = resolveMediaUrl(currentTrack.audio);
 
       if (!src) {
         if (!audio.paused) ignoreAudioPause.current = true;

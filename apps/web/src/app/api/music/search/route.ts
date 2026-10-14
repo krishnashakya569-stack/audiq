@@ -341,7 +341,10 @@ export async function GET(request: Request) {
       score: rank(query, track, index) - 80,
     }))
     .sort((a, b) => b.score - a.score)
-    .map(({ score, ...song }) => song);
+    .map(({ score, ...song }) => {
+      void score;
+      return song;
+    });
 
   const fullTrackSongs = audiusTracks
     .filter(
