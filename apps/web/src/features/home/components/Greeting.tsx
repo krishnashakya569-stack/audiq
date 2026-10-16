@@ -1,10 +1,19 @@
 "use client";
 
 import { Radio, Sparkles, Users } from "lucide-react";
+import { useAuth } from "@/features/auth/AuthProvider";
 
 export default function Greeting() {
+  const { user, profile } = useAuth();
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const displayName =
+    profile?.display_name ||
+    (typeof user?.user_metadata?.display_name === "string"
+      ? user.user_metadata.display_name
+      : null) ||
+    user?.email?.split("@")[0] ||
+    "there";
 
   return (
     <section className="mb-8 overflow-hidden rounded-lg border border-white/10 bg-[linear-gradient(135deg,rgba(176,19,64,0.34),rgba(10,10,12,0.94)_46%,rgba(68,215,182,0.12))] p-5 shadow-2xl shadow-black/30 md:p-7">
@@ -15,7 +24,7 @@ export default function Greeting() {
             AI powered social listening
           </div>
           <h1 className="text-4xl font-black leading-tight tracking-tight md:text-6xl">
-            {greeting}, Krishna
+            {greeting}, {displayName}
           </h1>
           <p className="mt-3 max-w-xl text-sm leading-6 text-zinc-300 md:text-base">
             Discover your next obsession, create AI mixes, and keep the conversation moving with friends in real time.

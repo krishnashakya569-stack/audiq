@@ -6,6 +6,8 @@ import { useEffect, useRef, useState } from "react";
 
 import {
   Bell,
+  LogIn,
+  LogOut,
   Menu,
   MessageCircle,
   Search,
@@ -18,6 +20,10 @@ import { Input } from "@/components/ui/input";
 
 type NavbarProps = {
   query: string;
+  accountName: string | null;
+  audiqId: string | null;
+  onOpenAuth: () => void;
+  onSignOut: () => void;
   onOpenAi: () => void;
   onSearch: (query: string) => void;
   onOpenSidebar: () => void;
@@ -25,6 +31,10 @@ type NavbarProps = {
 
 export default function Navbar({
   query,
+  accountName,
+  audiqId,
+  onOpenAuth,
+  onSignOut,
   onOpenAi,
   onSearch,
   onOpenSidebar,
@@ -32,6 +42,7 @@ export default function Navbar({
   const [term, setTerm] = useState(query);
   const [mobileSearchOpen, setMobileSearchOpen] =
     useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const mobileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -173,17 +184,55 @@ export default function Navbar({
           <MessageCircle className="h-5 w-5" />
         </Button>
 
-        {/* Avatar */}
+        {/* Account */}
 
-        <Avatar className="h-10 w-10 border border-[#ff2d67]/40 cursor-pointer">
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => {
+              if (!accountName) {
+                onOpenAuth();
+                return;
+              }
+              setAccountMenuOpen((open) => !open);
+            }}
+            aria-label={accountName ? "Open account menu" : "Sign in or create an account"}
+            aria-expanded={accountMenuOpen}
+            className={accountName
+              ? "flex items-center gap-2 rounded-full text-white"
+              : "flex items-center gap-2 rounded-lg border border-[#ff2d67]/40 bg-[#b01340]/20 px-2.5 py-1.5 text-white hover:bg-[#b01340]/35"}
+          >
+            {accountName ? (
+              <Avatar className="h-10 w-10 border border-[#ff2d67]/40">
+                <AvatarFallback className="bg-[#800f2f] font-bold text-white">
+                  {accountName.slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            ) : (
+              <LogIn aria-hidden="true" className="h-4 w-4" />
+            )}
+            <span className="text-xs font-semibold sm:text-sm">
+              {accountName ? "Account" : "Sign in"}
+            </span>
+          </button>
 
-          <AvatarFallback className="bg-[#800f2f] font-bold text-white">
-
-            KS
-
-          </AvatarFallback>
-
-        </Avatar>
+          {accountMenuOpen && accountName ? (
+            <div className="absolute right-0 top-full z-[70] mt-2 w-60 rounded-lg border border-white/10 bg-[#151318] p-3 shadow-2xl">
+              <p className="truncate font-bold text-white">{accountName}</p>
+              <p className="mt-1 text-xs text-zinc-400">{audiqId || "AudiQ ID loading…"}</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setAccountMenuOpen(false);
+                  onSignOut();
+                }}
+                className="mt-3 flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm text-zinc-300 hover:bg-white/10 hover:text-white"
+              >
+                <LogOut className="h-4 w-4" /> Sign out
+              </button>
+            </div>
+          ) : null}
+        </div>
 
       </div>
       </div>

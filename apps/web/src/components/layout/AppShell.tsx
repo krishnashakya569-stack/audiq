@@ -11,6 +11,8 @@ import LibraryDashboard, {
 import SocialHub, {
   type SocialTab,
 } from "@/features/social/components/SocialHub";
+import AuthDialog from "@/features/auth/AuthDialog";
+import { useAuth } from "@/features/auth/AuthProvider";
 
 import MusicPlayer from "./MusicPlayer";
 import MobileDrawer from "./MobileDrawer";
@@ -27,7 +29,9 @@ export type AppView =
 const EDGE_SWIPE_ZONE = 24;
 
 export default function AppShell() {
+  const { user, profile, signOut } = useAuth();
   const [query, setQuery] = useState("starboy");
+  const [authDialogOpen, setAuthDialogOpen] = useState(false);
 
   const [view, setView] =
     useState<AppView>("home");
@@ -125,6 +129,10 @@ export default function AppShell() {
 
       <Navbar
         query={query}
+        accountName={profile?.display_name ?? user?.email ?? null}
+        audiqId={profile?.audiq_id ?? null}
+        onOpenAuth={() => setAuthDialogOpen(true)}
+        onSignOut={() => void signOut()}
         onSearch={setQuery}
         onOpenAi={() => changeView("ai")}
         onOpenSidebar={() => setSidebarOpen(true)}
@@ -211,6 +219,7 @@ export default function AppShell() {
             <SocialHub
               activeTab={socialTab}
               onTabChange={setSocialTab}
+              onOpenAuth={() => setAuthDialogOpen(true)}
             />
           )}
 
@@ -238,6 +247,11 @@ export default function AppShell() {
       {/* Player */}
 
       <MusicPlayer />
+
+      <AuthDialog
+        open={authDialogOpen}
+        onClose={() => setAuthDialogOpen(false)}
+      />
 
     </div>
   );
