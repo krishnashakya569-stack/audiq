@@ -19,7 +19,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 type NavbarProps = {
-  query: string;
+  term: string;
+  onTermChange: (term: string) => void;
   accountName: string | null;
   audiqId: string | null;
   onOpenAuth: () => void;
@@ -27,10 +28,13 @@ type NavbarProps = {
   onOpenAi: () => void;
   onSearch: (query: string) => void;
   onOpenSidebar: () => void;
+  mobileSearchOpen: boolean;
+  onMobileSearchOpenChange: (open: boolean) => void;
 };
 
 export default function Navbar({
-  query,
+  term,
+  onTermChange,
   accountName,
   audiqId,
   onOpenAuth,
@@ -38,10 +42,9 @@ export default function Navbar({
   onOpenAi,
   onSearch,
   onOpenSidebar,
+  mobileSearchOpen,
+  onMobileSearchOpenChange,
 }: NavbarProps) {
-  const [term, setTerm] = useState(query);
-  const [mobileSearchOpen, setMobileSearchOpen] =
-    useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const mobileInputRef = useRef<HTMLInputElement>(null);
 
@@ -129,7 +132,7 @@ export default function Navbar({
 
         <Input
           value={term}
-          onChange={(e) => setTerm(e.target.value)}
+          onChange={(e) => onTermChange(e.target.value)}
           placeholder="Search songs, artists, playlists..."
           className="h-9 border-none bg-transparent text-sm text-white shadow-none placeholder:text-zinc-500 focus-visible:ring-0"
         />
@@ -146,7 +149,7 @@ export default function Navbar({
           variant="ghost"
           size="icon"
           aria-label="Open search"
-          onClick={() => setMobileSearchOpen((value) => !value)}
+          onClick={() => onMobileSearchOpenChange(!mobileSearchOpen)}
           className="text-zinc-300 md:hidden"
         >
           <Search className="h-5 w-5" />
@@ -243,14 +246,14 @@ export default function Navbar({
           onSubmit={(e) => {
             e.preventDefault();
             onSearch(term.trim() || "starboy");
-            setMobileSearchOpen(false);
+            onMobileSearchOpenChange(false);
           }}
         >
           <Search className="h-5 w-5 shrink-0 text-[#f5c2ce]" />
           <Input
             ref={mobileInputRef}
             value={term}
-            onChange={(e) => setTerm(e.target.value)}
+            onChange={(e) => onTermChange(e.target.value)}
             placeholder="Search Audiq"
             className="h-9 min-w-0 border-none bg-transparent text-sm text-white shadow-none placeholder:text-zinc-500 focus-visible:ring-0"
           />

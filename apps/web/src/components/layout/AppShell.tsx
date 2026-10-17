@@ -15,6 +15,7 @@ import AuthDialog from "@/features/auth/AuthDialog";
 import { useAuth } from "@/features/auth/AuthProvider";
 
 import MusicPlayer from "./MusicPlayer";
+import MobileBottomNav from "./MobileBottomNav";
 import MobileDrawer from "./MobileDrawer";
 import Navbar from "./Navbar";
 import RightPanel from "./RightPanel";
@@ -31,6 +32,8 @@ const EDGE_SWIPE_ZONE = 24;
 export default function AppShell() {
   const { user, profile, signOut } = useAuth();
   const [query, setQuery] = useState("starboy");
+  const [searchTerm, setSearchTerm] = useState("starboy");
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
 
   const [view, setView] =
@@ -79,6 +82,7 @@ export default function AppShell() {
     setLibraryTab(tab);
     setView("library");
     setSidebarOpen(false);
+    setMobileSearchOpen(false);
   };
 
   const openSocial = (
@@ -87,6 +91,7 @@ export default function AppShell() {
     setSocialTab(tab);
     setView("social");
     setSidebarOpen(false);
+    setMobileSearchOpen(false);
   };
 
   const changeView = (
@@ -94,6 +99,13 @@ export default function AppShell() {
   ) => {
     setView(newView);
     setSidebarOpen(false);
+    setMobileSearchOpen(false);
+  };
+
+  const openSearch = () => {
+    setView("home");
+    setSidebarOpen(false);
+    setMobileSearchOpen(true);
   };
     return (
     <div className="relative flex h-dvh min-w-0 flex-col overflow-hidden bg-[#070607] text-white">
@@ -128,7 +140,8 @@ export default function AppShell() {
       {/* Navbar */}
 
       <Navbar
-        query={query}
+        term={searchTerm}
+        onTermChange={setSearchTerm}
         accountName={profile?.display_name ?? user?.email ?? null}
         audiqId={profile?.audiq_id ?? null}
         onOpenAuth={() => setAuthDialogOpen(true)}
@@ -136,6 +149,8 @@ export default function AppShell() {
         onSearch={setQuery}
         onOpenAi={() => changeView("ai")}
         onOpenSidebar={() => setSidebarOpen(true)}
+        mobileSearchOpen={mobileSearchOpen}
+        onMobileSearchOpenChange={setMobileSearchOpen}
       />
 
       {/* Body */}
@@ -247,6 +262,20 @@ export default function AppShell() {
       {/* Player */}
 
       <MusicPlayer />
+
+      <MobileBottomNav
+        activeView={view}
+        isSearchActive={query.trim().toLowerCase() !== "starboy"}
+        isSearchOpen={mobileSearchOpen}
+        onHome={() => {
+          setQuery("starboy");
+          setSearchTerm("starboy");
+          changeView("home");
+        }}
+        onSearch={openSearch}
+        onLibrary={() => openLibrary()}
+        onFriends={() => openSocial("friends")}
+      />
 
       <AuthDialog
         open={authDialogOpen}
