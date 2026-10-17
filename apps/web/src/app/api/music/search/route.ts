@@ -73,7 +73,7 @@ async function searchYouTube(query: string, key: string) {
     videoEmbeddable: "true",
     videoSyndicated: "true",
     regionCode: process.env.YOUTUBE_REGION_CODE || "IN",
-    maxResults: "10",
+    maxResults: "25",
   });
   const searchResponse = await fetch(
     `https://www.googleapis.com/youtube/v3/search?${searchParams.toString()}`,
@@ -245,8 +245,8 @@ export async function GET(request: Request) {
     term: query,
     media: "music",
     entity: "song",
-    limit: "25",
-    country: "US",
+    limit: "50",
+    country: process.env.ITUNES_COUNTRY || process.env.YOUTUBE_REGION_CODE || "IN",
   });
 
   const audiusAppName = process.env.AUDIUS_APP_NAME || "Audiq";
@@ -254,6 +254,7 @@ export async function GET(request: Request) {
   const audiusParams = new URLSearchParams({
     query,
     app_name: audiusAppName,
+    limit: "40",
   });
 
   const [providerResults, youtubeResult] = await Promise.all([
@@ -354,7 +355,7 @@ export async function GET(request: Request) {
         !track.is_stream_gated &&
         track.access?.stream !== false
     )
-    .slice(0, 12)
+    .slice(0, 40)
     .map((track, index) => {
       const id = track.id as string;
       const streamParams = new URLSearchParams({ app_name: audiusAppName });
@@ -398,9 +399,19 @@ export async function GET(request: Request) {
       };
     });
 
-  return NextResponse.json([
+  const seen = new Set<string>();
+  const results = [
     ...youtubeTracks,
     ...fullTrackSongs,
     ...previewSongs,
-  ]);
+  ].filter((track) => {
+    const title = normalize(track.title);
+    const artist = normalize(track.artists[0]?.name || "");
+    const key = title && artist ? title + "::" + artist : track.id;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  return NextResponse.json(results);
 }

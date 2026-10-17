@@ -8,6 +8,10 @@ type HomeFeedProps = {
 };
 
 export default function HomeFeed({ query }: HomeFeedProps) {
+  if (query.trim().toLowerCase() !== "starboy") {
+    return <ContinueListening query={query} />;
+  }
+
   return (
     <>
       <Greeting />
