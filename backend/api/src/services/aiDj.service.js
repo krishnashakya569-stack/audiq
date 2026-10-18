@@ -14,7 +14,11 @@ const moodProfiles = {
     queries: ["party hits", "dance pop", "club mix"],
     intro: "AudiQ AI DJ is raising the energy for a hook-heavy party run.",
   },
-  heartbreak: {
+  indie: {
+    label: "Indie Hour",
+    queries: ["indie pop new music", "independent Indian music", "indie singer songwriter"],
+    intro: "AudiQ AI DJ is finding thoughtful songwriting and fresh independent sounds.",
+  },  heartbreak: {
     label: "Soft Reset",
     queries: ["sad songs", "Arijit Singh acoustic", "emotional pop"],
     intro: "AudiQ AI DJ is easing into a warm, emotional reset.",
