@@ -192,3 +192,103 @@
 .queue-scroll::-webkit-scrollbar-thumb:hover {
   background: #ff2d67;
 }
+
+/* Audiq light appearance is applied from Settings and persisted per device. */
+html[data-theme="light"] {
+  color-scheme: light;
+  --background: #f5f2f3;
+  --foreground: #241d21;
+  --card: #ffffff;
+  --card-foreground: #241d21;
+  --popover: #ffffff;
+  --popover-foreground: #241d21;
+  --secondary: #f0e9ec;
+  --secondary-foreground: #35262d;
+  --muted: #eee8eb;
+  --muted-foreground: #6a5d64;
+  --border: rgb(45 30 38 / 0.14);
+  --input: rgb(45 30 38 / 0.16);
+  --sidebar: #fffafb;
+  --sidebar-foreground: #241d21;
+  --sidebar-accent: #f6e9ee;
+}
+
+html[data-theme="light"] body {
+  color: #241d21;
+  background:
+    radial-gradient(circle at 18% -10%, rgb(176 19 64 / 0.10), transparent 32rem),
+    radial-gradient(circle at 90% 12%, rgb(255 45 103 / 0.08), transparent 28rem),
+    linear-gradient(180deg, #fff 0%, #f7f3f5 54%, #f4edf0 100%);
+}
+
+html[data-theme="light"] .audiq-shell {
+  color: #241d21 !important;
+  background-color: #f8f5f6 !important;
+}
+
+html[data-theme="light"] [class*="bg-[#070607]"],
+html[data-theme="light"] [class*="bg-[#080709]"],
+html[data-theme="light"] [class*="bg-[#09080a]"],
+html[data-theme="light"] [class*="bg-[#0d0d10]"],
+html[data-theme="light"] [class*="bg-[#0f0f12]"],
+html[data-theme="light"] [class*="bg-[#151318]"],
+html[data-theme="light"] [class*="bg-[#151114]"],
+html[data-theme="light"] [class*="bg-[#171317]"] {
+  background-color: #fffafb !important;
+}
+
+html[data-theme="light"] [class*="bg-black/"] {
+  background-color: rgb(45 30 38 / 0.055) !important;
+}
+
+html[data-theme="light"] [class*="border-white/"] {
+  border-color: rgb(45 30 38 / 0.13) !important;
+}
+
+html[data-theme="light"] .text-white {
+  color: #241d21 !important;
+}
+
+html[data-theme="light"] button[class*="bg-[#b01340]"],
+html[data-theme="light"] button[class*="bg-[#ff2d67]"],
+html[data-theme="light"] button[class*="bg-[#ff5c8a]"],
+html[data-theme="light"] button[class*="bg-gradient-to-r"] {
+  color: #fff !important;
+}
+
+html[data-theme="light"] [class*="text-zinc-300"],
+html[data-theme="light"] [class*="text-zinc-400"],
+html[data-theme="light"] [class*="text-zinc-500"],
+html[data-theme="light"] [class*="text-zinc-600"] {
+  color: #685e63 !important;
+}
+
+html[data-theme="light"] [class*="text-[#f5c2ce]"] {
+  color: #9c2448 !important;
+}
+
+html[data-theme="light"] [class*="text-[#ff8eae]"],
+html[data-theme="light"] [class*="text-[#ff5c8a]"] {
+  color: #bd2855 !important;
+}
+
+html[data-theme="light"] input,
+html[data-theme="light"] textarea {
+  color: #241d21;
+}
+
+html[data-theme="light"] input::placeholder,
+html[data-theme="light"] textarea::placeholder {
+  color: #81777d;
+}
+
+html[data-theme="light"] [class*="bg-[linear-gradient"] {
+  background-image: linear-gradient(135deg, rgb(176 19 64 / 0.12), rgb(68 215 182 / 0.12), rgb(255 255 255 / 0.88)) !important;
+}
+
+html[data-theme="light"] [class*="text-[#b5ffe9]"],
+html[data-theme="light"] [class*="text-[#9ff5de]"],
+html[data-theme="light"] [class*="text-amber-100"],
+html[data-theme="light"] [class*="text-rose-300"] {
+  color: #7b2845 !important;
+}

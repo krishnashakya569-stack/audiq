@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { AuthProvider } from "@/features/auth/AuthProvider";
+import { ThemeProvider } from "@/features/settings/ThemeProvider";
 
 export default function Providers({
   children,
@@ -13,7 +14,9 @@ export default function Providers({
 
   return (
     <QueryClientProvider client={client}>
-      <AuthProvider>{children}</AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>{children}</AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
