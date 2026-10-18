@@ -64,7 +64,7 @@ const moods = [
 type MoodId = (typeof moods)[number]["id"];
 
 function isPlayable(track: Track) {
-  return Boolean(track.audio || (track.source === "youtube" && track.videoId));
+  return !track.isPreview && Boolean(track.audio || (track.source === "youtube" && track.videoId));
 }
 
 function uniqueTracks(tracks: Track[]) {
