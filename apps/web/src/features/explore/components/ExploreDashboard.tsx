@@ -30,7 +30,7 @@ const categories = [
 ];
 
 function isPlayable(track: Track) {
-  return Boolean(track.audio || (track.source === "youtube" && track.videoId));
+  return !track.isPreview && Boolean(track.audio || (track.source === "youtube" && track.videoId));
 }
 
 function uniquePlayableTracks(songs: Song[]) {
