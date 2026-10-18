@@ -3,7 +3,7 @@
 import {
   Brain,
   Heart,
-  Loader2,
+  LoaderCircle,
   ListMusic,
   Mic2,
   Play,
@@ -16,371 +16,314 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import { mockSongs } from "@/services/music/mock";
 import { createAiDjPlan, type AiDjPlan } from "@/services/ai";
 import { searchMusic } from "@/services/music";
 import { songToTrack } from "@/lib/songAdapter";
 import { useLibraryStore } from "@/store/library";
 import { type Track, usePlayerStore } from "@/store/player";
+import { usePlaylistStore } from "@/store/playlist";
 
-type Mood = "night" | "focus" | "party" | "heartbreak";
-
-const moods: Array<{
-  id: Mood;
-  label: string;
-  prompt: string;
-  searchTerms: string[];
-  color: string;
-}> = [
+const moods = [
   {
     id: "night",
     label: "Night Drive",
-    prompt: "glossy, late, bass-forward",
-    searchTerms: ["The Weeknd", "night drive", "synth pop"],
+    prompt: "Glossy synths and a steady pulse",
+    queries: ["night drive synth pop", "The Weeknd synth pop"],
     color: "#ff5c8a",
   },
   {
     id: "focus",
     label: "Deep Focus",
-    prompt: "clean, minimal, no distractions",
-    searchTerms: ["lofi focus", "ambient study", "instrumental"],
+    prompt: "Calm instrumentals and soft textures",
+    queries: ["lofi focus instrumental", "ambient study music"],
     color: "#44d7b6",
   },
   {
     id: "party",
     label: "House Party",
-    prompt: "high energy, familiar hooks",
-    searchTerms: ["party hits", "dance pop", "club mix"],
+    prompt: "Dance tracks with familiar hooks",
+    queries: ["dance pop party hits", "popular club music"],
     color: "#f7b955",
   },
   {
     id: "heartbreak",
     label: "Soft Reset",
-    prompt: "emotional, warm, cinematic",
-    searchTerms: ["sad songs", "Arijit Singh", "acoustic heartbreak"],
+    prompt: "Warm vocals and emotional songs",
+    queries: ["soft heartbreak songs", "Arijit Singh acoustic"],
     color: "#a78bfa",
   },
-];
+  {
+    id: "indie",
+    label: "Indie Hour",
+    prompt: "Fresh finds and thoughtful songwriting",
+    queries: ["indie pop new music", "independent Indian music"],
+    color: "#60a5fa",
+  },
+] as const;
 
-const fallbackTracks = mockSongs
-  .map(songToTrack)
-  .filter((track) => track.audio || (track.source === "youtube" && track.videoId));
+type MoodId = (typeof moods)[number]["id"];
 
-function uniqueTracks(tracks: Track[]) {
-  const unique = new Map<string, Track>();
-
-  tracks.forEach((track) => {
-    unique.set(`${track.source ?? "unknown"}-${track.id}-${track.videoId ?? ""}`, track);
-  });
-
-  return Array.from(unique.values());
+function isPlayable(track: Track) {
+  return Boolean(track.audio || (track.source === "youtube" && track.videoId));
 }
 
-function getSeedArtist(tracks: Track[]) {
-  const first = tracks.find((track) => track.artist && track.artist !== "Audiq AI");
+function uniqueTracks(tracks: Track[]) {
+  const seen = new Set<string>();
+  return tracks.filter((track) => {
+    if (!isPlayable(track)) return false;
+    const key = `${track.source ?? "unknown"}:${track.id}:${track.videoId ?? ""}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
 
-  return first?.artist;
+function uniqueQueries(queries: string[]) {
+  const seen = new Set<string>();
+  return queries
+    .map((query) => query.trim())
+    .filter((query) => {
+      const key = query.toLowerCase();
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
 }
 
 export default function AiDj() {
-  const [mood, setMood] = useState<Mood>("night");
-  const [energy, setEnergy] = useState(72);
-  const [seed, setSeed] = useState("Krishna's late-night mix");
+  const [mood, setMood] = useState<MoodId>("night");
+  const [energy, setEnergy] = useState(65);
+  const [prompt, setPrompt] = useState("");
   const [aiPlan, setAiPlan] = useState<AiDjPlan | null>(null);
-  const [realSuggestions, setRealSuggestions] = useState<Track[]>([]);
-  const [isSuggesting, setSuggesting] = useState(false);
-  const [aiStatus, setAiStatus] = useState("Ready to build a set from your library.");
+  const [suggestions, setSuggestions] = useState<Track[]>([]);
+  const [hasGenerated, setHasGenerated] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [status, setStatus] = useState("Pick a mood, add a prompt, and build a set from the live catalog.");
+  const [statusIsError, setStatusIsError] = useState(false);
+
   const likedSongs = useLibraryStore((state) => state.likedSongs);
   const recentlyPlayed = useLibraryStore((state) => state.recentlyPlayed);
-  const { addToQueue, playTrack, setQueue } = usePlayerStore();
+  const personalTracks = useMemo(() => uniqueTracks([...likedSongs, ...recentlyPlayed]).slice(0, 20), [likedSongs, recentlyPlayed]);
+  const playTrack = usePlayerStore((state) => state.playTrack);
+  const addToQueue = usePlayerStore((state) => state.addToQueue);
+  const createPlaylist = usePlaylistStore((state) => state.createPlaylist);
+  const addSongToPlaylist = usePlaylistStore((state) => state.addSongToPlaylist);
+  const playlists = usePlaylistStore((state) => state.playlists);
 
   const selectedMood = moods.find((item) => item.id === mood) ?? moods[0];
-
-  const aiQueue = useMemo(() => {
-    const librarySeeds = [...likedSongs, ...recentlyPlayed].slice(0, 6);
-    const energySortedSuggestions = [...realSuggestions].sort((a, b) => {
-      const aScore = (a.duration ?? 180) + (a.title.length % Math.max(energy, 1));
-      const bScore = (b.duration ?? 180) + (b.title.length % Math.max(energy, 1));
-
-      return energy >= 60 ? bScore - aScore : aScore - bScore;
-    });
-
-    return uniqueTracks([...librarySeeds, ...energySortedSuggestions, ...fallbackTracks]).slice(0, 10);
-  }, [energy, likedSongs, realSuggestions, recentlyPlayed]);
-
-  const suggestionQuery = useMemo(() => {
-    const seedArtist = getSeedArtist([...likedSongs, ...recentlyPlayed]);
-    const energyHint = energy > 75 ? "upbeat" : energy < 40 ? "chill" : "popular";
-    const promptTokens = seed
-      .replace(/[^\w\s-]/g, " ")
-      .split(/\s+/)
-      .filter((token) => token.length > 2)
-      .slice(0, 3)
-      .join(" ");
-
-    return [seedArtist, selectedMood.searchTerms[0], energyHint, promptTokens]
-      .filter(Boolean)
-      .join(" ");
-  }, [energy, likedSongs, recentlyPlayed, seed, selectedMood.searchTerms]);
+  const queueTracks = suggestions.length > 0 ? suggestions : personalTracks;
 
   const generateSuggestions = async () => {
-    setSuggesting(true);
-    setAiStatus(`Asking AI DJ for ${selectedMood.label} recommendations...`);
+    if (isGenerating) return;
+    setIsGenerating(true);
+    setHasGenerated(false);
+    setStatusIsError(false);
+    setStatus("Building your set and searching the music catalog…");
+
+    const energyHint = energy >= 76 ? "upbeat energetic" : energy <= 35 ? "slow calm" : "mid-tempo";
+    const topArtists = [...likedSongs, ...recentlyPlayed]
+      .map((track) => track.artist)
+      .filter((artist) => artist && artist !== "Audiq AI");
+    const favoriteArtist = [...new Set(topArtists)][0];
+    const personalQuery = [favoriteArtist, selectedMood.queries[0], energyHint, prompt.trim()]
+      .filter(Boolean)
+      .join(" ");
+    const baseQueries = uniqueQueries([
+      prompt.trim(),
+      personalQuery,
+      ...selectedMood.queries,
+    ]).slice(0, 4);
 
     try {
-      const plan = await createAiDjPlan({
+      const planRequest = createAiDjPlan({
         mood,
         energy,
-        seed,
-        likedSongs,
-        recentlyPlayed,
-      });
-      const queries = [...plan.queries, suggestionQuery, ...selectedMood.searchTerms].filter(Boolean);
-      const responses = await Promise.allSettled(queries.slice(0, 5).map((query) => searchMusic(query)));
-      const songs = responses.flatMap((response) => (response.status === "fulfilled" ? response.value : []));
-      const tracks = uniqueTracks(songs.map(songToTrack)).filter((track) => track.audio || track.source === "youtube");
+        seed: prompt.trim() || `${selectedMood.label} mix`,
+        likedSongs: likedSongs.slice(0, 8),
+        recentlyPlayed: recentlyPlayed.slice(0, 8),
+      }).catch(() => null);
+
+      const baseResponses = await Promise.allSettled(baseQueries.map((query) => searchMusic(query)));
+      const plan = await planRequest;
+      const extraQueries = uniqueQueries(plan?.queries ?? [])
+        .filter((query) => !baseQueries.some((baseQuery) => baseQuery.toLowerCase() === query.toLowerCase()))
+        .slice(0, 2);
+      const extraResponses = await Promise.allSettled(extraQueries.map((query) => searchMusic(query)));
+      const allResponses = [...baseResponses, ...extraResponses];
+      const songs = allResponses.flatMap((response) => response.status === "fulfilled" ? response.value : []);
+      const realTracks = uniqueTracks(songs.map(songToTrack)).slice(0, 24);
 
       setAiPlan(plan);
+      setSuggestions(realTracks);
+      setHasGenerated(true);
 
-      if (tracks.length > 0) {
-        setRealSuggestions(tracks);
-        setAiStatus(
-          `${plan.provider === "openai" ? "OpenAI" : "Local AI"} suggested ${tracks.length} real playable songs.`
-        );
-      } else {
-        setAiStatus(`${plan.provider === "openai" ? "OpenAI" : "Local AI"} made a plan, but the catalog returned no playable matches.`);
+      if (realTracks.length > 0) {
+        setStatus(plan
+          ? `${plan.provider === "openai" ? "AI" : "Audiq"} built a set with ${realTracks.length} playable catalog tracks.`
+          : `Found ${realTracks.length} playable tracks from the catalog. AI planning is unavailable, so these are based on your mood and prompt.`);
+        return;
       }
+
+      if (personalTracks.length > 0) {
+        setStatus("The catalog returned no playable matches. Your liked and recently played songs are ready below.");
+        return;
+      }
+
+      setStatus("No playable matches came back. Try a broader prompt or choose another mood.");
+      setStatusIsError(true);
     } catch {
-      setAiStatus("Could not reach AI DJ or the music catalog. Using your library and offline fallback picks.");
+      setAiPlan(null);
+      setSuggestions([]);
+      setHasGenerated(true);
+      if (personalTracks.length > 0) {
+        setStatus("The catalog is unavailable right now. You can still play from your liked and recently played songs below.");
+      } else {
+        setStatus("Audiq could not reach the music catalog. Check your connection and try again.");
+        setStatusIsError(true);
+      }
     } finally {
-      setSuggesting(false);
+      setIsGenerating(false);
     }
   };
 
   const startSet = () => {
-    setQueue(aiQueue);
-
-    if (aiQueue[0]) {
-      playTrack(aiQueue[0], aiQueue);
-      setAiStatus(`Now mixing ${selectedMood.label} with ${aiQueue.length} tracks.`);
+    if (!queueTracks.length) {
+      setStatus("Build a set first, or like a few songs to give Audiq a starting point.");
+      return;
     }
+    playTrack(queueTracks[0], queueTracks);
+    setStatus(`Now playing ${selectedMood.label} · ${queueTracks.length} tracks.`);
+    setStatusIsError(false);
+  };
+
+  const queueSet = () => {
+    queueTracks.forEach(addToQueue);
+    setStatus(`${queueTracks.length} tracks added to your queue.`);
+    setStatusIsError(false);
+  };
+
+  const saveSet = () => {
+    if (!queueTracks.length) return;
+    const baseName = aiPlan?.title?.trim() || `Audiq ${selectedMood.label}`;
+    let name = baseName;
+    let suffix = 2;
+    while (playlists.some((playlist) => playlist.name.toLowerCase() === name.toLowerCase())) {
+      name = `${baseName} ${suffix}`;
+      suffix += 1;
+    }
+    createPlaylist(name);
+    const createdPlaylist = usePlaylistStore.getState().playlists.find((playlist) => playlist.name === name);
+    if (!createdPlaylist) {
+      setStatus("Could not save this mix. Please try again.");
+      setStatusIsError(true);
+      return;
+    }
+    queueTracks.forEach((track) => addSongToPlaylist(createdPlaylist.id, track));
+    setStatus(`Saved ${queueTracks.length} tracks to “${name}” in your library.`);
+    setStatusIsError(false);
   };
 
   const speakIntro = () => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-      setAiStatus("Voice intro is not supported in this browser.");
+      setStatus("Voice intros are not supported in this browser.");
+      setStatusIsError(true);
       return;
     }
-
     window.speechSynthesis.cancel();
-
     const intro = new SpeechSynthesisUtterance(
-      aiPlan?.intro ||
-        `AudiQ AI DJ is starting ${selectedMood.label}. Energy is set to ${energy} percent. First up, ${aiQueue[0]?.title ?? "your custom mix"}.`
+      aiPlan?.intro || `Your ${selectedMood.label} set is ready with ${queueTracks.length} tracks.`
     );
-
     intro.rate = 0.95;
-    intro.pitch = 0.92;
+    intro.pitch = 0.95;
     window.speechSynthesis.speak(intro);
-    setAiStatus("Voice intro playing.");
-  };
-
-  const refreshSet = () => {
-    void generateSuggestions();
+    setStatus("Playing your voice intro.");
+    setStatusIsError(false);
   };
 
   return (
-    <section className="space-y-6 pb-6">
-      <div className="overflow-hidden rounded-lg border border-white/10 bg-[linear-gradient(135deg,rgba(176,19,64,.34),rgba(68,215,182,.1),rgba(0,0,0,.2))] p-5 md:p-7">
-        <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+    <section className="space-y-6 pb-8">
+      <header className="overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(135deg,rgba(176,19,64,.36),rgba(68,215,182,.12),rgba(0,0,0,.18))] p-5 sm:p-7">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.24em] text-[#f5c2ce]">
-              <Sparkles className="h-4 w-4" />
-              AudiQ AI
-            </p>
-            <h1 className="mt-3 text-3xl font-black text-white md:text-5xl">AI DJ</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-300">
-              Build a live set from your taste, recent listening, and a mood prompt. This is the first layer of AudiQ AI music assistant.
-            </p>
+            <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.24em] text-[#f5c2ce]"><Sparkles aria-hidden="true" className="h-4 w-4" /> Audiq music lab</p>
+            <h1 className="mt-3 text-3xl font-black text-white sm:text-5xl">AI Studio</h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-300">Shape a mix around a mood, your listening, and a prompt. Audiq searches the live catalog, then lets you play, queue, or save the results.</p>
           </div>
-
-          <button
-            type="button"
-            onClick={startSet}
-            className="flex h-12 items-center justify-center gap-2 rounded-md bg-white px-5 text-sm font-black text-[#800f2f] shadow-lg shadow-black/30"
-          >
-            <Play className="h-4 w-4 fill-current" />
-            Start AI Set
+          <button type="button" onClick={suggestions.length ? startSet : () => void generateSuggestions()} disabled={isGenerating} className="flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-black text-[#800f2f] shadow-lg shadow-black/30 transition hover:bg-rose-50 disabled:cursor-wait disabled:opacity-60">
+            {isGenerating ? <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" /> : <Play aria-hidden="true" className="h-4 w-4 fill-current" />}
+            {suggestions.length ? "Play my set" : "Build my set"}
           </button>
         </div>
-      </div>
+      </header>
 
-      <div className="grid gap-5 xl:grid-cols-[22rem_1fr]">
+      <div className="grid items-start gap-5 xl:grid-cols-[21rem_minmax(0,1fr)]">
         <aside className="space-y-4">
-          <section className="rounded-lg border border-white/10 bg-white/[0.045] p-4">
-            <div className="mb-4 flex items-center gap-2">
-              <Wand2 className="h-4 w-4 text-[#f5c2ce]" />
-              <h2 className="font-bold">Mood Engine</h2>
-            </div>
-
-            <div className="grid gap-2">
+          <section className="rounded-2xl border border-white/10 bg-white/[0.045] p-4 sm:p-5">
+            <div className="mb-4 flex items-center gap-2"><Wand2 aria-hidden="true" className="h-4 w-4 text-[#f5c2ce]" /><h2 className="font-bold text-white">Choose a mood</h2></div>
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
               {moods.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setMood(item.id)}
-                  className={`flex items-center gap-3 rounded-md border p-3 text-left transition ${
-                    mood === item.id
-                      ? "border-[#ff2d67]/45 bg-[#b01340]/25"
-                      : "border-white/10 bg-white/[0.035] hover:bg-white/[0.06]"
-                  }`}
-                >
-                  <span className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />
-                  <span>
-                    <span className="block text-sm font-semibold text-white">{item.label}</span>
-                    <span className="text-xs text-zinc-500">{item.prompt}</span>
-                  </span>
+                <button key={item.id} type="button" onClick={() => setMood(item.id)} disabled={isGenerating} aria-pressed={mood === item.id} className={`flex items-center gap-3 rounded-xl border p-3 text-left transition disabled:opacity-60 ${mood === item.id ? "border-[#ff2d67]/50 bg-[#b01340]/20" : "border-white/10 bg-white/[0.025] hover:bg-white/[0.06]"}`}>
+                  <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: item.color }} />
+                  <span className="min-w-0"><span className="block text-sm font-semibold text-white">{item.label}</span><span className="block text-xs text-zinc-500">{item.prompt}</span></span>
                 </button>
               ))}
             </div>
           </section>
 
-          <section className="rounded-lg border border-white/10 bg-white/[0.045] p-4">
-            <div className="mb-4 flex items-center gap-2">
-              <SlidersHorizontal className="h-4 w-4 text-[#f5c2ce]" />
-              <h2 className="font-bold">Set Controls</h2>
-            </div>
-
-            <label className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Prompt</label>
-            <input
-              value={seed}
-              onChange={(event) => setSeed(event.target.value)}
-              className="mt-2 w-full rounded-md border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-[#ff2d67]/50"
-            />
-
-            <label className="mt-4 block text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
-              Energy {energy}%
-            </label>
-            <input
-              type="range"
-              min={15}
-              max={100}
-              value={energy}
-              onChange={(event) => setEnergy(Number(event.target.value))}
-              className="mt-3 w-full accent-[#ff2d67]"
-            />
-
-            <button
-              type="button"
-              onClick={generateSuggestions}
-              disabled={isSuggesting}
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-md border border-[#ff2d67]/40 bg-[#b01340]/20 px-4 py-2.5 text-sm font-bold text-[#f5c2ce] transition hover:bg-[#b01340]/30 disabled:cursor-wait disabled:opacity-70"
-            >
-              {isSuggesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              Real AI Suggestions
+          <section className="rounded-2xl border border-white/10 bg-white/[0.045] p-4 sm:p-5">
+            <div className="mb-4 flex items-center gap-2"><SlidersHorizontal aria-hidden="true" className="h-4 w-4 text-[#f5c2ce]" /><h2 className="font-bold text-white">Set your direction</h2></div>
+            <label htmlFor="ai-studio-prompt" className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">What should this mix feel like?</label>
+            <input id="ai-studio-prompt" value={prompt} onChange={(event) => setPrompt(event.target.value)} disabled={isGenerating} maxLength={120} placeholder="e.g. Hindi songs for a rainy evening" className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-3 py-3 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-[#ff2d67]/55 disabled:opacity-60" />
+            <div className="mt-4 flex items-center justify-between"><label htmlFor="ai-studio-energy" className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Energy</label><span className="text-sm font-bold text-[#ff8eae]">{energy}%</span></div>
+            <input id="ai-studio-energy" type="range" min={15} max={100} value={energy} disabled={isGenerating} onChange={(event) => setEnergy(Number(event.target.value))} className="mt-3 w-full accent-[#ff2d67] disabled:opacity-60" />
+            <div className="flex justify-between text-[11px] text-zinc-600"><span>Laid-back</span><span>High energy</span></div>
+            <button type="button" onClick={() => void generateSuggestions()} disabled={isGenerating} className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#b01340] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#cc174d] disabled:cursor-wait disabled:opacity-60">
+              {isGenerating ? <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" /> : <Sparkles aria-hidden="true" className="h-4 w-4" />}
+              {isGenerating ? "Building your set…" : "Generate a set"}
             </button>
-
-            <p className="mt-3 text-xs leading-5 text-zinc-500">{aiStatus}</p>
+            <p role="status" className={`mt-3 text-xs leading-5 ${statusIsError ? "text-rose-300" : "text-zinc-400"}`}>{status}</p>
           </section>
         </aside>
 
-        <section className="rounded-lg border border-white/10 bg-white/[0.04] p-4 md:p-5">
-          <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <section className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] p-4 sm:p-5">
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#f5c2ce]">
-                Generated Set {aiPlan ? `- ${aiPlan.provider === "openai" ? "OpenAI" : "Local AI"}` : ""}
-              </p>
-              <h2 className="mt-1 text-2xl font-black">{aiPlan?.title || selectedMood.label}</h2>
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#f5c2ce]">{hasGenerated ? suggestions.length ? "Live catalog mix" : "Personal fallback" : "Your starting point"}{aiPlan ? ` · ${aiPlan.provider === "openai" ? "AI planned" : "Audiq planned"}` : ""}</p>
+              <h2 className="mt-1 text-2xl font-black text-white">{aiPlan?.title || (hasGenerated ? selectedMood.label : "Built around your taste")}</h2>
+              <p className="mt-1 text-sm text-zinc-500">{suggestions.length ? `${suggestions.length} playable catalog tracks` : `${personalTracks.length} liked or recent tracks available`}</p>
             </div>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={refreshSet}
-                disabled={isSuggesting}
-                className="grid h-10 w-10 place-items-center rounded-md border border-white/10 bg-white/[0.05] text-zinc-300 transition hover:border-[#ff2d67]/40 hover:text-white disabled:cursor-wait"
-                title="Refresh set"
-              >
-                <RefreshCw className={`h-4 w-4 ${isSuggesting ? "animate-spin" : ""}`} />
-              </button>
-              <button
-                type="button"
-                onClick={speakIntro}
-                className="grid h-10 w-10 place-items-center rounded-md border border-white/10 bg-white/[0.05] text-zinc-300 transition hover:border-[#ff2d67]/40 hover:text-white"
-                title="Voice intro"
-              >
-                <Mic2 className="h-4 w-4" />
-              </button>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" onClick={() => void generateSuggestions()} disabled={isGenerating} aria-label="Refresh recommendations" className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-white/[0.05] text-zinc-300 transition hover:border-[#ff2d67]/40 hover:text-white disabled:opacity-50"><RefreshCw aria-hidden="true" className={`h-4 w-4 ${isGenerating ? "animate-spin" : ""}`} /></button>
+              <button type="button" onClick={speakIntro} disabled={!queueTracks.length} aria-label="Play voice introduction" className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-white/[0.05] text-zinc-300 transition hover:border-[#ff2d67]/40 hover:text-white disabled:opacity-40"><Mic2 aria-hidden="true" className="h-4 w-4" /></button>
+              <button type="button" onClick={queueSet} disabled={!queueTracks.length} className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm font-semibold text-zinc-300 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"><Plus aria-hidden="true" className="h-4 w-4" /> Queue all</button>
+              <button type="button" onClick={saveSet} disabled={!queueTracks.length} className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm font-semibold text-zinc-300 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"><ListMusic aria-hidden="true" className="h-4 w-4" /> Save mix</button>
             </div>
           </div>
 
-          <div className="mb-5 grid gap-3 md:grid-cols-3">
-            <div className="rounded-md border border-white/10 bg-black/20 p-3">
-              <Brain className="h-4 w-4 text-[#44d7b6]" />
-              <p className="mt-2 text-sm font-semibold">Taste match</p>
-              <p className="text-2xl font-black">{Math.min(98, 72 + likedSongs.length * 3)}%</p>
-            </div>
-            <div className="rounded-md border border-white/10 bg-black/20 p-3">
-              <Radio className="h-4 w-4 text-[#f7b955]" />
-              <p className="mt-2 text-sm font-semibold">Energy curve</p>
-              <p className="text-2xl font-black">{energy}%</p>
-            </div>
-            <div className="rounded-md border border-white/10 bg-black/20 p-3">
-              <Heart className="h-4 w-4 text-[#ff5c8a]" />
-              <p className="mt-2 text-sm font-semibold">Seed</p>
-              <p className="truncate text-sm text-zinc-400">{seed}</p>
-            </div>
+          <div className="mb-5 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border border-white/10 bg-black/15 p-3"><Brain aria-hidden="true" className="h-4 w-4 text-[#44d7b6]" /><p className="mt-2 text-xs text-zinc-500">Taste signals</p><p className="text-lg font-black text-white">{Math.min(20, likedSongs.length + recentlyPlayed.length)} tracks</p></div>
+            <div className="rounded-xl border border-white/10 bg-black/15 p-3"><Radio aria-hidden="true" className="h-4 w-4 text-[#f7b955]" /><p className="mt-2 text-xs text-zinc-500">Energy level</p><p className="text-lg font-black text-white">{energy}%</p></div>
+            <div className="rounded-xl border border-white/10 bg-black/15 p-3"><Heart aria-hidden="true" className="h-4 w-4 text-[#ff5c8a]" /><p className="mt-2 text-xs text-zinc-500">Your prompt</p><p className="truncate text-sm font-semibold text-white">{prompt.trim() || selectedMood.label}</p></div>
           </div>
 
-          <div className="space-y-2">
-            {aiPlan?.reasons?.length ? (
-              <div className="mb-3 rounded-md border border-[#44d7b6]/25 bg-[#44d7b6]/10 p-3 text-sm text-zinc-300">
-                <p className="mb-2 font-bold text-[#9ff5de]">AI reasoning</p>
-                <div className="space-y-1">
-                  {aiPlan.reasons.map((reason) => (
-                    <p key={reason}>{reason}</p>
-                  ))}
-                </div>
-              </div>
-            ) : null}
+          {aiPlan?.reasons?.length ? <div className="mb-4 rounded-xl border border-[#44d7b6]/20 bg-[#44d7b6]/10 p-4 text-sm text-zinc-300"><p className="mb-2 font-bold text-[#9ff5de]">Why this mix</p><ul className="list-inside list-disc space-y-1">{aiPlan.reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul></div> : null}
 
-            {aiQueue.map((track, index) => (
-              <div
-                key={`${track.source}-${track.id}`}
-                className="grid w-full grid-cols-[2rem_3rem_minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-white/5 bg-white/[0.035] p-2.5 text-left transition hover:border-[#ff2d67]/30 hover:bg-white/[0.065]"
-              >
-                <span className="text-sm text-zinc-500">{index + 1}</span>
-                <span className="relative h-12 w-12 overflow-hidden rounded-md bg-[#151114]">
-                  <Image src={track.albumArt || "/brand/audiq-logo.png"} alt="" fill sizes="48px" unoptimized className="object-cover" />
-                </span>
-                <button
-                  type="button"
-                  onClick={() => playTrack(track, aiQueue)}
-                  className="min-w-0 text-left"
-                >
-                  <span className="block truncate text-sm font-semibold text-white">{track.title}</span>
-                  <span className="block truncate text-xs text-zinc-500">{track.artist}</span>
-                </button>
-                <span className="hidden items-center gap-2 md:flex">
-                  <span className="items-center gap-1 rounded-full border border-white/10 px-2.5 py-1 text-xs text-zinc-400 md:flex">
-                    <ListMusic className="h-3.5 w-3.5" />
-                    {realSuggestions.some((item) => item.id === track.id) ? "Real pick" : "AI pick"}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      addToQueue(track);
-                      setAiStatus(`Added ${track.title} to the queue.`);
-                    }}
-                    className="grid h-8 w-8 place-items-center rounded-md border border-white/10 text-zinc-400 transition hover:border-[#ff2d67]/40 hover:text-white"
-                    title="Add to queue"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                </span>
-              </div>
-            ))}
-          </div>
+          {queueTracks.length > 0 ? (
+            <div className="space-y-2">
+              {queueTracks.map((track, index) => (
+                <article key={`${track.source}:${track.id}:${track.videoId ?? ""}`} className="grid grid-cols-[2rem_3rem_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-white/5 bg-white/[0.035] p-2.5 transition hover:border-[#ff2d67]/25 hover:bg-white/[0.06]">
+                  <span className="text-center text-sm text-zinc-500">{index + 1}</span>
+                  <span className="relative h-12 w-12 overflow-hidden rounded-lg bg-[#151114]"><Image src={track.albumArt || "/brand/audiq-logo.png"} alt="" fill sizes="48px" unoptimized className="object-cover" /></span>
+                  <button type="button" onClick={() => playTrack(track, queueTracks)} className="min-w-0 text-left"><span className="block truncate text-sm font-semibold text-white">{track.title}</span><span className="block truncate text-xs text-zinc-500">{track.artist} · {track.source || "Audiq"}</span></button>
+                  <button type="button" onClick={() => { addToQueue(track); setStatus(`${track.title} added to your queue.`); setStatusIsError(false); }} aria-label={`Add ${track.title} to queue`} className="grid h-9 w-9 place-items-center rounded-lg text-zinc-500 hover:bg-white/10 hover:text-white"><Plus aria-hidden="true" className="h-4 w-4" /></button>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="grid min-h-64 place-items-center rounded-2xl border border-dashed border-white/10 p-6 text-center">
+              <div><span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-[#b01340]/15 text-[#ff8eae]"><Sparkles aria-hidden="true" className="h-6 w-6" /></span><h3 className="mt-4 font-bold text-white">Your mix starts here</h3><p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-zinc-500">Choose a mood and generate a set. Audiq will search for playable tracks and use your liked songs to personalize the results.</p><button type="button" onClick={() => void generateSuggestions()} disabled={isGenerating} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#b01340] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#cc174d] disabled:opacity-50"><Sparkles aria-hidden="true" className="h-4 w-4" /> Build my first set</button></div>
+            </div>
+          )}
         </section>
       </div>
     </section>
