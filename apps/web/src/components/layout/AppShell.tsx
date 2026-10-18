@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { motion, type PanInfo } from "framer-motion";
 
 import AiDj from "@/features/ai/components/AiDj";
+import ExploreDashboard from "@/features/explore/components/ExploreDashboard";
+import SettingsDashboard from "@/features/settings/SettingsDashboard";
 import HomeFeed from "@/features/home/components/HomeFeed";
 import LibraryDashboard, {
   type LibraryTab,
@@ -25,7 +27,9 @@ export type AppView =
   | "home"
   | "library"
   | "ai"
-  | "social";
+  | "social"
+  | "explore"
+  | "settings";
 
 const EDGE_SWIPE_ZONE = 24;
 
@@ -108,7 +112,7 @@ export default function AppShell() {
     setMobileSearchOpen(true);
   };
     return (
-    <div className="relative flex h-dvh min-w-0 flex-col overflow-hidden bg-[#070607] text-white">
+    <div className="audiq-shell relative flex h-dvh min-w-0 flex-col overflow-hidden bg-[#070607] text-white">
 
       {/* Edge Swipe Zone (Mobile Only) */}
 
@@ -145,7 +149,7 @@ export default function AppShell() {
         accountName={profile?.display_name ?? user?.email ?? null}
         audiqId={profile?.audiq_id ?? null}
         onOpenAuth={() => setAuthDialogOpen(true)}
-        onSignOut={() => void signOut()}
+        onSignOut={signOut}
         onSearch={setQuery}
         onOpenAi={() => changeView("ai")}
         onOpenSidebar={() => setSidebarOpen(true)}
@@ -237,6 +241,10 @@ export default function AppShell() {
               onOpenAuth={() => setAuthDialogOpen(true)}
             />
           )}
+
+          {view === "explore" && <ExploreDashboard />}
+
+          {view === "settings" && <SettingsDashboard onOpenAuth={() => setAuthDialogOpen(true)} />}
 
           {view === "ai" && <AiDj />}
         </motion.main>

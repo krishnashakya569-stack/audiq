@@ -24,7 +24,7 @@ type NavbarProps = {
   accountName: string | null;
   audiqId: string | null;
   onOpenAuth: () => void;
-  onSignOut: () => void;
+  onSignOut: () => Promise<void>;
   onOpenAi: () => void;
   onSearch: (query: string) => void;
   onOpenSidebar: () => void;
@@ -46,6 +46,8 @@ export default function Navbar({
   onMobileSearchOpenChange,
 }: NavbarProps) {
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const [accountError, setAccountError] = useState("");
   const mobileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -197,6 +199,7 @@ export default function Navbar({
                 onOpenAuth();
                 return;
               }
+              setAccountError("");
               setAccountMenuOpen((open) => !open);
             }}
             aria-label={accountName ? "Open account menu" : "Sign in or create an account"}
@@ -223,12 +226,22 @@ export default function Navbar({
             <div className="absolute right-0 top-full z-[70] mt-2 w-60 rounded-lg border border-white/10 bg-[#151318] p-3 shadow-2xl">
               <p className="truncate font-bold text-white">{accountName}</p>
               <p className="mt-1 text-xs text-zinc-400">{audiqId || "AudiQ ID loading…"}</p>
+              {accountError && <p role="alert" className="mt-2 text-xs text-rose-300">{accountError}</p>}
               <button
                 type="button"
-                onClick={() => {
-                  setAccountMenuOpen(false);
-                  onSignOut();
+                onClick={async () => {
+                  setSigningOut(true);
+                  setAccountError("");
+                  try {
+                    await onSignOut();
+                    setAccountMenuOpen(false);
+                  } catch {
+                    setAccountError("Could not sign out. Please try again.");
+                  } finally {
+                    setSigningOut(false);
+                  }
                 }}
+                disabled={signingOut}
                 className="mt-3 flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm text-zinc-300 hover:bg-white/10 hover:text-white"
               >
                 <LogOut className="h-4 w-4" /> Sign out

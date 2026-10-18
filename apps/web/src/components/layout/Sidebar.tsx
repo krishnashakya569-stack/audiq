@@ -48,6 +48,7 @@ const menu: Array<{
   {
     icon: Compass,
     label: "Explore",
+    view: "explore",
   },
   {
     icon: Library,
@@ -77,6 +78,11 @@ const menu: Array<{
     icon: Sparkles,
     label: "AI Studio",
     view: "ai",
+  },
+  {
+    icon: Settings,
+    label: "Settings",
+    view: "settings",
   },
 ];
 
@@ -327,6 +333,8 @@ export default function Sidebar({
 
         <button
           type="button"
+          onClick={() => onViewChange("settings")}
+          aria-current={activeView === "settings" ? "page" : undefined}
           className="mt-3 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-zinc-400 transition-all hover:bg-white/10 hover:text-white"
         >
           <Settings size={18} />
