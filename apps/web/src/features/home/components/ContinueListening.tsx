@@ -27,7 +27,7 @@ export default function ContinueListening({ query }: ContinueListeningProps) {
   const hasLiveSongs = !isError && songs.length > 0;
   const isSearch = query.trim().toLowerCase() !== "starboy";
   const displayedSongs = hasLiveSongs ? songs.slice(0, 4) : fallbackSongs;
-  const title = isSearch ? "Search results for " + query : "Continue listening";
+  const title = isSearch ? "Search results for " + query : "On repeat for you";
   const { currentTrack, isPlaying, playTrack, togglePlay } = usePlayerStore();
   const playableQueue = useMemo(
     () =>
@@ -39,7 +39,7 @@ export default function ContinueListening({ query }: ContinueListeningProps) {
 
   if (isSearch) {
     return (
-      <section className="mb-8">
+      <section className="mb-10">
         <div className="mb-5 flex items-end justify-between gap-4">
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-zinc-500">Music search</p>
@@ -59,7 +59,7 @@ export default function ContinueListening({ query }: ContinueListeningProps) {
             Music search is not reachable right now. Try another search.
           </div>
         ) : songs.length > 0 ? (
-          <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02]">
+          <div className="overflow-hidden rounded-[22px] border border-white/10 bg-white/[0.025] shadow-2xl shadow-black/20">
             <div className="grid grid-cols-[28px_40px_minmax(0,1fr)_48px] items-center gap-2 border-b border-white/10 px-2 py-2 text-xs font-semibold text-zinc-500 sm:grid-cols-[36px_48px_minmax(0,1fr)_64px] sm:gap-3 sm:px-4">
               <span>#</span>
               <span className="col-span-2">Title</span>
@@ -97,14 +97,14 @@ export default function ContinueListening({ query }: ContinueListeningProps) {
                     className={
                       "group grid w-full grid-cols-[28px_40px_minmax(0,1fr)_48px] items-center gap-2 px-2 py-2 text-left transition-colors sm:grid-cols-[36px_48px_minmax(0,1fr)_64px] sm:gap-3 sm:px-4 " +
                       (isCurrentTrack
-                        ? "bg-[#00594f]/20"
+                        ? "bg-[#00796b]/20"
                         : "hover:bg-white/[0.07] focus-visible:bg-white/[0.07]") +
                       (canPlay ? " cursor-pointer" : " cursor-default opacity-55")
                     }
                   >
                     <span className="flex h-8 items-center justify-center text-sm text-zinc-500">
                       {isCurrentTrack ? (
-                        <Check className="h-4 w-4 text-[#4db6ac]" />
+                        <Check className="h-4 w-4 text-[#d6ff36]" />
                       ) : (
                         <>
                           <span className="group-hover:hidden">{index + 1}</span>
@@ -124,7 +124,7 @@ export default function ContinueListening({ query }: ContinueListeningProps) {
                     </span>
 
                     <span className="min-w-0 py-0.5">
-                      <span className={"block truncate text-sm font-medium sm:text-base " + (isCurrentTrack ? "text-[#80cbc4]" : "text-zinc-100")}>
+                      <span className={"block truncate text-sm font-semibold sm:text-base " + (isCurrentTrack ? "text-[#d6ff36]" : "text-zinc-100")}>
                         {song.title}
                       </span>
                       <span className="mt-0.5 block truncate text-xs text-zinc-400 sm:text-sm">{byline}</span>
@@ -148,15 +148,16 @@ export default function ContinueListening({ query }: ContinueListeningProps) {
   }
 
   return (
-    <section className="mb-8">
+    <section className="mb-10">
       <div className="mb-4 flex items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-zinc-500">Made for you</p>
-          <h2 className="mt-1 text-2xl font-black">{title}</h2>
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#80cbc4]">Your current rotation</p>
+          <h2 className="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl">{title}</h2>
         </div>
-        <button className="text-sm font-semibold text-[#80cbc4]">
-          {isLoading ? "Searching..." : "Refresh mix"}
-        </button>
+        <span className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#d6ff36]/20 bg-[#d6ff36]/[0.07] px-3 py-2 text-[9px] font-black uppercase tracking-[0.15em] text-[#d6ff36]">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#d6ff36]" />
+          {isLoading ? "Finding a vibe" : "Fresh picks"}
+        </span>
       </div>
 
       {isLoading && !hasLiveSongs ? (

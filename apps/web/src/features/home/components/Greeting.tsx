@@ -1,9 +1,14 @@
 "use client";
 
-import { Radio, Sparkles, Users } from "lucide-react";
+import { ArrowUpRight, Sparkles } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
 
-export default function Greeting() {
+type GreetingProps = {
+  onExplore: () => void;
+  onCreateMix: () => void;
+};
+
+export default function Greeting({ onExplore, onCreateMix }: GreetingProps) {
   const { user, profile } = useAuth();
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
@@ -16,33 +21,42 @@ export default function Greeting() {
     "there";
 
   return (
-    <section className="mb-8 overflow-hidden rounded-lg border border-white/10 bg-[linear-gradient(135deg,rgba(0,121,107,0.32),rgba(10,10,12,0.94)_46%,rgba(0,121,107,0.12))] p-5 shadow-2xl shadow-black/30 md:p-7">
-      <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
-        <div className="max-w-2xl">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#4db6ac]/30 bg-[#00594f]/20 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-[#80cbc4]">
-            <Sparkles className="h-3.5 w-3.5" />
-            AI powered social listening
-          </div>
-          <h1 className="text-4xl font-black leading-tight tracking-tight md:text-6xl">
-            {greeting}, {displayName}
-          </h1>
-          <p className="mt-3 max-w-xl text-sm leading-6 text-zinc-300 md:text-base">
-            Discover your next obsession, create AI mixes, and keep the conversation moving with friends in real time.
-          </p>
+    <section className="audiq-hero mb-8 px-5 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
+      <div className="audiq-hero-art" aria-hidden="true">
+        <div className="audiq-vinyl">
+          <span className="audiq-vinyl-center">AQ</span>
+        </div>
+        <div className="audiq-sticker">
+          <Sparkles />
+          <span>NO SKIPS<br />ALL VIBES</span>
+        </div>
+      </div>
+
+      <div className="audiq-hero-content">
+        <div className="audiq-kicker mb-5 max-w-full truncate">
+          <span className="audiq-kicker-dot" aria-hidden="true" />
+          {greeting}, {displayName}
         </div>
 
-        <div className="grid grid-cols-3 gap-3 text-center">
-          {[
-            { icon: Radio, label: "Live rooms", value: "18" },
-            { icon: Users, label: "Friends online", value: "42" },
-            { icon: Sparkles, label: "AI picks", value: "96%" },
-          ].map((item) => (
-            <div key={item.label} className="rounded-md border border-white/10 bg-black/25 p-3">
-              <item.icon className="mx-auto h-4 w-4 text-[#4db6ac]" />
-              <div className="mt-2 text-xl font-black">{item.value}</div>
-              <div className="text-[10px] uppercase tracking-[0.18em] text-zinc-500">{item.label}</div>
-            </div>
-          ))}
+        <h1 className="audiq-display">
+          Find your
+          <br />
+          <span className="audiq-display-accent">next obsession</span>
+          <span className="text-[#ff7052]">.</span>
+        </h1>
+
+        <p className="mt-4 max-w-xl text-sm leading-6 text-zinc-300 sm:text-base sm:leading-7">
+          Your soundtrack, your people, your next big repeat. Find a new sound and make it yours.
+        </p>
+
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button type="button" onClick={onExplore} className="audiq-cta-main">
+            Explore new sounds <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+          </button>
+          <button type="button" onClick={onCreateMix} className="audiq-cta-secondary">
+            <Sparkles className="h-4 w-4 text-[#d6ff36]" aria-hidden="true" />
+            Make me a mix
+          </button>
         </div>
       </div>
     </section>

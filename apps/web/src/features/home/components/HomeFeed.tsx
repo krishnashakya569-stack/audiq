@@ -5,19 +5,21 @@ import Trending from "./Trending";
 
 type HomeFeedProps = {
   query: string;
+  onExplore: () => void;
+  onCreateMix: () => void;
 };
 
-export default function HomeFeed({ query }: HomeFeedProps) {
+export default function HomeFeed({ query, onExplore, onCreateMix }: HomeFeedProps) {
   if (query.trim().toLowerCase() !== "starboy") {
     return <ContinueListening query={query} />;
   }
 
   return (
     <>
-      <Greeting />
+      <Greeting onExplore={onExplore} onCreateMix={onCreateMix} />
+      <AIPicks onOpenAi={onCreateMix} />
+      <Trending onExplore={onExplore} />
       <ContinueListening query={query} />
-      <AIPicks />
-      <Trending />
     </>
   );
 }
