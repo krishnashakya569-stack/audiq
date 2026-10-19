@@ -47,14 +47,14 @@ export default function QueuePanel() {
                 onClick={() => playTrack(track, queue)}
                 className={`flex w-full items-center gap-3 rounded-lg p-2 text-left transition ${
                   active
-                    ? "bg-[#b01340]/25 border border-[#ff2d67]/40"
+                    ? "bg-[#00594f]/25 border border-[#00796b]/40"
                     : "hover:bg-white/5"
                 }`}
               >
                 <div
                   className={`grid h-10 w-10 place-items-center rounded-md ${
                     active
-                      ? "bg-[#ff2d67]"
+                      ? "bg-[#00796b]"
                       : "bg-zinc-800"
                   }`}
                 >

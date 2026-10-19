@@ -95,7 +95,7 @@ export default function AuthDialog({ open, onClose }: AuthDialogProps) {
       >
         <div className="mb-6 flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#f5c2ce]">AudiQ community</p>
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#80cbc4]">AudiQ community</p>
             <h2 id="auth-dialog-title" className="mt-2 text-2xl font-black text-white">
               {mode === "signin" ? "Welcome back" : "Create your account"}
             </h2>
@@ -118,7 +118,7 @@ export default function AuthDialog({ open, onClose }: AuthDialogProps) {
                 setError("");
                 setNotice("");
               }}
-              className={`rounded-md px-3 py-2 text-sm font-bold ${mode === item ? "bg-[#b01340] text-white" : "text-zinc-400 hover:text-white"}`}
+              className={`rounded-md px-3 py-2 text-sm font-bold ${mode === item ? "bg-[#00594f] text-white" : "text-zinc-400 hover:text-white"}`}
             >
               {item === "signin" ? "Sign in" : "Create account"}
             </button>
@@ -130,11 +130,11 @@ export default function AuthDialog({ open, onClose }: AuthDialogProps) {
             <>
               <label className="block text-sm text-zinc-300">
                 Display name
-                <input required maxLength={50} value={displayName} onChange={(event) => setDisplayName(event.target.value)} className="mt-1.5 w-full rounded-md border border-white/10 bg-black/30 px-3 py-2.5 text-white outline-none focus:border-[#ff2d67]/60" />
+                <input required maxLength={50} value={displayName} onChange={(event) => setDisplayName(event.target.value)} className="mt-1.5 w-full rounded-md border border-white/10 bg-black/30 px-3 py-2.5 text-white outline-none focus:border-[#00796b]/60" />
               </label>
               <label className="block text-sm text-zinc-300">
                 Username
-                <span className="mt-1.5 flex items-center rounded-md border border-white/10 bg-black/30 px-3 text-zinc-500 focus-within:border-[#ff2d67]/60">
+                <span className="mt-1.5 flex items-center rounded-md border border-white/10 bg-black/30 px-3 text-zinc-500 focus-within:border-[#00796b]/60">
                   @
                   <input required minLength={3} maxLength={24} autoCapitalize="none" value={handle} onChange={(event) => setHandle(event.target.value)} className="w-full bg-transparent px-2 py-2.5 text-white outline-none" placeholder="yourname" />
                 </span>
@@ -144,18 +144,18 @@ export default function AuthDialog({ open, onClose }: AuthDialogProps) {
 
           <label className="block text-sm text-zinc-300">
             Email
-            <input required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} className="mt-1.5 w-full rounded-md border border-white/10 bg-black/30 px-3 py-2.5 text-white outline-none focus:border-[#ff2d67]/60" />
+            <input required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} className="mt-1.5 w-full rounded-md border border-white/10 bg-black/30 px-3 py-2.5 text-white outline-none focus:border-[#00796b]/60" />
           </label>
           <label className="block text-sm text-zinc-300">
             Password
-            <input required type="password" minLength={8} autoComplete={mode === "signin" ? "current-password" : "new-password"} value={password} onChange={(event) => setPassword(event.target.value)} className="mt-1.5 w-full rounded-md border border-white/10 bg-black/30 px-3 py-2.5 text-white outline-none focus:border-[#ff2d67]/60" />
+            <input required type="password" minLength={8} autoComplete={mode === "signin" ? "current-password" : "new-password"} value={password} onChange={(event) => setPassword(event.target.value)} className="mt-1.5 w-full rounded-md border border-white/10 bg-black/30 px-3 py-2.5 text-white outline-none focus:border-[#00796b]/60" />
             {mode === "signup" ? <span className="mt-1 block text-xs text-zinc-500">Use at least 8 characters.</span> : null}
           </label>
 
           {notice ? <p role="status" className="rounded-md border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm text-emerald-200">{notice}</p> : null}
           {error ? <p role="alert" className="rounded-md border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-200">{error}</p> : null}
 
-          <button disabled={busy} type="submit" className="w-full rounded-md bg-[#ff2d67] px-4 py-3 text-sm font-black text-white transition hover:bg-[#e9215b] disabled:cursor-wait disabled:opacity-60">
+          <button disabled={busy} type="submit" className="w-full rounded-md bg-[#00796b] px-4 py-3 text-sm font-black text-white transition hover:bg-[#00695c] disabled:cursor-wait disabled:opacity-60">
             {busy ? "Please wait…" : mode === "signin" ? "Sign in" : "Create account"}
           </button>
         </form>

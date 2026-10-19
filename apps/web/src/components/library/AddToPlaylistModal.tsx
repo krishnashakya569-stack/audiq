@@ -96,9 +96,9 @@ export default function AddToPlaylistModal({
 
                     onClose();
                   }}
-                  className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3 transition hover:border-[#ff2d67] hover:bg-[#ff2d67]/10"
+                  className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3 transition hover:border-[#00796b] hover:bg-[#00796b]/10"
                 >
-                  <div className="grid h-11 w-11 place-items-center rounded-lg bg-[#b01340]">
+                  <div className="grid h-11 w-11 place-items-center rounded-lg bg-[#00594f]">
                     <Music2 size={18} />
                   </div>
 
@@ -132,7 +132,7 @@ export default function AddToPlaylistModal({
               setPlaylistName(e.target.value)
             }
             placeholder="New Playlist"
-            className="mb-3 w-full rounded-lg border border-white/10 bg-[#1b1b1b] px-4 py-3 text-white outline-none transition focus:border-[#ff2d67]"
+            className="mb-3 w-full rounded-lg border border-white/10 bg-[#1b1b1b] px-4 py-3 text-white outline-none transition focus:border-[#00796b]"
           />
 
           <button
@@ -158,7 +158,7 @@ export default function AddToPlaylistModal({
 
               onClose();
             }}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#ff2d67] to-[#b01340] py-3 font-semibold text-white transition hover:scale-[1.02]"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#00796b] to-[#00594f] py-3 font-semibold text-white transition hover:scale-[1.02]"
           >
             <Plus size={18} />
 

@@ -97,14 +97,14 @@ export default function ContinueListening({ query }: ContinueListeningProps) {
                     className={
                       "group grid w-full grid-cols-[28px_40px_minmax(0,1fr)_48px] items-center gap-2 px-2 py-2 text-left transition-colors sm:grid-cols-[36px_48px_minmax(0,1fr)_64px] sm:gap-3 sm:px-4 " +
                       (isCurrentTrack
-                        ? "bg-[#b01340]/20"
+                        ? "bg-[#00594f]/20"
                         : "hover:bg-white/[0.07] focus-visible:bg-white/[0.07]") +
                       (canPlay ? " cursor-pointer" : " cursor-default opacity-55")
                     }
                   >
                     <span className="flex h-8 items-center justify-center text-sm text-zinc-500">
                       {isCurrentTrack ? (
-                        <Check className="h-4 w-4 text-[#ff5c8a]" />
+                        <Check className="h-4 w-4 text-[#4db6ac]" />
                       ) : (
                         <>
                           <span className="group-hover:hidden">{index + 1}</span>
@@ -124,7 +124,7 @@ export default function ContinueListening({ query }: ContinueListeningProps) {
                     </span>
 
                     <span className="min-w-0 py-0.5">
-                      <span className={"block truncate text-sm font-medium sm:text-base " + (isCurrentTrack ? "text-[#ff8ead]" : "text-zinc-100")}>
+                      <span className={"block truncate text-sm font-medium sm:text-base " + (isCurrentTrack ? "text-[#80cbc4]" : "text-zinc-100")}>
                         {song.title}
                       </span>
                       <span className="mt-0.5 block truncate text-xs text-zinc-400 sm:text-sm">{byline}</span>
@@ -154,7 +154,7 @@ export default function ContinueListening({ query }: ContinueListeningProps) {
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-zinc-500">Made for you</p>
           <h2 className="mt-1 text-2xl font-black">{title}</h2>
         </div>
-        <button className="text-sm font-semibold text-[#f5c2ce]">
+        <button className="text-sm font-semibold text-[#80cbc4]">
           {isLoading ? "Searching..." : "Refresh mix"}
         </button>
       </div>

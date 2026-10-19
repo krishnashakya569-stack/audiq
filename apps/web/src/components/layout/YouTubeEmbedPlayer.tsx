@@ -271,7 +271,7 @@ const YouTubeEmbedPlayer = forwardRef<
             open it on YouTube.
             <br />
             <a
-              className="mt-2 inline-block text-[#ff8aa8] underline"
+              className="mt-2 inline-block text-[#80cbc4] underline"
               href={`https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}`}
               target="_blank"
               rel="noopener"

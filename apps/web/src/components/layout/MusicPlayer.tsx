@@ -72,7 +72,7 @@ export default function MusicPlayer() {
 
   const cover =
     currentTrack?.albumArt ||
-    "/brand/audiq-logo.png";
+    "/brand/audiq-vinyl.svg";
 
   const progress =
     duration > 0
@@ -238,7 +238,7 @@ export default function MusicPlayer() {
 
   return (
     <>
-    <footer className={`mb-2 grid items-center rounded-lg border border-white/10 bg-[#0d0d10]/95 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-2xl shadow-black/40 backdrop-blur-xl md:mb-3 md:min-h-28 md:py-4 ${
+    <footer className={`mb-2 grid items-center rounded-lg border border-white/10 bg-[#080b09]/95 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-2xl shadow-black/40 backdrop-blur-xl md:mb-3 md:min-h-28 md:py-4 ${
       isYouTubeTrack
         ? "mx-1 grid-cols-[minmax(0,1fr)_200px] grid-rows-2 gap-1 px-2 md:mx-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] md:grid-rows-none md:gap-4 md:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(250px,1.4fr)_minmax(200px,0.9fr)_minmax(180px,1fr)]"
         : "mx-2 grid-cols-1 gap-2 px-3 md:mx-5 md:grid-cols-[1fr_1.5fr_1fr] md:gap-4 md:px-6"
@@ -329,7 +329,7 @@ export default function MusicPlayer() {
       />
 
     <div className="flex min-w-0 items-center gap-2 md:gap-3">
-              <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md bg-gradient-to-br from-[#b01340] via-[#5c0921] to-black sm:h-12 sm:w-12 md:h-16 md:w-16">
+              <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md bg-gradient-to-br from-[#00594f] via-[#00332d] to-black sm:h-12 sm:w-12 md:h-16 md:w-16">
           <Image
             src={cover}
             alt=""
@@ -349,7 +349,7 @@ export default function MusicPlayer() {
             {currentTrack?.artist || "Search and press play"}
           </p>
 
-          <p className="text-[11px] text-[#f5c2ce] md:mt-1 md:text-xs">
+          <p className="text-[11px] text-[#80cbc4] md:mt-1 md:text-xs">
             {sourceLabel}
           </p>
         </div>
@@ -362,7 +362,7 @@ export default function MusicPlayer() {
           <button
             onClick={toggleShuffle}
             className={`hidden rounded-md p-2 transition hover:bg-white/10 sm:block ${
-              isShuffling ? "text-[#ff5c8a]" : ""
+              isShuffling ? "text-[#4db6ac]" : ""
             }`}
           >
             <Shuffle className="h-4 w-4" />
@@ -387,7 +387,7 @@ export default function MusicPlayer() {
           <button
             onClick={handleTogglePlay}
             disabled={!currentTrack}
-            className={`grid place-items-center rounded-full bg-gradient-to-br from-[#ff2d67] to-[#b01340] text-white shadow-lg ${isYouTubeTrack ? "h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12" : "h-10 w-10 md:h-12 md:w-12"}`}
+            className={`grid place-items-center rounded-full bg-gradient-to-br from-[#00796b] to-[#00594f] text-white shadow-lg ${isYouTubeTrack ? "h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12" : "h-10 w-10 md:h-12 md:w-12"}`}
           >
             {isPlaying ? (
               <Pause className="h-5 w-5" />
@@ -416,14 +416,14 @@ export default function MusicPlayer() {
             onClick={toggleRepeat}
             className={`relative hidden rounded-md p-2 hover:bg-white/10 sm:block ${
               repeatMode !== "off"
-                ? "text-[#ff5c8a]"
+                ? "text-[#4db6ac]"
                 : ""
             }`}
           >
             <Repeat2 className="h-4 w-4" />
 
             {repeatMode === "one" && (
-              <span className="absolute -right-0.5 -top-0.5 grid h-4 w-4 place-items-center rounded-full bg-[#ff5c8a] text-[10px] font-bold text-white">
+              <span className="absolute -right-0.5 -top-0.5 grid h-4 w-4 place-items-center rounded-full bg-[#4db6ac] text-[10px] font-bold text-white">
                 1
               </span>
             )}
@@ -445,9 +445,9 @@ export default function MusicPlayer() {
               seekTo(e.target.value)
             }
             disabled={!currentTrack}
-            className="h-2 w-full cursor-pointer accent-[#ff2d67] md:h-1"
+            className="h-2 w-full cursor-pointer accent-[#00796b] md:h-1"
             style={{
-              background: `linear-gradient(to right,#ff2d67 ${progress}%,rgb(255 255 255 / 0.12) ${progress}%)`,
+              background: `linear-gradient(to right,#00796b ${progress}%,rgb(255 255 255 / 0.12) ${progress}%)`,
             }}
           />
 
@@ -495,7 +495,7 @@ export default function MusicPlayer() {
           }}
           className={`grid h-10 w-10 place-items-center rounded-md border transition ${
             isLiked
-              ? "border-[#ff2d67] bg-[#ff2d67]/20 text-[#ff2d67]"
+              ? "border-[#00796b] bg-[#00796b]/20 text-[#00796b]"
               : "border-white/10 bg-white/[0.06] text-zinc-300 hover:text-white"
           }`}
           title={
@@ -513,7 +513,7 @@ export default function MusicPlayer() {
         <button
           disabled={!currentTrack}
           onClick={() => setShowPlaylistModal(true)}
-          className="grid h-10 w-10 place-items-center rounded-md border border-white/10 bg-white/[0.06] text-zinc-300 transition hover:border-[#ff2d67]/50 hover:text-white disabled:opacity-40"
+          className="grid h-10 w-10 place-items-center rounded-md border border-white/10 bg-white/[0.06] text-zinc-300 transition hover:border-[#00796b]/50 hover:text-white disabled:opacity-40"
           title="Add to playlist"
         >
           <Plus className="h-5 w-5" />
@@ -541,7 +541,7 @@ export default function MusicPlayer() {
             setVolume(v);
             setMuted(v === 0);
           }}
-          className="h-1 w-28 cursor-pointer accent-[#ff2d67]"
+          className="h-1 w-28 cursor-pointer accent-[#00796b]"
         />
 
       </div>

@@ -29,35 +29,35 @@ const moods = [
     label: "Night Drive",
     prompt: "Glossy synths and a steady pulse",
     queries: ["night drive synth pop", "The Weeknd synth pop"],
-    color: "#ff5c8a",
+    color: "#4db6ac",
   },
   {
     id: "focus",
     label: "Deep Focus",
     prompt: "Calm instrumentals and soft textures",
     queries: ["lofi focus instrumental", "ambient study music"],
-    color: "#44d7b6",
+    color: "#00796b",
   },
   {
     id: "party",
     label: "House Party",
     prompt: "Dance tracks with familiar hooks",
     queries: ["dance pop party hits", "popular club music"],
-    color: "#f7b955",
+    color: "#80cbc4",
   },
   {
     id: "heartbreak",
     label: "Soft Reset",
     prompt: "Warm vocals and emotional songs",
     queries: ["soft heartbreak songs", "Arijit Singh acoustic"],
-    color: "#a78bfa",
+    color: "#00695c",
   },
   {
     id: "indie",
     label: "Indie Hour",
     prompt: "Fresh finds and thoughtful songwriting",
     queries: ["indie pop new music", "independent Indian music"],
-    color: "#60a5fa",
+    color: "#26a69a",
   },
 ] as const;
 
@@ -242,14 +242,14 @@ export default function AiDj() {
 
   return (
     <section className="space-y-6 pb-8">
-      <header className="overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(135deg,rgba(176,19,64,.36),rgba(68,215,182,.12),rgba(0,0,0,.18))] p-5 sm:p-7">
+      <header className="overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(135deg,rgba(0,121,107,.28),rgba(0,121,107,.14),rgba(0,0,0,.18))] p-5 sm:p-7">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.24em] text-[#f5c2ce]"><Sparkles aria-hidden="true" className="h-4 w-4" /> Audiq music lab</p>
+            <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.24em] text-[#80cbc4]"><Sparkles aria-hidden="true" className="h-4 w-4" /> Audiq music lab</p>
             <h1 className="mt-3 text-3xl font-black text-white sm:text-5xl">AI Studio</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-300">Shape a mix around a mood, your listening, and a prompt. Audiq searches the live catalog, then lets you play, queue, or save the results.</p>
           </div>
-          <button type="button" onClick={suggestions.length ? startSet : () => void generateSuggestions()} disabled={isGenerating} className="flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-black text-[#800f2f] shadow-lg shadow-black/30 transition hover:bg-rose-50 disabled:cursor-wait disabled:opacity-60">
+          <button type="button" onClick={suggestions.length ? startSet : () => void generateSuggestions()} disabled={isGenerating} className="flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-black text-[#00332d] shadow-lg shadow-black/30 transition hover:bg-rose-50 disabled:cursor-wait disabled:opacity-60">
             {isGenerating ? <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" /> : <Play aria-hidden="true" className="h-4 w-4 fill-current" />}
             {suggestions.length ? "Play my set" : "Build my set"}
           </button>
@@ -259,10 +259,10 @@ export default function AiDj() {
       <div className="grid items-start gap-5 xl:grid-cols-[21rem_minmax(0,1fr)]">
         <aside className="space-y-4">
           <section className="rounded-2xl border border-white/10 bg-white/[0.045] p-4 sm:p-5">
-            <div className="mb-4 flex items-center gap-2"><Wand2 aria-hidden="true" className="h-4 w-4 text-[#f5c2ce]" /><h2 className="font-bold text-white">Choose a mood</h2></div>
+            <div className="mb-4 flex items-center gap-2"><Wand2 aria-hidden="true" className="h-4 w-4 text-[#80cbc4]" /><h2 className="font-bold text-white">Choose a mood</h2></div>
             <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
               {moods.map((item) => (
-                <button key={item.id} type="button" onClick={() => setMood(item.id)} disabled={isGenerating} aria-pressed={mood === item.id} className={`flex items-center gap-3 rounded-xl border p-3 text-left transition disabled:opacity-60 ${mood === item.id ? "border-[#ff2d67]/50 bg-[#b01340]/20" : "border-white/10 bg-white/[0.025] hover:bg-white/[0.06]"}`}>
+                <button key={item.id} type="button" onClick={() => setMood(item.id)} disabled={isGenerating} aria-pressed={mood === item.id} className={`flex items-center gap-3 rounded-xl border p-3 text-left transition disabled:opacity-60 ${mood === item.id ? "border-[#00796b]/50 bg-[#00594f]/20" : "border-white/10 bg-white/[0.025] hover:bg-white/[0.06]"}`}>
                   <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: item.color }} />
                   <span className="min-w-0"><span className="block text-sm font-semibold text-white">{item.label}</span><span className="block text-xs text-zinc-500">{item.prompt}</span></span>
                 </button>
@@ -271,13 +271,13 @@ export default function AiDj() {
           </section>
 
           <section className="rounded-2xl border border-white/10 bg-white/[0.045] p-4 sm:p-5">
-            <div className="mb-4 flex items-center gap-2"><SlidersHorizontal aria-hidden="true" className="h-4 w-4 text-[#f5c2ce]" /><h2 className="font-bold text-white">Set your direction</h2></div>
+            <div className="mb-4 flex items-center gap-2"><SlidersHorizontal aria-hidden="true" className="h-4 w-4 text-[#80cbc4]" /><h2 className="font-bold text-white">Set your direction</h2></div>
             <label htmlFor="ai-studio-prompt" className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">What should this mix feel like?</label>
-            <input id="ai-studio-prompt" value={prompt} onChange={(event) => setPrompt(event.target.value)} disabled={isGenerating} maxLength={120} placeholder="e.g. Hindi songs for a rainy evening" className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-3 py-3 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-[#ff2d67]/55 disabled:opacity-60" />
-            <div className="mt-4 flex items-center justify-between"><label htmlFor="ai-studio-energy" className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Energy</label><span className="text-sm font-bold text-[#ff8eae]">{energy}%</span></div>
-            <input id="ai-studio-energy" type="range" min={15} max={100} value={energy} disabled={isGenerating} onChange={(event) => setEnergy(Number(event.target.value))} className="mt-3 w-full accent-[#ff2d67] disabled:opacity-60" />
+            <input id="ai-studio-prompt" value={prompt} onChange={(event) => setPrompt(event.target.value)} disabled={isGenerating} maxLength={120} placeholder="e.g. Hindi songs for a rainy evening" className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-3 py-3 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-[#00796b]/55 disabled:opacity-60" />
+            <div className="mt-4 flex items-center justify-between"><label htmlFor="ai-studio-energy" className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Energy</label><span className="text-sm font-bold text-[#80cbc4]">{energy}%</span></div>
+            <input id="ai-studio-energy" type="range" min={15} max={100} value={energy} disabled={isGenerating} onChange={(event) => setEnergy(Number(event.target.value))} className="mt-3 w-full accent-[#00796b] disabled:opacity-60" />
             <div className="flex justify-between text-[11px] text-zinc-600"><span>Laid-back</span><span>High energy</span></div>
-            <button type="button" onClick={() => void generateSuggestions()} disabled={isGenerating} className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#b01340] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#cc174d] disabled:cursor-wait disabled:opacity-60">
+            <button type="button" onClick={() => void generateSuggestions()} disabled={isGenerating} className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#00594f] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#00695c] disabled:cursor-wait disabled:opacity-60">
               {isGenerating ? <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" /> : <Sparkles aria-hidden="true" className="h-4 w-4" />}
               {isGenerating ? "Building your set…" : "Generate a set"}
             </button>
@@ -288,32 +288,32 @@ export default function AiDj() {
         <section className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] p-4 sm:p-5">
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#f5c2ce]">{hasGenerated ? suggestions.length ? "Live catalog mix" : "Personal fallback" : "Your starting point"}{aiPlan ? ` · ${aiPlan.provider === "openai" ? "AI planned" : "Audiq planned"}` : ""}</p>
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#80cbc4]">{hasGenerated ? suggestions.length ? "Live catalog mix" : "Personal fallback" : "Your starting point"}{aiPlan ? ` · ${aiPlan.provider === "openai" ? "AI planned" : "Audiq planned"}` : ""}</p>
               <h2 className="mt-1 text-2xl font-black text-white">{aiPlan?.title || (hasGenerated ? selectedMood.label : "Built around your taste")}</h2>
               <p className="mt-1 text-sm text-zinc-500">{suggestions.length ? `${suggestions.length} playable catalog tracks` : `${personalTracks.length} liked or recent tracks available`}</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={() => void generateSuggestions()} disabled={isGenerating} aria-label="Refresh recommendations" className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-white/[0.05] text-zinc-300 transition hover:border-[#ff2d67]/40 hover:text-white disabled:opacity-50"><RefreshCw aria-hidden="true" className={`h-4 w-4 ${isGenerating ? "animate-spin" : ""}`} /></button>
-              <button type="button" onClick={speakIntro} disabled={!queueTracks.length} aria-label="Play voice introduction" className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-white/[0.05] text-zinc-300 transition hover:border-[#ff2d67]/40 hover:text-white disabled:opacity-40"><Mic2 aria-hidden="true" className="h-4 w-4" /></button>
+              <button type="button" onClick={() => void generateSuggestions()} disabled={isGenerating} aria-label="Refresh recommendations" className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-white/[0.05] text-zinc-300 transition hover:border-[#00796b]/40 hover:text-white disabled:opacity-50"><RefreshCw aria-hidden="true" className={`h-4 w-4 ${isGenerating ? "animate-spin" : ""}`} /></button>
+              <button type="button" onClick={speakIntro} disabled={!queueTracks.length} aria-label="Play voice introduction" className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-white/[0.05] text-zinc-300 transition hover:border-[#00796b]/40 hover:text-white disabled:opacity-40"><Mic2 aria-hidden="true" className="h-4 w-4" /></button>
               <button type="button" onClick={queueSet} disabled={!queueTracks.length} className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm font-semibold text-zinc-300 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"><Plus aria-hidden="true" className="h-4 w-4" /> Queue all</button>
               <button type="button" onClick={saveSet} disabled={!queueTracks.length} className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm font-semibold text-zinc-300 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"><ListMusic aria-hidden="true" className="h-4 w-4" /> Save mix</button>
             </div>
           </div>
 
           <div className="mb-5 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-xl border border-white/10 bg-black/15 p-3"><Brain aria-hidden="true" className="h-4 w-4 text-[#44d7b6]" /><p className="mt-2 text-xs text-zinc-500">Taste signals</p><p className="text-lg font-black text-white">{Math.min(20, likedSongs.length + recentlyPlayed.length)} tracks</p></div>
-            <div className="rounded-xl border border-white/10 bg-black/15 p-3"><Radio aria-hidden="true" className="h-4 w-4 text-[#f7b955]" /><p className="mt-2 text-xs text-zinc-500">Energy level</p><p className="text-lg font-black text-white">{energy}%</p></div>
-            <div className="rounded-xl border border-white/10 bg-black/15 p-3"><Heart aria-hidden="true" className="h-4 w-4 text-[#ff5c8a]" /><p className="mt-2 text-xs text-zinc-500">Your prompt</p><p className="truncate text-sm font-semibold text-white">{prompt.trim() || selectedMood.label}</p></div>
+            <div className="rounded-xl border border-white/10 bg-black/15 p-3"><Brain aria-hidden="true" className="h-4 w-4 text-[#00796b]" /><p className="mt-2 text-xs text-zinc-500">Taste signals</p><p className="text-lg font-black text-white">{Math.min(20, likedSongs.length + recentlyPlayed.length)} tracks</p></div>
+            <div className="rounded-xl border border-white/10 bg-black/15 p-3"><Radio aria-hidden="true" className="h-4 w-4 text-[#80cbc4]" /><p className="mt-2 text-xs text-zinc-500">Energy level</p><p className="text-lg font-black text-white">{energy}%</p></div>
+            <div className="rounded-xl border border-white/10 bg-black/15 p-3"><Heart aria-hidden="true" className="h-4 w-4 text-[#4db6ac]" /><p className="mt-2 text-xs text-zinc-500">Your prompt</p><p className="truncate text-sm font-semibold text-white">{prompt.trim() || selectedMood.label}</p></div>
           </div>
 
-          {aiPlan?.reasons?.length ? <div className="mb-4 rounded-xl border border-[#44d7b6]/20 bg-[#44d7b6]/10 p-4 text-sm text-zinc-300"><p className="mb-2 font-bold text-[#9ff5de]">Why this mix</p><ul className="list-inside list-disc space-y-1">{aiPlan.reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul></div> : null}
+          {aiPlan?.reasons?.length ? <div className="mb-4 rounded-xl border border-[#00796b]/20 bg-[#00796b]/10 p-4 text-sm text-zinc-300"><p className="mb-2 font-bold text-[#80cbc4]">Why this mix</p><ul className="list-inside list-disc space-y-1">{aiPlan.reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul></div> : null}
 
           {queueTracks.length > 0 ? (
             <div className="space-y-2">
               {queueTracks.map((track, index) => (
-                <article key={`${track.source}:${track.id}:${track.videoId ?? ""}`} className="grid grid-cols-[2rem_3rem_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-white/5 bg-white/[0.035] p-2.5 transition hover:border-[#ff2d67]/25 hover:bg-white/[0.06]">
+                <article key={`${track.source}:${track.id}:${track.videoId ?? ""}`} className="grid grid-cols-[2rem_3rem_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-white/5 bg-white/[0.035] p-2.5 transition hover:border-[#00796b]/25 hover:bg-white/[0.06]">
                   <span className="text-center text-sm text-zinc-500">{index + 1}</span>
-                  <span className="relative h-12 w-12 overflow-hidden rounded-lg bg-[#151114]"><Image src={track.albumArt || "/brand/audiq-logo.png"} alt="" fill sizes="48px" unoptimized className="object-cover" /></span>
+                  <span className="relative h-12 w-12 overflow-hidden rounded-lg bg-[#101412]"><Image src={track.albumArt || "/brand/audiq-vinyl.svg"} alt="" fill sizes="48px" unoptimized className="object-cover" /></span>
                   <button type="button" onClick={() => playTrack(track, queueTracks)} className="min-w-0 text-left"><span className="block truncate text-sm font-semibold text-white">{track.title}</span><span className="block truncate text-xs text-zinc-500">{track.artist} · {track.source || "Audiq"}</span></button>
                   <button type="button" onClick={() => { addToQueue(track); setStatus(`${track.title} added to your queue.`); setStatusIsError(false); }} aria-label={`Add ${track.title} to queue`} className="grid h-9 w-9 place-items-center rounded-lg text-zinc-500 hover:bg-white/10 hover:text-white"><Plus aria-hidden="true" className="h-4 w-4" /></button>
                 </article>
@@ -321,7 +321,7 @@ export default function AiDj() {
             </div>
           ) : (
             <div className="grid min-h-64 place-items-center rounded-2xl border border-dashed border-white/10 p-6 text-center">
-              <div><span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-[#b01340]/15 text-[#ff8eae]"><Sparkles aria-hidden="true" className="h-6 w-6" /></span><h3 className="mt-4 font-bold text-white">Your mix starts here</h3><p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-zinc-500">Choose a mood and generate a set. Audiq will search for playable tracks and use your liked songs to personalize the results.</p><button type="button" onClick={() => void generateSuggestions()} disabled={isGenerating} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#b01340] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#cc174d] disabled:opacity-50"><Sparkles aria-hidden="true" className="h-4 w-4" /> Build my first set</button></div>
+              <div><span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-[#00594f]/15 text-[#80cbc4]"><Sparkles aria-hidden="true" className="h-6 w-6" /></span><h3 className="mt-4 font-bold text-white">Your mix starts here</h3><p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-zinc-500">Choose a mood and generate a set. Audiq will search for playable tracks and use your liked songs to personalize the results.</p><button type="button" onClick={() => void generateSuggestions()} disabled={isGenerating} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#00594f] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#00695c] disabled:opacity-50"><Sparkles aria-hidden="true" className="h-4 w-4" /> Build my first set</button></div>
             </div>
           )}
         </section>

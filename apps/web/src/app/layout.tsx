@@ -17,6 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Audiq",
   description: "AI powered music streaming, discovery, and social chat.",
+  icons: { icon: "/brand/audiq-vinyl.svg", shortcut: "/brand/audiq-vinyl.svg" },
 };
 
 export default function RootLayout({

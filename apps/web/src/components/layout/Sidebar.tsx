@@ -146,7 +146,7 @@ export default function Sidebar({
       icon: Heart,
       title: "Liked Songs",
       meta: `${visibleLikedSongs.length} tracks`,
-      accent: "#ff5c8a",
+      accent: "#4db6ac",
       tab: "liked" as const,
     },
     {
@@ -155,42 +155,42 @@ export default function Sidebar({
       meta: `${visiblePlaylists.length} collection${
         visiblePlaylists.length === 1 ? "" : "s"
       }`,
-      accent: "#f7b955",
+      accent: "#80cbc4",
       tab: "playlists" as const,
     },
     {
       icon: Clock3,
       title: "Recently Played",
       meta: `${visibleRecentlyPlayed.length} songs`,
-      accent: "#44d7b6",
+      accent: "#00796b",
       tab: "recent" as const,
     },
     {
       icon: Download,
       title: "Downloads",
       meta: "Offline music",
-      accent: "#7dd3fc",
+      accent: "#26a69a",
       tab: "downloads" as const,
     },
     {
       icon: Music2,
       title: "Queue",
       meta: "Now Playing",
-      accent: "#c084fc",
+      accent: "#00695c",
       tab: "queue" as const,
     },
     {
       icon: History,
       title: "History",
       meta: "Listening Log",
-      accent: "#fb7185",
+      accent: "#00796b",
       tab: "history" as const,
     },
     ...visiblePlaylists.slice(0, 2).map((playlist) => ({
       icon: Music2,
       title: playlist.name,
       meta: `${playlist.tracks.length} songs`,
-      accent: "#facc15",
+      accent: "#4db6ac",
       tab: "playlists" as const,
     })),
   ];
@@ -237,7 +237,7 @@ export default function Sidebar({
               }}
               className={`group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium transition-all duration-200 ${
                 active
-                  ? "bg-gradient-to-r from-[#b01340] to-[#800f2f] text-white shadow-lg"
+                  ? "bg-gradient-to-r from-[#00594f] to-[#00332d] text-white shadow-lg"
                   : "text-zinc-400 hover:bg-white/10 hover:text-white"
               }`}
             >
@@ -284,8 +284,8 @@ export default function Sidebar({
               className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-all duration-200 ${
                 activeView === "library" &&
                 activeLibraryTab === playlist.tab
-                  ? "border-[#ff2d67]/40 bg-[#b01340]/20 shadow-lg shadow-[#b01340]/20"
-                  : "border-white/5 bg-white/[0.045] hover:border-[#ff2d67]/30 hover:bg-white/[0.08]"
+                  ? "border-[#00796b]/40 bg-[#00594f]/20 shadow-lg shadow-[#00594f]/20"
+                  : "border-white/5 bg-white/[0.045] hover:border-[#00796b]/30 hover:bg-white/[0.08]"
               }`}
             >
               <span
@@ -314,9 +314,9 @@ export default function Sidebar({
 
       {/* Live Room */}
 
-      <div className="mt-auto rounded-xl border border-[#b01340]/25 bg-gradient-to-br from-[#b01340]/10 to-[#111111] p-4">
+      <div className="mt-auto rounded-xl border border-[#00594f]/25 bg-gradient-to-br from-[#00594f]/10 to-[#111111] p-4">
 
-        <p className="text-xs uppercase tracking-[0.22em] text-[#f5c2ce]">
+        <p className="text-xs uppercase tracking-[0.22em] text-[#80cbc4]">
           Live Room
         </p>
 
@@ -326,7 +326,7 @@ export default function Sidebar({
 
         <button
           type="button"
-          className="mt-4 w-full rounded-xl bg-white py-3 font-semibold text-[#800f2f] transition-all hover:scale-[1.02] hover:bg-zinc-100"
+          className="mt-4 w-full rounded-xl bg-white py-3 font-semibold text-[#00332d] transition-all hover:scale-[1.02] hover:bg-zinc-100"
         >
           Join Session
         </button>

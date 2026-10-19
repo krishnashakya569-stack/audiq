@@ -73,14 +73,14 @@ export default function AlbumCard({
     }
   };
     return (
-    <article className="group cursor-pointer overflow-hidden rounded-lg border border-white/10 bg-white/[0.045] transition-all duration-300 hover:-translate-y-1 hover:border-[#ff2d67]/50 hover:bg-white/[0.07] hover:shadow-xl hover:shadow-[#b01340]/20">
+    <article className="group cursor-pointer overflow-hidden rounded-lg border border-white/10 bg-white/[0.045] transition-all duration-300 hover:-translate-y-1 hover:border-[#00796b]/50 hover:bg-white/[0.07] hover:shadow-xl hover:shadow-[#00594f]/20">
       <div
         className={`relative overflow-hidden ${
           song.provider === "youtube" ? "aspect-video" : "aspect-square"
         }`}
       >
         <Image
-          src={track.albumArt || "/media/audiq-logo.png"}
+          src={track.albumArt || "/brand/audiq-vinyl.svg"}
           alt={song.title}
           fill
           sizes="(min-width:1280px) 25vw, 50vw"
@@ -107,7 +107,7 @@ export default function AlbumCard({
             href={track.externalUrl}
             target="_blank"
             rel="noreferrer"
-            className="absolute bottom-3 right-3 grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-[#ff2d67] to-[#b01340] text-white shadow-lg shadow-[#b01340]/40 transition hover:scale-105"
+            className="absolute bottom-3 right-3 grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-[#00796b] to-[#00594f] text-white shadow-lg shadow-[#00594f]/40 transition hover:scale-105"
           >
             <ExternalLink size={17} />
           </a>
@@ -115,7 +115,7 @@ export default function AlbumCard({
           <button
             onClick={handlePlay}
             disabled={!canPlay}
-            className="absolute bottom-3 right-3 grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-[#ff2d67] to-[#b01340] text-white shadow-lg shadow-[#b01340]/40 transition hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50"
+            className="absolute bottom-3 right-3 grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-[#00796b] to-[#00594f] text-white shadow-lg shadow-[#00594f]/40 transition hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Play
               size={17}
@@ -152,7 +152,7 @@ export default function AlbumCard({
               onClick={handleLike}
               className={`grid h-8 w-8 place-items-center rounded-md border transition ${
                 isLiked
-                  ? "border-[#ff2d67] bg-[#ff2d67]/20 text-[#ff2d67]"
+                  ? "border-[#00796b] bg-[#00796b]/20 text-[#00796b]"
                   : "border-white/10 bg-white/[0.06] text-zinc-300 hover:text-white"
               }`}
             >
@@ -167,7 +167,7 @@ export default function AlbumCard({
                 e.stopPropagation();
                 setShowPlaylistModal(true);
               }}
-              className="grid h-8 w-8 place-items-center rounded-md border border-white/10 bg-white/[0.06] text-zinc-300 transition hover:border-[#ff2d67] hover:text-[#ff2d67]"
+              className="grid h-8 w-8 place-items-center rounded-md border border-white/10 bg-white/[0.06] text-zinc-300 transition hover:border-[#00796b] hover:text-[#00796b]"
             >
               <Plus className="h-4 w-4" />
             </button>

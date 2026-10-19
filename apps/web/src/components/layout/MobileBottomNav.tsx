@@ -52,7 +52,7 @@ export default function MobileBottomNav({
   return (
     <nav
       aria-label="Main navigation"
-      className="grid shrink-0 grid-cols-4 border-t border-white/10 bg-[#09080a]/95 px-2 pt-1 pb-[calc(0.25rem+env(safe-area-inset-bottom))] backdrop-blur-xl lg:hidden"
+      className="grid shrink-0 grid-cols-4 border-t border-white/10 bg-[#050706]/95 px-2 pt-1 pb-[calc(0.25rem+env(safe-area-inset-bottom))] backdrop-blur-xl lg:hidden"
     >
       {items.map(({ label, icon: Icon, active, onClick }) => (
         <button
@@ -62,7 +62,7 @@ export default function MobileBottomNav({
           aria-current={active ? "page" : undefined}
           onClick={onClick}
           className={`flex min-h-12 flex-col items-center justify-center gap-1 rounded-lg text-[10px] font-medium transition-colors ${
-            active ? "text-[#ff5c8a]" : "text-zinc-400 hover:text-white"
+            active ? "text-[#4db6ac]" : "text-zinc-400 hover:text-white"
           }`}
         >
           <Icon aria-hidden="true" className="h-5 w-5" />

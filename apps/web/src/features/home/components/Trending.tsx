@@ -1,9 +1,9 @@
 import { Heart, MessageCircle, Play } from "lucide-react";
 
 const trends = [
-  { title: "To The Moon", artist: "Jvke", plays: "2.1M", accent: "bg-[#44d7b6]" },
-  { title: "Softly", artist: "Karan Aujla", plays: "1.8M", accent: "bg-[#f7b955]" },
-  { title: "I Want You", artist: "Arijit Singh", plays: "1.4M", accent: "bg-[#ff5c8a]" },
+  { title: "To The Moon", artist: "Jvke", plays: "2.1M", accent: "bg-[#00796b]" },
+  { title: "Softly", artist: "Karan Aujla", plays: "1.8M", accent: "bg-[#80cbc4]" },
+  { title: "I Want You", artist: "Arijit Singh", plays: "1.4M", accent: "bg-[#4db6ac]" },
 ];
 
 export default function Trending() {
@@ -11,14 +11,14 @@ export default function Trending() {
     <section className="pb-4">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-2xl font-black">Trending in your circle</h2>
-        <button className="text-sm font-semibold text-[#f5c2ce]">See all</button>
+        <button className="text-sm font-semibold text-[#80cbc4]">See all</button>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
         {trends.map((item, index) => (
           <article
             key={item.title}
-            className="group flex items-center gap-4 rounded-lg border border-white/10 bg-white/[0.045] p-4 transition hover:border-[#ff2d67]/40 hover:bg-white/[0.07]"
+            className="group flex items-center gap-4 rounded-lg border border-white/10 bg-white/[0.045] p-4 transition hover:border-[#00796b]/40 hover:bg-white/[0.07]"
           >
             <div className={`grid h-16 w-16 shrink-0 place-items-center rounded-md ${item.accent} text-lg font-black text-black`}>
               {index + 1}
@@ -38,7 +38,7 @@ export default function Trending() {
                 </span>
               </div>
             </div>
-            <button className="grid h-10 w-10 place-items-center rounded-full bg-white text-[#800f2f] opacity-100 transition group-hover:scale-105">
+            <button className="grid h-10 w-10 place-items-center rounded-full bg-white text-[#00332d] opacity-100 transition group-hover:scale-105">
               <Play className="h-4 w-4 fill-current" />
             </button>
           </article>

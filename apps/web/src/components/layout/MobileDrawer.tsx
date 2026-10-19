@@ -184,7 +184,7 @@ export default function MobileDrawer({
               overflow-hidden
               border-r
               border-white/10
-              bg-[#0d0d10]/95
+              bg-[#080b09]/95
               backdrop-blur-2xl
               shadow-2xl
               lg:hidden
@@ -225,7 +225,7 @@ export default function MobileDrawer({
                 right-0
                 h-12
                 bg-gradient-to-t
-                from-[#0d0d10]
+                from-[#080b09]
                 to-transparent
               "
             />

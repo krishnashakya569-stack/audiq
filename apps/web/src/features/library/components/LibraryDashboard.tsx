@@ -55,7 +55,7 @@ function EmptyState({
   return (
     <div className="grid min-h-72 place-items-center rounded-lg border border-dashed border-white/10 bg-white/[0.035] p-8 text-center">
       <div>
-        <div className="mx-auto grid h-14 w-14 place-items-center rounded-md border border-white/10 bg-white/[0.06] text-[#f5c2ce]">
+        <div className="mx-auto grid h-14 w-14 place-items-center rounded-md border border-white/10 bg-white/[0.06] text-[#80cbc4]">
           <Icon className="h-6 w-6" />
         </div>
         <h3 className="mt-4 text-lg font-bold text-white">{title}</h3>
@@ -84,22 +84,22 @@ function TrackRow({
     <div
       className={`grid grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-3 rounded-lg border p-2.5 transition md:grid-cols-[2.5rem_minmax(0,1.3fr)_minmax(0,0.8fr)_auto] ${
         isActive
-          ? "border-[#ff2d67]/45 bg-[#b01340]/20"
+          ? "border-[#00796b]/45 bg-[#00594f]/20"
           : "border-white/5 bg-white/[0.035] hover:border-white/10 hover:bg-white/[0.06]"
       }`}
     >
       <button
         type="button"
         onClick={() => playTrack(track, queue)}
-        className="grid h-10 w-10 place-items-center rounded-md bg-white/[0.07] text-zinc-300 transition hover:bg-[#ff2d67] hover:text-white"
+        className="grid h-10 w-10 place-items-center rounded-md bg-white/[0.07] text-zinc-300 transition hover:bg-[#00796b] hover:text-white"
         title="Play"
       >
         {isActive ? <Play className="h-4 w-4 fill-current" /> : <span className="text-sm">{index + 1}</span>}
       </button>
 
       <div className="flex min-w-0 items-center gap-3">
-        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md bg-[#171317]">
-          <Image src={track.albumArt || "/brand/audiq-logo.png"} alt="" fill sizes="48px" unoptimized className="object-cover" />
+        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md bg-[#101412]">
+          <Image src={track.albumArt || "/brand/audiq-vinyl.svg"} alt="" fill sizes="48px" unoptimized className="object-cover" />
         </div>
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-white">{track.title}</p>
@@ -135,17 +135,17 @@ function PlaylistTile({
 }) {
   const playTrack = usePlayerStore((state) => state.playTrack);
   const renamePlaylist = usePlaylistStore((state) => state.renamePlaylist);
-  const cover = playlist.cover || playlist.tracks[0]?.albumArt || "/brand/audiq-logo.png";
+  const cover = playlist.cover || playlist.tracks[0]?.albumArt || "/brand/audiq-vinyl.svg";
 
   return (
-    <article className="group rounded-lg border border-white/10 bg-white/[0.045] p-4 transition hover:border-[#ff2d67]/40 hover:bg-white/[0.07]">
-      <div className="relative aspect-square overflow-hidden rounded-md bg-[#151114]">
+    <article className="group rounded-lg border border-white/10 bg-white/[0.045] p-4 transition hover:border-[#00796b]/40 hover:bg-white/[0.07]">
+      <div className="relative aspect-square overflow-hidden rounded-md bg-[#101412]">
         <Image src={cover} alt="" fill sizes="220px" unoptimized className="object-cover transition group-hover:scale-105" />
         <button
           type="button"
           disabled={playlist.tracks.length === 0}
           onClick={() => playlist.tracks[0] && playTrack(playlist.tracks[0], playlist.tracks)}
-          className="absolute bottom-3 right-3 grid h-11 w-11 place-items-center rounded-full bg-[#ff2d67] text-white shadow-lg shadow-black/40 transition hover:scale-105 disabled:opacity-50"
+          className="absolute bottom-3 right-3 grid h-11 w-11 place-items-center rounded-full bg-[#00796b] text-white shadow-lg shadow-black/40 transition hover:scale-105 disabled:opacity-50"
           title="Play playlist"
         >
           <Play className="h-4 w-4 fill-current" />
@@ -215,10 +215,10 @@ export default function LibraryDashboard({
 
   return (
     <section className="space-y-6 pb-6">
-      <div className="overflow-hidden rounded-lg border border-white/10 bg-[linear-gradient(135deg,rgba(176,19,64,.28),rgba(68,215,182,.08),rgba(255,255,255,.04))] p-5 md:p-7">
+      <div className="overflow-hidden rounded-lg border border-white/10 bg-[linear-gradient(135deg,rgba(0,121,107,.2),rgba(0,121,107,.1),rgba(255,255,255,.04))] p-5 md:p-7">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.24em] text-[#f5c2ce]">
+            <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.24em] text-[#80cbc4]">
               <Library className="h-4 w-4" />
               Your Library
             </p>
@@ -231,7 +231,7 @@ export default function LibraryDashboard({
           <div className="grid grid-cols-3 gap-3">
             {stats.map((stat) => (
               <div key={stat.label} className="rounded-md border border-white/10 bg-black/25 p-3">
-                <stat.icon className="h-4 w-4 text-[#f5c2ce]" />
+                <stat.icon className="h-4 w-4 text-[#80cbc4]" />
                 <p className="mt-2 text-2xl font-black">{stat.value}</p>
                 <p className="text-xs text-zinc-500">{stat.label}</p>
               </div>
@@ -249,7 +249,7 @@ export default function LibraryDashboard({
               onClick={() => onTabChange(tab.id)}
               className={`flex shrink-0 items-center gap-2 rounded-md border px-3 py-2 text-sm font-semibold transition ${
                 activeTab === tab.id
-                  ? "border-[#ff2d67]/50 bg-[#b01340]/35 text-white"
+                  ? "border-[#00796b]/50 bg-[#00594f]/35 text-white"
                   : "border-white/10 bg-white/[0.04] text-zinc-400 hover:text-white"
               }`}
             >
@@ -272,7 +272,7 @@ export default function LibraryDashboard({
           <button
             type="button"
             onClick={() => createPlaylist(`New Playlist ${visiblePlaylists.length + 1}`)}
-            className="grid h-10 w-10 place-items-center rounded-md bg-[#ff2d67] text-white shadow-lg shadow-[#b01340]/25"
+            className="grid h-10 w-10 place-items-center rounded-md bg-[#00796b] text-white shadow-lg shadow-[#00594f]/25"
             title="Create playlist"
           >
             <Plus className="h-4 w-4" />

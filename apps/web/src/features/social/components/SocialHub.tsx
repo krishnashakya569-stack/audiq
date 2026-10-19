@@ -67,7 +67,7 @@ function AvatarBlock({ user }: { user: AudiqProfile }) {
   return (
     <div
       className="grid h-11 w-11 shrink-0 place-items-center rounded-full font-black text-white"
-      style={{ backgroundColor: user.avatar_color || "#b01340" }}
+      style={{ backgroundColor: user.avatar_color || "#00594f" }}
       aria-hidden="true"
     >
       {user.display_name.slice(0, 1).toUpperCase()}
@@ -415,13 +415,13 @@ export default function SocialHub({
 
   if (!user) {
     return (
-      <section className="mx-auto max-w-3xl rounded-xl border border-white/10 bg-[linear-gradient(135deg,rgba(176,19,64,.25),rgba(68,215,182,.06),rgba(255,255,255,.03))] p-7 text-center md:p-12">
-        <Users className="mx-auto h-12 w-12 text-[#f5c2ce]" />
+      <section className="mx-auto max-w-3xl rounded-xl border border-white/10 bg-[linear-gradient(135deg,rgba(0,121,107,.18),rgba(0,121,107,.08),rgba(255,255,255,.03))] p-7 text-center md:p-12">
+        <Users className="mx-auto h-12 w-12 text-[#80cbc4]" />
         <h1 className="mt-4 text-3xl font-black text-white">AudiQ Friends & Chat</h1>
         <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-zinc-300">
           Create an account to get a unique AudiQ ID, find friends, share what you are listening to, and chat in real time.
         </p>
-        <button type="button" onClick={onOpenAuth} className="mt-6 rounded-md bg-[#ff2d67] px-6 py-3 text-sm font-black text-white hover:bg-[#e9215b]">
+        <button type="button" onClick={onOpenAuth} className="mt-6 rounded-md bg-[#00796b] px-6 py-3 text-sm font-black text-white hover:bg-[#00695c]">
           Sign in or create an account
         </button>
         {!supabase ? <p className="mt-4 text-xs text-amber-200">Sign-in needs the Supabase URL and publishable key in the app environment.</p> : null}
@@ -433,10 +433,10 @@ export default function SocialHub({
 
   return (
     <section className="space-y-5 pb-6">
-      <div className="overflow-hidden rounded-xl border border-white/10 bg-[linear-gradient(135deg,rgba(176,19,64,.3),rgba(68,215,182,.08),rgba(255,255,255,.04))] p-5 md:p-7">
+      <div className="overflow-hidden rounded-xl border border-white/10 bg-[linear-gradient(135deg,rgba(0,121,107,.22),rgba(0,121,107,.1),rgba(255,255,255,.04))] p-5 md:p-7">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div>
-            <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.24em] text-[#f5c2ce]">
+            <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.24em] text-[#80cbc4]">
               <Users className="h-4 w-4" /> AudiQ Social
             </p>
             <h1 className="mt-3 text-3xl font-black text-white md:text-5xl">Friends & Chat</h1>
@@ -465,7 +465,7 @@ export default function SocialHub({
           { id: "friends" as const, label: "Find Friends", icon: UserPlus },
           { id: "messages" as const, label: "Messages", icon: MessageCircle },
         ].map((tab) => (
-          <button key={tab.id} type="button" onClick={() => onTabChange(tab.id)} className={`flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-bold transition ${activeTab === tab.id ? "border-[#ff2d67]/50 bg-[#b01340]/35 text-white" : "border-white/10 bg-white/[0.04] text-zinc-400 hover:text-white"}`}>
+          <button key={tab.id} type="button" onClick={() => onTabChange(tab.id)} className={`flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-bold transition ${activeTab === tab.id ? "border-[#00796b]/50 bg-[#00594f]/35 text-white" : "border-white/10 bg-white/[0.04] text-zinc-400 hover:text-white"}`}>
             <tab.icon className="h-4 w-4" /> {tab.label}
           </button>
         ))}
@@ -485,7 +485,7 @@ export default function SocialHub({
                 <Search className="h-4 w-4 shrink-0 text-zinc-500" />
                 <input value={searchId} onChange={(event) => setSearchId(event.target.value)} placeholder="AQ-1A2B3C4D or @username" className="min-w-0 flex-1 bg-transparent py-2.5 text-sm text-white outline-none placeholder:text-zinc-600" />
               </label>
-              <button type="submit" className="rounded-md border border-[#ff2d67]/40 bg-[#b01340]/20 px-4 text-sm font-bold text-[#f5c2ce]">Search</button>
+              <button type="submit" className="rounded-md border border-[#00796b]/40 bg-[#00594f]/20 px-4 text-sm font-bold text-[#80cbc4]">Search</button>
             </form>
 
             {foundUser ? (
@@ -495,7 +495,7 @@ export default function SocialHub({
                   <p className="truncate font-bold text-white">{foundUser.display_name}</p>
                   <p className="truncate text-sm text-zinc-500">{foundUser.audiq_id} · @{foundUser.handle}</p>
                 </div>
-                <button type="button" onClick={() => void handleAddFriend()} disabled={busy} className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-[#ff2d67] text-white disabled:opacity-50" title="Send friend request" aria-label="Send friend request">
+                <button type="button" onClick={() => void handleAddFriend()} disabled={busy} className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-[#00796b] text-white disabled:opacity-50" title="Send friend request" aria-label="Send friend request">
                   <Plus className="h-4 w-4" />
                 </button>
               </div>
@@ -553,7 +553,7 @@ export default function SocialHub({
                   <div key={friend.id} className="flex items-center gap-3 rounded-lg border border-white/10 bg-black/20 p-3">
                     <AvatarBlock user={friend} />
                     <div className="min-w-0 flex-1"><p className="truncate font-bold text-white">{friend.display_name}</p><p className="truncate text-sm text-zinc-500">{friend.audiq_id} · @{friend.handle}</p></div>
-                    <button type="button" onClick={() => { setActiveFriendId(friend.id); onTabChange("messages"); }} className="flex items-center gap-2 rounded-md border border-[#ff2d67]/30 px-3 py-2 text-sm font-bold text-[#f5c2ce] hover:bg-[#b01340]/20"><MessageCircle className="h-4 w-4" /> Chat</button>
+                    <button type="button" onClick={() => { setActiveFriendId(friend.id); onTabChange("messages"); }} className="flex items-center gap-2 rounded-md border border-[#00796b]/30 px-3 py-2 text-sm font-bold text-[#80cbc4] hover:bg-[#00594f]/20"><MessageCircle className="h-4 w-4" /> Chat</button>
                     <button type="button" onClick={() => { const relation = relationships.find((row) => row.status === "accepted" && (row.requester_id === friend.id || row.addressee_id === friend.id)); if (relation) void deleteRelationship(relation.id); }} title="Remove friend" aria-label={`Remove ${friend.display_name}`} className="grid h-9 w-9 place-items-center rounded-md text-zinc-500 hover:bg-red-500/10 hover:text-red-300"><Trash2 className="h-4 w-4" /></button>
                   </div>
                 ))}
@@ -571,7 +571,7 @@ export default function SocialHub({
               {friends.length === 0 ? (
                 <button type="button" onClick={() => onTabChange("friends")} className="w-full rounded-md border border-dashed border-white/10 p-5 text-sm text-zinc-500">Add a friend to start chatting.</button>
               ) : friends.map((friend) => (
-                <button key={friend.id} type="button" onClick={() => setActiveFriendId(friend.id)} className={`flex w-full items-center gap-3 rounded-md border p-3 text-left transition ${activeFriend?.id === friend.id ? "border-[#ff2d67]/45 bg-[#b01340]/20" : "border-white/5 bg-black/15 hover:bg-white/[0.06]"}`}>
+                <button key={friend.id} type="button" onClick={() => setActiveFriendId(friend.id)} className={`flex w-full items-center gap-3 rounded-md border p-3 text-left transition ${activeFriend?.id === friend.id ? "border-[#00796b]/45 bg-[#00594f]/20" : "border-white/5 bg-black/15 hover:bg-white/[0.06]"}`}>
                   <AvatarBlock user={friend} />
                   <span className="min-w-0"><span className="block truncate font-bold text-white">{friend.display_name}</span><span className="block truncate text-xs text-zinc-500">{friend.audiq_id}</span></span>
                 </button>
@@ -592,12 +592,12 @@ export default function SocialHub({
                     const mine = item.sender_id === user.id;
                     const sharedSong = item.message_type === "song" ? item.song : null;
                     return (
-                      <div key={item.id} className={`max-w-[88%] rounded-lg p-3 text-sm ${mine ? "ml-auto bg-[#8f1338] text-white" : "bg-white/[0.08] text-zinc-100"}`}>
+                      <div key={item.id} className={`max-w-[88%] rounded-lg p-3 text-sm ${mine ? "ml-auto bg-[#00594f] text-white" : "bg-white/[0.08] text-zinc-100"}`}>
                         {sharedSong ? (
                           <div className="flex min-w-0 items-center gap-3 rounded-md border border-white/10 bg-black/20 p-2">
                             <Image src={sharedSong.albumArt || "/covers/default.png"} alt="" width={52} height={52} unoptimized className="h-13 w-13 shrink-0 rounded object-cover" />
                             <div className="min-w-0 flex-1"><p className="truncate font-bold">{sharedSong.title}</p><p className="truncate text-xs text-white/65">{sharedSong.artist}</p><p className="mt-1 text-[10px] uppercase text-white/50">Shared from {sharedSong.source}</p></div>
-                            {sharedSong.audioUrl || sharedSong.videoId ? <button type="button" onClick={() => playSharedSong(item)} className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#ff2d67] text-white" aria-label={`Play ${sharedSong.title}`} title="Play in Audiq"><Play className="h-4 w-4 fill-current" /></button> : null}
+                            {sharedSong.audioUrl || sharedSong.videoId ? <button type="button" onClick={() => playSharedSong(item)} className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#00796b] text-white" aria-label={`Play ${sharedSong.title}`} title="Play in Audiq"><Play className="h-4 w-4 fill-current" /></button> : null}
                           </div>
                         ) : <p className="whitespace-pre-wrap break-words">{item.body}</p>}
                         <p className="mt-1 text-right text-[10px] text-white/55">{formatTime(item.created_at)}</p>
@@ -607,9 +607,9 @@ export default function SocialHub({
                 </div>
 
                 <form className="flex flex-wrap items-center gap-2 border-t border-white/10 p-3" onSubmit={(event) => void handleSend(event)}>
-                  <input value={messageText} onChange={(event) => setMessageText(event.target.value)} placeholder={`Message ${activeFriend.display_name}`} maxLength={2000} className="min-w-0 flex-1 basis-40 rounded-md border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#ff2d67]/50" />
-                  <button type="button" onClick={() => void handleShareSong()} disabled={!currentTrack} title={currentTrack ? `Share ${currentTrack.title}` : "Play a song to share it"} className="flex h-11 items-center gap-2 rounded-md border border-white/10 px-3 text-sm font-bold text-[#f5c2ce] hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40"><Music2 className="h-4 w-4" /><span className="hidden sm:inline">Share song</span></button>
-                  <button type="submit" disabled={!messageText.trim()} aria-label="Send message" className="grid h-11 w-11 place-items-center rounded-md bg-[#ff2d67] text-white disabled:cursor-not-allowed disabled:opacity-50"><Send className="h-4 w-4" /></button>
+                  <input value={messageText} onChange={(event) => setMessageText(event.target.value)} placeholder={`Message ${activeFriend.display_name}`} maxLength={2000} className="min-w-0 flex-1 basis-40 rounded-md border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#00796b]/50" />
+                  <button type="button" onClick={() => void handleShareSong()} disabled={!currentTrack} title={currentTrack ? `Share ${currentTrack.title}` : "Play a song to share it"} className="flex h-11 items-center gap-2 rounded-md border border-white/10 px-3 text-sm font-bold text-[#80cbc4] hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40"><Music2 className="h-4 w-4" /><span className="hidden sm:inline">Share song</span></button>
+                  <button type="submit" disabled={!messageText.trim()} aria-label="Send message" className="grid h-11 w-11 place-items-center rounded-md bg-[#00796b] text-white disabled:cursor-not-allowed disabled:opacity-50"><Send className="h-4 w-4" /></button>
                 </form>
               </>
             ) : (

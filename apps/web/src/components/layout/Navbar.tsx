@@ -65,7 +65,7 @@ export default function Navbar({
   }, [mobileSearchOpen]);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#070607]/90 px-3 py-3 backdrop-blur-xl md:px-8">
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#050706]/90 px-3 py-3 backdrop-blur-xl md:px-8">
       <div className="flex min-h-14 items-center justify-between gap-3">
 
       {/* Left */}
@@ -88,10 +88,10 @@ export default function Navbar({
 
         <Link href="/" className="flex min-w-0 items-center gap-2 md:gap-3">
 
-          <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg border border-[#ff5c8a]/25 bg-black shadow-lg shadow-[#b01340]/30 md:h-14 md:w-14">
+          <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg border border-[#4db6ac]/25 bg-black shadow-lg shadow-[#00594f]/30 md:h-14 md:w-14">
 
             <Image
-              src="/brand/audiq-logo.png"
+              src="/brand/audiq-vinyl.svg"
               alt="Audiq Logo"
               fill
               priority
@@ -105,12 +105,12 @@ export default function Navbar({
 
             <span className="block truncate text-2xl font-black tracking-tight md:text-3xl">
               Audi
-              <span className="text-[#ff2d67]">
+              <span className="text-[#00796b]">
                 q
               </span>
             </span>
 
-            <span className="hidden text-[10px] uppercase tracking-[0.32em] text-[#f5c2ce] md:block">
+            <span className="hidden text-[10px] uppercase tracking-[0.32em] text-[#80cbc4] md:block">
               Audio Intelligence Community
             </span>
 
@@ -130,7 +130,7 @@ export default function Navbar({
         }}
       >
 
-        <Search className="h-5 w-5 text-[#f5c2ce]" />
+        <Search className="h-5 w-5 text-[#80cbc4]" />
 
         <Input
           value={term}
@@ -161,7 +161,7 @@ export default function Navbar({
 
         <Button
           onClick={onOpenAi}
-          className="hidden lg:flex items-center gap-2 bg-[#b01340]/20 border border-[#b01340]/50 text-[#f5c2ce] hover:bg-[#b01340]/35"
+          className="hidden lg:flex items-center gap-2 bg-[#00594f]/20 border border-[#00594f]/50 text-[#80cbc4] hover:bg-[#00594f]/35"
         >
           <Sparkles className="h-4 w-4" />
           AI DJ
@@ -206,11 +206,11 @@ export default function Navbar({
             aria-expanded={accountMenuOpen}
             className={accountName
               ? "flex items-center gap-2 rounded-full text-white"
-              : "flex items-center gap-2 rounded-lg border border-[#ff2d67]/40 bg-[#b01340]/20 px-2.5 py-1.5 text-white hover:bg-[#b01340]/35"}
+              : "flex items-center gap-2 rounded-lg border border-[#00796b]/40 bg-[#00594f]/20 px-2.5 py-1.5 text-white hover:bg-[#00594f]/35"}
           >
             {accountName ? (
-              <Avatar className="h-10 w-10 border border-[#ff2d67]/40">
-                <AvatarFallback className="bg-[#800f2f] font-bold text-white">
+              <Avatar className="h-10 w-10 border border-[#00796b]/40">
+                <AvatarFallback className="bg-[#00332d] font-bold text-white">
                   {accountName.slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
@@ -223,7 +223,7 @@ export default function Navbar({
           </button>
 
           {accountMenuOpen && accountName ? (
-            <div className="absolute right-0 top-full z-[70] mt-2 w-60 rounded-lg border border-white/10 bg-[#151318] p-3 shadow-2xl">
+            <div className="absolute right-0 top-full z-[70] mt-2 w-60 rounded-lg border border-white/10 bg-[#101412] p-3 shadow-2xl">
               <p className="truncate font-bold text-white">{accountName}</p>
               <p className="mt-1 text-xs text-zinc-400">{audiqId || "AudiQ ID loading…"}</p>
               {accountError && <p role="alert" className="mt-2 text-xs text-rose-300">{accountError}</p>}
@@ -262,7 +262,7 @@ export default function Navbar({
             onMobileSearchOpenChange(false);
           }}
         >
-          <Search className="h-5 w-5 shrink-0 text-[#f5c2ce]" />
+          <Search className="h-5 w-5 shrink-0 text-[#80cbc4]" />
           <Input
             ref={mobileInputRef}
             value={term}

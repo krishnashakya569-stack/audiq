@@ -112,7 +112,7 @@ export default function AppShell() {
     setMobileSearchOpen(true);
   };
     return (
-    <div className="audiq-shell relative flex h-dvh min-w-0 flex-col overflow-hidden bg-[#070607] text-white">
+    <div className="audiq-shell relative flex h-dvh min-w-0 flex-col overflow-hidden bg-[#050706] text-white">
 
       {/* Edge Swipe Zone (Mobile Only) */}
 
@@ -171,7 +171,7 @@ export default function AppShell() {
             shrink-0
             border-r
             border-white/10
-            bg-[#0d0d10]
+            bg-[#080b09]
           "
         >
           <Sidebar
@@ -214,7 +214,7 @@ export default function AppShell() {
             min-w-0
             flex-1
             overflow-y-auto
-            bg-[#080709]
+            bg-[#050706]
             px-4
             py-4
             pb-40
@@ -259,7 +259,7 @@ export default function AppShell() {
             shrink-0
             border-l
             border-white/10
-            bg-[#0d0d10]
+            bg-[#080b09]
           "
         >
           <RightPanel />

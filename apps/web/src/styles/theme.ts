@@ -1,12 +1,12 @@
 export const theme = {
   colors: {
-    primary: "#800F2F",
-    primaryDark: "#5C0921",
-    primaryHover: "#B01340",
+    primary: "#00796b",
+    primaryDark: "#00332d",
+    primaryHover: "#00695c",
 
-    background: "#0D0D0D",
-    surface: "#171717",
-    surface2: "#202020",
+    background: "#050706",
+    surface: "#101412",
+    surface2: "#10211f",
 
     white: "#FFFFFF",
 
