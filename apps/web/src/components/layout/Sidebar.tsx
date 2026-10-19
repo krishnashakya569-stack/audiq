@@ -237,7 +237,7 @@ export default function Sidebar({
               }}
               className={`group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium transition-all duration-200 ${
                 active
-                  ? "bg-gradient-to-r from-[#00594f] to-[#00332d] text-white shadow-lg"
+                  ? "bg-[#d6ff36] text-[#07100d] shadow-lg shadow-[#d6ff36]/10"
                   : "text-zinc-400 hover:bg-white/10 hover:text-white"
               }`}
             >
@@ -314,7 +314,7 @@ export default function Sidebar({
 
       {/* Live Room */}
 
-      <div className="mt-auto rounded-xl border border-[#00594f]/25 bg-gradient-to-br from-[#00594f]/10 to-[#111111] p-4">
+      <div className="mt-auto rounded-2xl border border-[#ff7052]/20 bg-[radial-gradient(circle_at_100%_0%,rgba(255,112,82,0.16),transparent_48%),linear-gradient(145deg,rgba(0,121,107,0.12),#101412)] p-4">
 
         <p className="text-xs uppercase tracking-[0.22em] text-[#80cbc4]">
           Live Room
@@ -326,7 +326,7 @@ export default function Sidebar({
 
         <button
           type="button"
-          className="mt-4 w-full rounded-xl bg-white py-3 font-semibold text-[#00332d] transition-all hover:scale-[1.02] hover:bg-zinc-100"
+          className="mt-4 w-full rounded-full bg-[#d6ff36] py-3 font-black text-[#07100d] transition-all hover:scale-[1.02] hover:bg-[#e4ff75]"
         >
           Join Session
         </button>

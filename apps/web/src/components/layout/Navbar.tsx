@@ -65,7 +65,7 @@ export default function Navbar({
   }, [mobileSearchOpen]);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#050706]/90 px-3 py-3 backdrop-blur-xl md:px-8">
+    <header className="sticky top-0 z-50 border-b border-white/[0.08] bg-[#070908]/85 px-3 py-3 backdrop-blur-2xl md:px-8">
       <div className="flex min-h-14 items-center justify-between gap-3">
 
       {/* Left */}
@@ -123,19 +123,19 @@ export default function Navbar({
       {/* Search */}
 
       <form
-        className="hidden md:flex w-[min(42vw,520px)] items-center gap-3 rounded-xl border border-white/10 bg-white/[0.06] px-4 py-1.5"
+        className="hidden md:flex w-[min(42vw,520px)] items-center gap-3 rounded-full border border-white/10 bg-white/[0.045] px-4 py-1.5 transition focus-within:border-[#d6ff36]/40 focus-within:bg-white/[0.07]"
         onSubmit={(e) => {
           e.preventDefault();
           onSearch(term.trim() || "starboy");
         }}
       >
 
-        <Search className="h-5 w-5 text-[#80cbc4]" />
+        <Search className="h-5 w-5 text-[#d6ff36]" />
 
         <Input
           value={term}
           onChange={(e) => onTermChange(e.target.value)}
-          placeholder="Search songs, artists, playlists..."
+          placeholder="Search your next obsession..."
           className="h-9 border-none bg-transparent text-sm text-white shadow-none placeholder:text-zinc-500 focus-visible:ring-0"
         />
 
@@ -161,7 +161,7 @@ export default function Navbar({
 
         <Button
           onClick={onOpenAi}
-          className="hidden lg:flex items-center gap-2 bg-[#00594f]/20 border border-[#00594f]/50 text-[#80cbc4] hover:bg-[#00594f]/35"
+          className="hidden lg:flex items-center gap-2 rounded-full border border-[#d6ff36]/25 bg-[#d6ff36]/[0.08] text-[#e6ff8a] hover:border-[#d6ff36]/50 hover:bg-[#d6ff36]/[0.14]"
         >
           <Sparkles className="h-4 w-4" />
           AI DJ
@@ -206,18 +206,18 @@ export default function Navbar({
             aria-expanded={accountMenuOpen}
             className={accountName
               ? "flex items-center gap-2 rounded-full text-white"
-              : "flex items-center gap-2 rounded-lg border border-[#00796b]/40 bg-[#00594f]/20 px-2.5 py-1.5 text-white hover:bg-[#00594f]/35"}
+              : "flex items-center gap-2 rounded-full border border-[#d6ff36]/30 bg-[#d6ff36] px-3.5 py-2 text-[#07100d] shadow-lg shadow-[#d6ff36]/10 transition hover:-translate-y-0.5 hover:bg-[#e4ff75]"}
           >
             {accountName ? (
-              <Avatar className="h-10 w-10 border border-[#00796b]/40">
-                <AvatarFallback className="bg-[#00332d] font-bold text-white">
+              <Avatar className="h-10 w-10 border border-[#d6ff36]/40">
+                <AvatarFallback className="bg-[#d6ff36] font-black text-[#07100d]">
                   {accountName.slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
             ) : (
               <LogIn aria-hidden="true" className="h-4 w-4" />
             )}
-            <span className="text-xs font-semibold sm:text-sm">
+            <span className="text-xs font-black uppercase tracking-wide sm:text-sm">
               {accountName ? "Account" : "Sign in"}
             </span>
           </button>
@@ -262,7 +262,7 @@ export default function Navbar({
             onMobileSearchOpenChange(false);
           }}
         >
-          <Search className="h-5 w-5 shrink-0 text-[#80cbc4]" />
+          <Search className="h-5 w-5 shrink-0 text-[#d6ff36]" />
           <Input
             ref={mobileInputRef}
             value={term}

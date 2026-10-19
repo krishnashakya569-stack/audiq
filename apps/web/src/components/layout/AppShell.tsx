@@ -224,7 +224,11 @@ export default function AppShell() {
           "
         >
           {view === "home" && (
-            <HomeFeed query={query} />
+            <HomeFeed
+              query={query}
+              onExplore={() => changeView("explore")}
+              onCreateMix={() => changeView("ai")}
+            />
           )}
 
           {view === "library" && (
