@@ -90,7 +90,7 @@ export default function MusicPlayer() {
 
     switch (currentTrack.source) {
       case "youtube":
-        return "YouTube";
+        return "YouTube · keep screen on";
 
       case "jiosaavn":
         return "JioSaavn";
@@ -115,6 +115,110 @@ export default function MusicPlayer() {
 
     audio.volume = isMuted ? 0 : volume;
   }, [volume, isMuted]);
+
+  useEffect(() => {
+    const session = navigator.mediaSession;
+
+    if (!session) return;
+
+    const directAudioTrack =
+      currentTrack &&
+      currentTrack.source !== "youtube" &&
+      Boolean(currentTrack.audio);
+
+    if (!directAudioTrack || !currentTrack) {
+      session.metadata = null;
+      session.playbackState = "none";
+      return;
+    }
+
+    if (typeof MediaMetadata !== "undefined") {
+      const artworkUrl = currentTrack.albumArt
+        ? new URL(currentTrack.albumArt, window.location.origin).toString()
+        : undefined;
+
+      session.metadata = new MediaMetadata({
+        title: currentTrack.title,
+        artist: currentTrack.artist,
+        album: currentTrack.source || "Audiq",
+        artwork: artworkUrl
+          ? [
+              { src: artworkUrl, sizes: "96x96", type: "image/jpeg" },
+              { src: artworkUrl, sizes: "256x256", type: "image/jpeg" },
+              { src: artworkUrl, sizes: "512x512", type: "image/jpeg" },
+            ]
+          : [],
+      });
+    }
+
+    const setHandler = (
+      action: MediaSessionAction,
+      handler: MediaSessionActionHandler | null
+    ) => {
+      try {
+        session.setActionHandler(action, handler);
+      } catch {
+        // Browsers may not support every media action.
+      }
+    };
+
+    setHandler("play", () => {
+      const audio = audioRef.current;
+      if (!audio) return;
+      audio.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+    });
+    setHandler("pause", () => audioRef.current?.pause());
+    setHandler("previoustrack", previousTrack);
+    setHandler("nexttrack", nextTrack);
+    setHandler("seekbackward", (details) => {
+      const audio = audioRef.current;
+      if (!audio) return;
+      audio.currentTime = Math.max(
+        audio.currentTime - (details.seekOffset || 10),
+        0
+      );
+    });
+    setHandler("seekforward", (details) => {
+      const audio = audioRef.current;
+      if (!audio) return;
+      const end = Number.isFinite(audio.duration)
+        ? audio.duration
+        : audio.currentTime + (details.seekOffset || 10);
+      audio.currentTime = Math.min(
+        audio.currentTime + (details.seekOffset || 10),
+        end
+      );
+    });
+    setHandler("seekto", (details) => {
+      const audio = audioRef.current;
+      if (audio && details.seekTime !== undefined) {
+        audio.currentTime = details.seekTime;
+      }
+    });
+
+    return () => {
+      for (const action of [
+        "play",
+        "pause",
+        "previoustrack",
+        "nexttrack",
+        "seekbackward",
+        "seekforward",
+        "seekto",
+      ] as const) {
+        setHandler(action, null);
+      }
+      session.metadata = null;
+      session.playbackState = "none";
+    };
+  }, [currentTrack, nextTrack, previousTrack, setPlaying]);
+
+  useEffect(() => {
+    if (!navigator.mediaSession || !currentTrack) return;
+    if (currentTrack.source === "youtube" || !currentTrack.audio) return;
+
+    navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
+  }, [currentTrack, isPlaying]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -559,3 +663,4 @@ export default function MusicPlayer() {
     </>
   );
 }
+
