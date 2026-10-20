@@ -41,7 +41,7 @@ export default function DownloadPage() {
             <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#80cbc4]">Web portal · Android</p>
             <h1 className="mt-4 text-4xl font-black tracking-tight sm:text-6xl">Take your music space with you.</h1>
             <p className="mt-5 max-w-xl text-base leading-7 text-zinc-300 sm:text-lg">
-              Keep using Audiq in your browser, install it from your browser, or get the Android app when the signed APK is available.
+              Use the web portal, install Audiq from your browser, or download the Android app.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">

@@ -37,12 +37,9 @@ export default function InstallPwaButton() {
 
   if (!promptEvent) {
     return (
-      <a
-        href="/"
-        className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/15 px-6 py-3 font-bold text-white transition hover:border-[#80cbc4]/60 hover:text-[#80cbc4]"
-      >
-        <Smartphone size={18} /> Install from browser
-      </a>
+      <span className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/15 px-6 py-3 text-sm font-semibold text-zinc-300">
+        <Smartphone size={18} /> In Chrome, choose “Install app” from ⋮
+      </span>
     );
   }
 
