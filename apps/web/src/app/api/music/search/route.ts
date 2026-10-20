@@ -204,8 +204,8 @@ function normalize(value = "") {
     .trim();
 }
 
-const INDIAN_LANGUAGE_SCRIPT = /[\\u0900-\\u097f\\u0980-\\u09ff\\u0a00-\\u0a7f\\u0a80-\\u0aff\\u0b00-\\u0b7f\\u0b80-\\u0bff\\u0c00-\\u0c7f\\u0c80-\\u0cff\\u0d00-\\u0d7f]/;
-const INDIAN_MUSIC_TERMS = /\\b(?:indian|bharatiya|desi|bollywood|filmi|hindi|punjabi|tamil|telugu|malayalam|kannada|bengali|bangla|marathi|gujarati|bhojpuri|haryanvi|odia|assamese|rajasthani|konkani|manipuri|sindhi|kashmiri|urdu|qawwali|ghazal|sufi|bhajan|kirtan|bhangra|garba|dandiya|hindustani|carnatic|kollywood|tollywood|mollywood|sandalwood|t-series|saregama|zee music|sony music india|tips official|speed records|white hill music|lahari music|think music india)\\b/i;
+const INDIAN_LANGUAGE_SCRIPT = /[\u0900-\u097f\u0980-\u09ff\u0a00-\u0a7f\u0a80-\u0aff\u0b00-\u0b7f\u0b80-\u0bff\u0c00-\u0c7f\u0c80-\u0cff\u0d00-\u0d7f]/;
+const INDIAN_MUSIC_TERMS = /\b(?:indian|bharatiya|desi|bollywood|filmi|hindi|punjabi|tamil|telugu|malayalam|kannada|bengali|bangla|marathi|gujarati|bhojpuri|haryanvi|odia|assamese|rajasthani|konkani|manipuri|sindhi|kashmiri|urdu|qawwali|ghazal|sufi|bhajan|kirtan|bhangra|garba|dandiya|hindustani|carnatic|kollywood|tollywood|mollywood|sandalwood|t-series|saregama|zee music|sony music india|tips official|speed records|white hill music|lahari music|think music india)\b/i;
 
 function indianMusicPreferenceBonus(values: Array<string | null | undefined>) {
   const text = values.filter(Boolean).join(" ");
