@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   Clock3,
   Compass,
@@ -249,6 +250,19 @@ export default function Sidebar({
         })}
       </div>
 
+      <Link
+        href="/download"
+        className="mt-6 flex items-center gap-3 rounded-xl border border-[#00796b]/35 bg-[#00796b]/10 px-3 py-3 transition hover:border-[#4db6ac]/60 hover:bg-[#00796b]/20"
+      >
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#00796b]/25 text-[#80cbc4]">
+          <Download size={18} />
+        </span>
+        <span className="min-w-0">
+          <span className="block text-sm font-semibold text-white">Get Audiq app</span>
+          <span className="block text-xs text-zinc-400">Android APK & browser install</span>
+        </span>
+      </Link>
+
       {/* Library */}
 
       <div className="mt-8">
@@ -344,3 +358,4 @@ export default function Sidebar({
     </div>
   );
 }
+
