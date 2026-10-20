@@ -18,6 +18,9 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { type AudiqProfile, useAuth } from "@/features/auth/AuthProvider";
+import ProfileAvatar from "@/features/social/components/ProfileAvatar";
+import { getChatTheme } from "@/features/auth/profileAppearance";
+import { withSignedAvatarUrls } from "@/lib/supabase/avatars";
 import { usePlayerStore, type Track } from "@/store/player";
 
 export type SocialTab = "friends" | "messages";
@@ -65,15 +68,7 @@ function formatTime(value: string) {
 }
 
 function AvatarBlock({ user }: { user: AudiqProfile }) {
-  return (
-    <div
-      className="grid h-11 w-11 shrink-0 place-items-center rounded-full font-black text-white"
-      style={{ backgroundColor: user.avatar_color || "#00594f" }}
-      aria-hidden="true"
-    >
-      {user.display_name.slice(0, 1).toUpperCase()}
-    </div>
-  );
+  return <ProfileAvatar profile={user} className="h-11 w-11" />;
 }
 
 export default function SocialHub({
@@ -82,6 +77,7 @@ export default function SocialHub({
   onOpenAuth,
 }: SocialHubProps) {
   const { user, profile, loading: authLoading, profileLoading, supabase } = useAuth();
+  const chatTheme = getChatTheme(profile?.chat_theme);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const playTrack = usePlayerStore((state) => state.playTrack);
 
@@ -134,17 +130,14 @@ export default function SocialHub({
 
     const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
-      .select("id,audiq_id,display_name,handle,avatar_color")
+      .select("id,audiq_id,display_name,handle,avatar_color,avatar_path,avatar_style,chat_theme")
       .in("id", otherIds);
 
     if (profilesError) {
       setError("Could not load user profiles. Check the Supabase social migration and try again.");
     } else {
-      setProfilesById(
-        Object.fromEntries(
-          ((profiles ?? []) as AudiqProfile[]).map((item) => [item.id, item])
-        )
-      );
+      const profilesWithAvatars = await withSignedAvatarUrls(supabase, (profiles ?? []) as AudiqProfile[]);
+      setProfilesById(Object.fromEntries(profilesWithAvatars.map((item) => [item.id, item])));
     }
     setLoadingSocial(false);
   }, [supabase, user]);
@@ -267,7 +260,7 @@ export default function SocialHub({
       : query.replace(/^@/, "").toLowerCase();
     const result = await supabase
       .from("profiles")
-      .select("id,audiq_id,display_name,handle,avatar_color")
+      .select("id,audiq_id,display_name,handle,avatar_color,avatar_path,avatar_style,chat_theme")
       .eq(isAudiqId ? "audiq_id" : "handle", normalized)
       .maybeSingle();
 
@@ -279,7 +272,7 @@ export default function SocialHub({
       setNotice("No Audiq user found with that ID or username.");
       return;
     }
-    const match = result.data as AudiqProfile;
+    const [match] = await withSignedAvatarUrls(supabase, [result.data as AudiqProfile]);
     if (match.id === user.id) {
       setNotice("That is your own Audiq profile.");
       return;
@@ -631,13 +624,13 @@ export default function SocialHub({
                     const sharedSong = item.message_type === "song" ? item.song : null;
                     return (
                       <div key={item.id} className={`flex items-end gap-2 ${mine ? "justify-end" : "justify-start"}`}>
-                        {!mine ? <div className="mb-5 grid h-7 w-7 shrink-0 place-items-center rounded-full text-[10px] font-black text-white" style={{ backgroundColor: activeFriend.avatar_color || "#00594f" }} aria-hidden="true">{activeFriend.display_name.slice(0, 1).toUpperCase()}</div> : null}
-                        <div className={`max-w-[88%] rounded-[1.35rem] px-3.5 py-2.5 text-sm shadow-sm sm:max-w-[78%] ${mine ? "rounded-br-md bg-[#00796b] text-white" : "rounded-bl-md bg-[#202523] text-zinc-100"}`}>
+                        {!mine ? <ProfileAvatar profile={activeFriend} className="mb-5 h-7 w-7" /> : null}
+                        <div style={mine ? { backgroundColor: chatTheme.color, color: chatTheme.textColor } : undefined} className={`max-w-[88%] rounded-[1.35rem] px-3.5 py-2.5 text-sm shadow-sm sm:max-w-[78%] ${mine ? "rounded-br-md" : "rounded-bl-md bg-[#202523] text-zinc-100"}`}>
                         {sharedSong ? (
                           <div className="flex min-w-0 items-center gap-2.5 rounded-xl border border-white/10 bg-black/20 p-2">
                             <Image src={sharedSong.albumArt || "/covers/default.png"} alt="" width={48} height={48} unoptimized className="h-12 w-12 shrink-0 rounded-lg object-cover" />
                             <div className="min-w-0 flex-1"><p className="truncate font-bold">{sharedSong.title}</p><p className="truncate text-xs text-white/65">{sharedSong.artist}</p><p className="mt-1 text-[10px] uppercase tracking-wide text-white/50">Shared from {sharedSong.source}</p></div>
-                            {sharedSong.audioUrl || sharedSong.videoId ? <button type="button" onClick={() => playSharedSong(item)} className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#80cbc4] text-[#05110f] transition hover:scale-105" aria-label={`Play ${sharedSong.title}`} title="Play in Audiq"><Play className="h-4 w-4 fill-current" /></button> : null}
+                            {sharedSong.audioUrl || sharedSong.videoId ? <button type="button" onClick={() => playSharedSong(item)} style={{ backgroundColor: chatTheme.color, color: chatTheme.textColor }} className="grid h-9 w-9 shrink-0 place-items-center rounded-full transition hover:scale-105" aria-label={`Play ${sharedSong.title}`} title="Play in Audiq"><Play className="h-4 w-4 fill-current" /></button> : null}
                           </div>
                         ) : <p className="whitespace-pre-wrap break-words">{item.body}</p>}
                         <p className={`mt-1 text-[10px] text-white/50 ${mine ? "text-right" : "text-left"}`}>{formatTime(item.created_at)}</p>
@@ -650,8 +643,8 @@ export default function SocialHub({
 
                 <form className="flex shrink-0 items-center gap-2 border-t border-white/10 bg-[#0a0d0c] px-3 py-3 sm:px-4" onSubmit={(event) => void handleSend(event)}>
                   <input value={messageText} onChange={(event) => setMessageText(event.target.value)} placeholder={`Message ${activeFriend.display_name}`} maxLength={2000} className="min-h-11 min-w-0 flex-1 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-white outline-none transition focus:border-[#00796b]/60 focus:bg-white/[0.06]" />
-                  <button type="button" onClick={() => void handleShareSong()} disabled={!currentTrack} title={currentTrack ? `Share ${currentTrack.title}` : "Play a song to share it"} aria-label={currentTrack ? `Share ${currentTrack.title}` : "Play a song to share it"} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#80cbc4] transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto sm:gap-2 sm:px-3"><Music2 className="h-5 w-5" /><span className="hidden text-sm font-bold sm:inline">Share</span></button>
-                  <button type="submit" disabled={!messageText.trim()} aria-label="Send message" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#00796b] text-white transition hover:bg-[#008f80] disabled:cursor-not-allowed disabled:opacity-50"><Send className="h-4 w-4" /></button>
+                  <button type="button" onClick={() => void handleShareSong()} disabled={!currentTrack} title={currentTrack ? `Share ${currentTrack.title}` : "Play a song to share it"} aria-label={currentTrack ? `Share ${currentTrack.title}` : "Play a song to share it"} style={{ color: chatTheme.color }} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto sm:gap-2 sm:px-3"><Music2 className="h-5 w-5" /><span className="hidden text-sm font-bold sm:inline">Share</span></button>
+                  <button type="submit" disabled={!messageText.trim()} aria-label="Send message" style={{ backgroundColor: chatTheme.color, color: chatTheme.textColor }} className="grid h-11 w-11 shrink-0 place-items-center rounded-full transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"><Send className="h-4 w-4" /></button>
                 </form>
               </>
             ) : (
@@ -663,3 +656,4 @@ export default function SocialHub({
     </section>
   );
 }
+

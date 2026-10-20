@@ -149,6 +149,7 @@ export default function AppShell() {
         term={searchTerm}
         onTermChange={setSearchTerm}
         accountName={profile?.display_name ?? user?.email ?? null}
+        profile={profile}
         audiqId={profile?.audiq_id ?? null}
         onOpenAuth={() => setAuthDialogOpen(true)}
         onSignOut={signOut}
@@ -290,3 +291,4 @@ export default function AppShell() {
     </div>
   );
 }
+

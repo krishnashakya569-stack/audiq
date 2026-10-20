@@ -6,10 +6,13 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import type { User } from "@supabase/supabase-js";
 import { getSupabaseClient } from "@/lib/supabase/client";
+import { withSignedAvatarUrls } from "@/lib/supabase/avatars";
+import type { AvatarStyle, ChatThemeId } from "./profileAppearance";
 
 export type AudiqProfile = {
   id: string;
@@ -17,6 +20,10 @@ export type AudiqProfile = {
   display_name: string;
   handle: string;
   avatar_color: string;
+  avatar_path: string | null;
+  avatar_url: string | null;
+  avatar_style: AvatarStyle;
+  chat_theme: ChatThemeId;
 };
 
 type AuthContextValue = {
@@ -25,6 +32,7 @@ type AuthContextValue = {
   loading: boolean;
   profileLoading: boolean;
   supabase: ReturnType<typeof getSupabaseClient>;
+  refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -36,6 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<AudiqProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
+  const profileRequest = useRef(0);
 
   /* eslint-disable react-hooks/set-state-in-effect -- Initial auth bootstrap needs to finish when no Supabase client is configured. */
   useEffect(() => {
@@ -67,31 +76,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  /* eslint-disable react-hooks/set-state-in-effect -- Profile state synchronizes an asynchronous Supabase lookup with the current signed-in user. */
-  useEffect(() => {
+  const refreshProfile = useCallback(async () => {
+    const requestId = ++profileRequest.current;
     if (!supabase || !user) {
       setProfile(null);
       setProfileLoading(false);
       return;
     }
-
-    let active = true;
     setProfileLoading(true);
-    void (async () => {
+    try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id,audiq_id,display_name,handle,avatar_color")
+        .select("id,audiq_id,display_name,handle,avatar_color,avatar_path,avatar_style,chat_theme")
         .eq("id", user.id)
         .maybeSingle();
-      if (!active) return;
-      setProfile(error ? null : (data as AudiqProfile | null) ?? null);
-      setProfileLoading(false);
-    })();
-
-    return () => {
-      active = false;
-    };
+      if (requestId !== profileRequest.current) return;
+      if (error || !data) {
+        setProfile(null);
+        return;
+      }
+      const [profileWithAvatar] = await withSignedAvatarUrls(supabase, [data as AudiqProfile]);
+      if (requestId === profileRequest.current) setProfile(profileWithAvatar);
+    } catch {
+      if (requestId === profileRequest.current) setProfile(null);
+    } finally {
+      if (requestId === profileRequest.current) setProfileLoading(false);
+    }
   }, [supabase, user]);
+
+  /* eslint-disable react-hooks/set-state-in-effect -- Profile state synchronizes an asynchronous Supabase lookup with the current signed-in user. */
+  useEffect(() => {
+    void refreshProfile();
+    return () => {
+      profileRequest.current += 1;
+    };
+  }, [refreshProfile]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   const signOut = useCallback(async () => {
@@ -101,8 +120,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase]);
 
   const value = useMemo(
-    () => ({ user, profile, loading, profileLoading, supabase, signOut }),
-    [user, profile, loading, profileLoading, supabase, signOut]
+    () => ({ user, profile, loading, profileLoading, supabase, refreshProfile, signOut }),
+    [user, profile, loading, profileLoading, supabase, refreshProfile, signOut]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -113,3 +132,4 @@ export function useAuth() {
   if (!context) throw new Error("useAuth must be used inside AuthProvider");
   return context;
 }
+

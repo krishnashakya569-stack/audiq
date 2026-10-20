@@ -14,7 +14,8 @@ import {
   Sparkles,
 } from "lucide-react";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import type { AudiqProfile } from "@/features/auth/AuthProvider";
+import ProfileAvatar from "@/features/social/components/ProfileAvatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -22,6 +23,7 @@ type NavbarProps = {
   term: string;
   onTermChange: (term: string) => void;
   accountName: string | null;
+  profile: AudiqProfile | null;
   audiqId: string | null;
   onOpenAuth: () => void;
   onSignOut: () => Promise<void>;
@@ -36,6 +38,7 @@ export default function Navbar({
   term,
   onTermChange,
   accountName,
+  profile,
   audiqId,
   onOpenAuth,
   onSignOut,
@@ -209,11 +212,7 @@ export default function Navbar({
               : "flex items-center gap-2 rounded-full border border-[#d6ff36]/30 bg-[#d6ff36] px-3.5 py-2 text-[#07100d] shadow-lg shadow-[#d6ff36]/10 transition hover:-translate-y-0.5 hover:bg-[#e4ff75]"}
           >
             {accountName ? (
-              <Avatar className="h-10 w-10 border border-[#d6ff36]/40">
-                <AvatarFallback className="bg-[#d6ff36] font-black text-[#07100d]">
-                  {accountName.slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <ProfileAvatar profile={profile} className="h-10 w-10 border border-[#d6ff36]/40" />
             ) : (
               <LogIn aria-hidden="true" className="h-4 w-4" />
             )}
@@ -276,3 +275,4 @@ export default function Navbar({
     </header>
   );
 }
+

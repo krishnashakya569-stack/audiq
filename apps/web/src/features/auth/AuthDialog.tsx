@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useAuth } from "./AuthProvider";
+import { AVATAR_STYLE_OPTIONS, type AvatarStyle } from "./profileAppearance";
 
 type AuthDialogProps = {
   open: boolean;
@@ -16,6 +17,7 @@ export default function AuthDialog({ open, onClose }: AuthDialogProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [handle, setHandle] = useState("");
+  const [avatarStyle, setAvatarStyle] = useState<AvatarStyle>("prefer_not_to_say");
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -51,6 +53,7 @@ export default function AuthDialog({ open, onClose }: AuthDialogProps) {
             data: {
               display_name: displayName.trim(),
               handle: safeHandle,
+              avatar_style: avatarStyle,
             },
           },
         });
@@ -141,6 +144,13 @@ export default function AuthDialog({ open, onClose }: AuthDialogProps) {
                   <input required minLength={3} maxLength={24} autoCapitalize="none" value={handle} onChange={(event) => setHandle(event.target.value)} className="w-full bg-transparent px-2 py-2.5 text-white outline-none" placeholder="yourname" />
                 </span>
               </label>
+              <label className="block text-sm text-zinc-300">
+                Default avatar style <span className="text-zinc-500">(optional)</span>
+                <select value={avatarStyle} onChange={(event) => setAvatarStyle(event.target.value as AvatarStyle)} className="mt-1.5 w-full rounded-md border border-white/10 bg-[#111014] px-3 py-2.5 text-white outline-none focus:border-[#00796b]/60">
+                  {AVATAR_STYLE_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                </select>
+                <span className="mt-1 block text-xs text-zinc-500">This only changes your illustrated avatar. You can change it later in Settings.</span>
+              </label>
             </>
           ) : null}
 
@@ -170,3 +180,4 @@ export default function AuthDialog({ open, onClose }: AuthDialogProps) {
     </div>
   );
 }
+
