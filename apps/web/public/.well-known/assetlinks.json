@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "online.audiq",
+      "sha256_cert_fingerprints": [
+        "D7:6A:F9:BC:88:82:AC:1F:6C:01:C9:21:7C:F9:8E:FF:DA:B1:7B:10:71:24:2F:21:C3:41:73:38:B0:1A:05:07"
+      ]
+    }
+  }
+]
