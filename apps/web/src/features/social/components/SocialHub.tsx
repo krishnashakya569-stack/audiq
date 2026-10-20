@@ -613,6 +613,53 @@ export default function SocialHub({
               {friends.length > 0 && !friends.some((friend) => `${friend.display_name} ${friend.handle} ${friend.audiq_id}`.toLowerCase().includes(chatSearch.trim().toLowerCase())) ? (
                 <p className="px-3 py-6 text-center text-sm text-zinc-500">No chats match that search.</p>
               ) : null}
+            </div>
+          </aside>
+
+          <section className={`min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0d100f] ${mobileChatOpen ? "flex" : "hidden xl:flex"}`}>
+            {activeFriend ? (
+              <>
+                <div className="flex shrink-0 items-center gap-3 border-b border-white/10 bg-white/[0.02] px-3 py-3 sm:px-4">
+                  <button type="button" onClick={() => setMobileChatOpen(false)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-zinc-300 transition hover:bg-white/10 xl:hidden" aria-label="Back to chats"><ArrowLeft className="h-5 w-5" /></button>
+                  <AvatarBlock user={activeFriend} />
+                  <div className="min-w-0"><h2 className="truncate font-black text-white">{activeFriend.display_name}</h2><p className="truncate text-sm text-zinc-500">{activeFriend.audiq_id}</p></div>
+                </div>
+
+                <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3 sm:p-5">
+                  {messages.length === 0 ? <div className="grid flex-1 place-items-center px-6 text-center text-sm text-zinc-500">Say hello or share the song you are listening to.</div> : messages.map((item) => {
+                    const mine = item.sender_id === user.id;
+                    const sharedSong = item.message_type === "song" ? item.song : null;
+                    return (
+                      <div key={item.id} className={`flex items-end gap-2 ${mine ? "justify-end" : "justify-start"}`}>
+                        {!mine ? <div className="mb-5 grid h-7 w-7 shrink-0 place-items-center rounded-full text-[10px] font-black text-white" style={{ backgroundColor: activeFriend.avatar_color || "#00594f" }} aria-hidden="true">{activeFriend.display_name.slice(0, 1).toUpperCase()}</div> : null}
+                        <div className={`max-w-[88%] rounded-[1.35rem] px-3.5 py-2.5 text-sm shadow-sm sm:max-w-[78%] ${mine ? "rounded-br-md bg-[#00796b] text-white" : "rounded-bl-md bg-[#202523] text-zinc-100"}`}>
+                        {sharedSong ? (
+                          <div className="flex min-w-0 items-center gap-2.5 rounded-xl border border-white/10 bg-black/20 p-2">
+                            <Image src={sharedSong.albumArt || "/covers/default.png"} alt="" width={48} height={48} unoptimized className="h-12 w-12 shrink-0 rounded-lg object-cover" />
+                            <div className="min-w-0 flex-1"><p className="truncate font-bold">{sharedSong.title}</p><p className="truncate text-xs text-white/65">{sharedSong.artist}</p><p className="mt-1 text-[10px] uppercase tracking-wide text-white/50">Shared from {sharedSong.source}</p></div>
+                            {sharedSong.audioUrl || sharedSong.videoId ? <button type="button" onClick={() => playSharedSong(item)} className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#80cbc4] text-[#05110f] transition hover:scale-105" aria-label={`Play ${sharedSong.title}`} title="Play in Audiq"><Play className="h-4 w-4 fill-current" /></button> : null}
+                          </div>
+                        ) : <p className="whitespace-pre-wrap break-words">{item.body}</p>}
+                        <p className={`mt-1 text-[10px] text-white/50 ${mine ? "text-right" : "text-left"}`}>{formatTime(item.created_at)}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div ref={messagesEndRef} aria-hidden="true" />
+                </div>
+
+                <form className="flex shrink-0 items-center gap-2 border-t border-white/10 bg-[#0a0d0c] px-3 py-3 sm:px-4" onSubmit={(event) => void handleSend(event)}>
+                  <input value={messageText} onChange={(event) => setMessageText(event.target.value)} placeholder={`Message ${activeFriend.display_name}`} maxLength={2000} className="min-h-11 min-w-0 flex-1 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-white outline-none transition focus:border-[#00796b]/60 focus:bg-white/[0.06]" />
+                  <button type="button" onClick={() => void handleShareSong()} disabled={!currentTrack} title={currentTrack ? `Share ${currentTrack.title}` : "Play a song to share it"} aria-label={currentTrack ? `Share ${currentTrack.title}` : "Play a song to share it"} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#80cbc4] transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto sm:gap-2 sm:px-3"><Music2 className="h-5 w-5" /><span className="hidden text-sm font-bold sm:inline">Share</span></button>
+                  <button type="submit" disabled={!messageText.trim()} aria-label="Send message" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#00796b] text-white transition hover:bg-[#008f80] disabled:cursor-not-allowed disabled:opacity-50"><Send className="h-4 w-4" /></button>
+                </form>
+              </>
+            ) : (
+              <div className="grid flex-1 place-items-center p-8 text-center text-zinc-500">Add a friend, then open a chat.</div>
+            )}
+          </section>
+        </div>
+      ) : null}
     </section>
   );
 }
