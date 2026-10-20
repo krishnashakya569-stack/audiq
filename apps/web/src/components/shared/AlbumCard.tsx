@@ -73,7 +73,7 @@ export default function AlbumCard({
     }
   };
     return (
-    <article className="group cursor-pointer overflow-hidden rounded-lg border border-white/10 bg-white/[0.045] transition-all duration-300 hover:-translate-y-1 hover:border-[#00796b]/50 hover:bg-white/[0.07] hover:shadow-xl hover:shadow-[#00594f]/20">
+    <article className="group cursor-pointer overflow-hidden rounded-[22px] border border-white/10 bg-[#101412] shadow-xl shadow-black/15 transition-all duration-300 hover:-translate-y-1 hover:border-[#d6ff36]/35 hover:bg-[#141a17] hover:shadow-2xl hover:shadow-[#00594f]/20">
       <div
         className={`relative overflow-hidden ${
           song.provider === "youtube" ? "aspect-video" : "aspect-square"
@@ -107,7 +107,7 @@ export default function AlbumCard({
             href={track.externalUrl}
             target="_blank"
             rel="noreferrer"
-            className="absolute bottom-3 right-3 grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-[#00796b] to-[#00594f] text-white shadow-lg shadow-[#00594f]/40 transition hover:scale-105"
+            className="absolute bottom-3 right-3 grid h-11 w-11 place-items-center rounded-full bg-[#d6ff36] text-[#07100d] shadow-lg shadow-black/40 transition hover:scale-110"
           >
             <ExternalLink size={17} />
           </a>
@@ -115,7 +115,7 @@ export default function AlbumCard({
           <button
             onClick={handlePlay}
             disabled={!canPlay}
-            className="absolute bottom-3 right-3 grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-[#00796b] to-[#00594f] text-white shadow-lg shadow-[#00594f]/40 transition hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50"
+            className="absolute bottom-3 right-3 grid h-11 w-11 place-items-center rounded-full bg-[#d6ff36] text-[#07100d] shadow-lg shadow-black/40 transition hover:scale-110 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Play
               size={17}
@@ -125,7 +125,7 @@ export default function AlbumCard({
         )}
       </div>
 
-      <div className="p-4">
+      <div className="p-4 sm:p-5">
         <h3 className="truncate text-base font-bold text-white">
           {song.title}
         </h3>
@@ -151,8 +151,8 @@ export default function AlbumCard({
             <button
               onClick={handleLike}
               className={`grid h-8 w-8 place-items-center rounded-md border transition ${
-                isLiked
-                  ? "border-[#00796b] bg-[#00796b]/20 text-[#00796b]"
+              isLiked
+                  ? "border-[#d6ff36]/50 bg-[#d6ff36]/10 text-[#d6ff36]"
                   : "border-white/10 bg-white/[0.06] text-zinc-300 hover:text-white"
               }`}
             >
@@ -167,7 +167,7 @@ export default function AlbumCard({
                 e.stopPropagation();
                 setShowPlaylistModal(true);
               }}
-              className="grid h-8 w-8 place-items-center rounded-md border border-white/10 bg-white/[0.06] text-zinc-300 transition hover:border-[#00796b] hover:text-[#00796b]"
+              className="grid h-8 w-8 place-items-center rounded-md border border-white/10 bg-white/[0.06] text-zinc-300 transition hover:border-[#d6ff36]/60 hover:text-[#d6ff36]"
             >
               <Plus className="h-4 w-4" />
             </button>

@@ -52,7 +52,7 @@ export default function MobileBottomNav({
   return (
     <nav
       aria-label="Main navigation"
-      className="grid shrink-0 grid-cols-4 border-t border-white/10 bg-[#050706]/95 px-2 pt-1 pb-[calc(0.25rem+env(safe-area-inset-bottom))] backdrop-blur-xl lg:hidden"
+      className="grid shrink-0 grid-cols-4 border-t border-[#d6ff36]/15 bg-[#050706]/95 px-2 pt-1 pb-[calc(0.25rem+env(safe-area-inset-bottom))] backdrop-blur-2xl lg:hidden"
     >
       {items.map(({ label, icon: Icon, active, onClick }) => (
         <button
@@ -61,11 +61,13 @@ export default function MobileBottomNav({
           aria-label={label}
           aria-current={active ? "page" : undefined}
           onClick={onClick}
-          className={`flex min-h-12 flex-col items-center justify-center gap-1 rounded-lg text-[10px] font-medium transition-colors ${
-            active ? "text-[#4db6ac]" : "text-zinc-400 hover:text-white"
+          className={`flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl text-[10px] font-semibold transition-colors ${
+            active ? "text-[#d6ff36]" : "text-zinc-400 hover:text-white"
           }`}
         >
-          <Icon aria-hidden="true" className="h-5 w-5" />
+          <span className={`grid h-7 min-w-10 place-items-center rounded-full transition ${active ? "bg-[#d6ff36] text-[#07100d] shadow-[0_0_18px_rgba(214,255,54,0.18)]" : ""}`}>
+            <Icon aria-hidden="true" className="h-[18px] w-[18px]" />
+          </span>
           <span>{label}</span>
         </button>
       ))}

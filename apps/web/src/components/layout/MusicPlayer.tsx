@@ -86,7 +86,7 @@ export default function MusicPlayer() {
     );
 
   const sourceLabel = useMemo(() => {
-    if (!currentTrack) return "No Track";
+    if (!currentTrack) return "Ready for a new sound";
 
     switch (currentTrack.source) {
       case "youtube":
@@ -238,7 +238,7 @@ export default function MusicPlayer() {
 
   return (
     <>
-    <footer className={`mb-2 grid items-center rounded-lg border border-white/10 bg-[#080b09]/95 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-2xl shadow-black/40 backdrop-blur-xl md:mb-3 md:min-h-28 md:py-4 ${
+    <footer className={`audiq-player mb-2 grid items-center rounded-[20px] border border-white/10 border-t-2 border-t-[#d6ff36]/75 bg-[#080b09]/95 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-2xl shadow-black/40 backdrop-blur-xl md:mb-3 md:min-h-28 md:py-4 ${
       isYouTubeTrack
         ? "mx-1 grid-cols-[minmax(0,1fr)_200px] grid-rows-2 gap-1 px-2 md:mx-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] md:grid-rows-none md:gap-4 md:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(250px,1.4fr)_minmax(200px,0.9fr)_minmax(180px,1fr)]"
         : "mx-2 grid-cols-1 gap-2 px-3 md:mx-5 md:grid-cols-[1fr_1.5fr_1fr] md:gap-4 md:px-6"
@@ -342,11 +342,11 @@ export default function MusicPlayer() {
 
         <div className="min-w-0">
           <h3 className="truncate text-sm font-semibold text-white md:text-base">
-            {currentTrack?.title || "Choose a track"}
+            {currentTrack?.title || "Pick your next obsession"}
           </h3>
 
           <p className="truncate text-xs text-zinc-400 md:text-sm">
-            {currentTrack?.artist || "Search and press play"}
+            {currentTrack?.artist || "Search a song and hit play"}
           </p>
 
           <p className="text-[11px] text-[#80cbc4] md:mt-1 md:text-xs">
@@ -387,7 +387,8 @@ export default function MusicPlayer() {
           <button
             onClick={handleTogglePlay}
             disabled={!currentTrack}
-            className={`grid place-items-center rounded-full bg-gradient-to-br from-[#00796b] to-[#00594f] text-white shadow-lg ${isYouTubeTrack ? "h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12" : "h-10 w-10 md:h-12 md:w-12"}`}
+            aria-label={isPlaying ? "Pause" : "Play"}
+            className={`grid place-items-center rounded-full bg-[#d6ff36] text-[#07100d] shadow-[0_0_26px_rgba(214,255,54,0.18)] transition hover:scale-105 disabled:opacity-45 ${isYouTubeTrack ? "h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12" : "h-10 w-10 md:h-12 md:w-12"}`}
           >
             {isPlaying ? (
               <Pause className="h-5 w-5" />
@@ -445,9 +446,9 @@ export default function MusicPlayer() {
               seekTo(e.target.value)
             }
             disabled={!currentTrack}
-            className="h-2 w-full cursor-pointer accent-[#00796b] md:h-1"
+            className="h-2 w-full cursor-pointer accent-[#d6ff36] md:h-1"
             style={{
-              background: `linear-gradient(to right,#00796b ${progress}%,rgb(255 255 255 / 0.12) ${progress}%)`,
+              background: `linear-gradient(to right,#d6ff36 ${progress}%,rgb(255 255 255 / 0.12) ${progress}%)`,
             }}
           />
 
