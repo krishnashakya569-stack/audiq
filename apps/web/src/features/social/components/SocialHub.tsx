@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import {
+  ArrowLeft,
   Check,
   Copy,
   MessageCircle,
@@ -15,7 +16,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { type AudiqProfile, useAuth } from "@/features/auth/AuthProvider";
 import { usePlayerStore, type Track } from "@/store/player";
 
@@ -95,6 +96,9 @@ export default function SocialHub({
   const [profilesById, setProfilesById] = useState<Record<string, AudiqProfile>>({});
   const [activeFriendId, setActiveFriendId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessageRow[]>([]);
+  const [chatSearch, setChatSearch] = useState("");
+  const [mobileChatOpen, setMobileChatOpen] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const refreshRelationships = useCallback(async () => {
     if (!supabase || !user) return;
@@ -203,6 +207,10 @@ export default function SocialHub({
     void refreshMessages();
   }, [refreshMessages]);
   /* eslint-enable react-hooks/set-state-in-effect */
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
+  }, [messages]);
 
   const friends = useMemo(() => {
     if (!user) return [];
@@ -340,6 +348,7 @@ export default function SocialHub({
     else {
       setNotice(`${requestedBy.display_name} is now your friend.`);
       setActiveFriendId(requestedBy.id);
+      setMobileChatOpen(true);
       onTabChange("messages");
     }
     await refreshRelationships();
@@ -438,8 +447,8 @@ export default function SocialHub({
   const myAudiqId = profile?.audiq_id ?? "Creating your Audiq ID…";
 
   return (
-    <section className="space-y-5 pb-6">
-      <div className="overflow-hidden rounded-xl border border-white/10 bg-[linear-gradient(135deg,rgba(0,121,107,.22),rgba(0,121,107,.1),rgba(255,255,255,.04))] p-5 md:p-7">
+    <section className={`min-h-0 ${activeTab === "messages" ? "flex h-full flex-col gap-4" : "space-y-5 pb-6"}`}>
+      {activeTab === "friends" ? <div className="overflow-hidden rounded-xl border border-white/10 bg-[linear-gradient(135deg,rgba(0,121,107,.3),rgba(0,121,107,.08),rgba(255,255,255,.04))] p-5 md:p-7">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div>
             <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.24em] text-[#80cbc4]">
@@ -464,9 +473,19 @@ export default function SocialHub({
             {profile ? <p className="mt-1 text-xs text-zinc-500">@{profile.handle}</p> : null}
           </div>
         </div>
-      </div>
+      </div> : (
+        <div className="flex shrink-0 items-center justify-between gap-4 border-b border-white/10 pb-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#80cbc4]">Audiq community</p>
+            <h1 className="mt-1 text-2xl font-black text-white sm:text-3xl">Messages</h1>
+          </div>
+          <button type="button" onClick={() => onTabChange("friends")} className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-bold text-zinc-200 transition hover:border-[#00796b]/50 hover:bg-[#00594f]/20">
+            Find people
+          </button>
+        </div>
+      )}
 
-      <div className="flex gap-2">
+      <div className="flex shrink-0 gap-2">
         {[
           { id: "friends" as const, label: "Find Friends", icon: UserPlus },
           { id: "messages" as const, label: "Messages", icon: MessageCircle },
@@ -559,7 +578,7 @@ export default function SocialHub({
                   <div key={friend.id} className="flex items-center gap-3 rounded-lg border border-white/10 bg-black/20 p-3">
                     <AvatarBlock user={friend} />
                     <div className="min-w-0 flex-1"><p className="truncate font-bold text-white">{friend.display_name}</p><p className="truncate text-sm text-zinc-500">{friend.audiq_id} · @{friend.handle}</p></div>
-                    <button type="button" onClick={() => { setActiveFriendId(friend.id); onTabChange("messages"); }} className="flex items-center gap-2 rounded-md border border-[#00796b]/30 px-3 py-2 text-sm font-bold text-[#80cbc4] hover:bg-[#00594f]/20"><MessageCircle className="h-4 w-4" /> Chat</button>
+                    <button type="button" onClick={() => { setActiveFriendId(friend.id); setMobileChatOpen(true); onTabChange("messages"); }} className="flex items-center gap-2 rounded-md border border-[#00796b]/30 px-3 py-2 text-sm font-bold text-[#80cbc4] hover:bg-[#00594f]/20"><MessageCircle className="h-4 w-4" /> Chat</button>
                     <button type="button" onClick={() => { const relation = relationships.find((row) => row.status === "accepted" && (row.requester_id === friend.id || row.addressee_id === friend.id)); if (relation) void deleteRelationship(relation.id); }} title="Remove friend" aria-label={`Remove ${friend.display_name}`} className="grid h-9 w-9 place-items-center rounded-md text-zinc-500 hover:bg-red-500/10 hover:text-red-300"><Trash2 className="h-4 w-4" /></button>
                   </div>
                 ))}
@@ -570,60 +589,30 @@ export default function SocialHub({
       ) : null}
 
       {activeTab === "messages" ? (
-        <div className="grid min-h-[520px] gap-4 xl:grid-cols-[19rem_1fr]">
-          <aside className="rounded-xl border border-white/10 bg-white/[0.045] p-3">
-            <h2 className="mb-3 px-2 font-bold text-white">Chats</h2>
-            <div className="space-y-2">
+        <div className="grid min-h-0 flex-1 gap-3 xl:grid-cols-[19rem_minmax(0,1fr)]">
+          <aside className={`min-h-0 overflow-y-auto rounded-2xl border border-white/10 bg-white/[0.045] p-3 ${mobileChatOpen ? "hidden xl:block" : ""}`}>
+            <div className="mb-3 flex items-center justify-between px-2">
+              <h2 className="font-bold text-white">Chats</h2>
+              <span className="text-xs text-zinc-500">{friends.length}</span>
+            </div>
+            <label className="flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-2.5 text-zinc-500">
+              <Search className="h-4 w-4 shrink-0" />
+              <span className="sr-only">Search chats</span>
+              <input value={chatSearch} onChange={(event) => setChatSearch(event.target.value)} placeholder="Search chats" className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-zinc-500" />
+            </label>
+            <div className="mt-3 space-y-1">
               {friends.length === 0 ? (
-                <button type="button" onClick={() => onTabChange("friends")} className="w-full rounded-md border border-dashed border-white/10 p-5 text-sm text-zinc-500">Add a friend to start chatting.</button>
-              ) : friends.map((friend) => (
-                <button key={friend.id} type="button" onClick={() => setActiveFriendId(friend.id)} className={`flex w-full items-center gap-3 rounded-md border p-3 text-left transition ${activeFriend?.id === friend.id ? "border-[#00796b]/45 bg-[#00594f]/20" : "border-white/5 bg-black/15 hover:bg-white/[0.06]"}`}>
+                <button type="button" onClick={() => onTabChange("friends")} className="w-full rounded-2xl border border-dashed border-white/10 p-5 text-sm text-zinc-500 transition hover:border-[#00796b]/40 hover:text-zinc-300">Add a friend to start chatting.</button>
+              ) : friends.filter((friend) => `${friend.display_name} ${friend.handle} ${friend.audiq_id}`.toLowerCase().includes(chatSearch.trim().toLowerCase())).map((friend) => (
+                <button key={friend.id} type="button" onClick={() => { setActiveFriendId(friend.id); setMobileChatOpen(true); }} className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition ${activeFriend?.id === friend.id ? "border-[#00796b]/45 bg-[#00594f]/20" : "border-transparent hover:border-white/10 hover:bg-white/[0.06]"}`}>
                   <AvatarBlock user={friend} />
-                  <span className="min-w-0"><span className="block truncate font-bold text-white">{friend.display_name}</span><span className="block truncate text-xs text-zinc-500">{friend.audiq_id}</span></span>
+                  <span className="min-w-0 flex-1"><span className="block truncate font-bold text-white">{friend.display_name}</span><span className="mt-0.5 block truncate text-xs text-zinc-500">{friend.audiq_id}</span></span>
+                  <MessageCircle className="h-4 w-4 shrink-0 text-zinc-500" />
                 </button>
               ))}
-            </div>
-          </aside>
-
-          <section className="flex min-h-[520px] min-w-0 flex-col rounded-xl border border-white/10 bg-white/[0.045]">
-            {activeFriend ? (
-              <>
-                <div className="flex items-center gap-3 border-b border-white/10 p-4">
-                  <AvatarBlock user={activeFriend} />
-                  <div><h2 className="font-black text-white">{activeFriend.display_name}</h2><p className="text-sm text-zinc-500">{activeFriend.audiq_id}</p></div>
-                </div>
-
-                <div className="flex-1 space-y-3 overflow-y-auto p-4">
-                  {messages.length === 0 ? <div className="grid min-h-40 place-items-center text-center text-sm text-zinc-500">Say hello or share the song you are listening to.</div> : messages.map((item) => {
-                    const mine = item.sender_id === user.id;
-                    const sharedSong = item.message_type === "song" ? item.song : null;
-                    return (
-                      <div key={item.id} className={`max-w-[88%] rounded-lg p-3 text-sm ${mine ? "ml-auto bg-[#00594f] text-white" : "bg-white/[0.08] text-zinc-100"}`}>
-                        {sharedSong ? (
-                          <div className="flex min-w-0 items-center gap-3 rounded-md border border-white/10 bg-black/20 p-2">
-                            <Image src={sharedSong.albumArt || "/covers/default.png"} alt="" width={52} height={52} unoptimized className="h-13 w-13 shrink-0 rounded object-cover" />
-                            <div className="min-w-0 flex-1"><p className="truncate font-bold">{sharedSong.title}</p><p className="truncate text-xs text-white/65">{sharedSong.artist}</p><p className="mt-1 text-[10px] uppercase text-white/50">Shared from {sharedSong.source}</p></div>
-                            {sharedSong.audioUrl || sharedSong.videoId ? <button type="button" onClick={() => playSharedSong(item)} className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#00796b] text-white" aria-label={`Play ${sharedSong.title}`} title="Play in Audiq"><Play className="h-4 w-4 fill-current" /></button> : null}
-                          </div>
-                        ) : <p className="whitespace-pre-wrap break-words">{item.body}</p>}
-                        <p className="mt-1 text-right text-[10px] text-white/55">{formatTime(item.created_at)}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <form className="flex flex-wrap items-center gap-2 border-t border-white/10 p-3" onSubmit={(event) => void handleSend(event)}>
-                  <input value={messageText} onChange={(event) => setMessageText(event.target.value)} placeholder={`Message ${activeFriend.display_name}`} maxLength={2000} className="min-w-0 flex-1 basis-40 rounded-md border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-white outline-none focus:border-[#00796b]/50" />
-                  <button type="button" onClick={() => void handleShareSong()} disabled={!currentTrack} title={currentTrack ? `Share ${currentTrack.title}` : "Play a song to share it"} className="flex h-11 items-center gap-2 rounded-md border border-white/10 px-3 text-sm font-bold text-[#80cbc4] hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40"><Music2 className="h-4 w-4" /><span className="hidden sm:inline">Share song</span></button>
-                  <button type="submit" disabled={!messageText.trim()} aria-label="Send message" className="grid h-11 w-11 place-items-center rounded-md bg-[#00796b] text-white disabled:cursor-not-allowed disabled:opacity-50"><Send className="h-4 w-4" /></button>
-                </form>
-              </>
-            ) : (
-              <div className="grid flex-1 place-items-center p-8 text-center text-zinc-500">Add a friend, then open a chat.</div>
-            )}
-          </section>
-        </div>
-      ) : null}
+              {friends.length > 0 && !friends.some((friend) => `${friend.display_name} ${friend.handle} ${friend.audiq_id}`.toLowerCase().includes(chatSearch.trim().toLowerCase())) ? (
+                <p className="px-3 py-6 text-center text-sm text-zinc-500">No chats match that search.</p>
+              ) : null}
     </section>
   );
 }
