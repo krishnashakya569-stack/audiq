@@ -213,8 +213,10 @@ export default function AppShell() {
           transition={{
             duration: 0.25,
           }}
-          className={`min-h-0 min-w-0 flex-1 bg-[#050706] px-4 py-4 md:px-6 xl:px-8 ${
-            isMessagesView ? "overflow-hidden pb-4" : "overflow-y-auto pb-40 md:pb-36"
+          className={`min-h-0 min-w-0 flex-1 bg-[#050706] ${
+            isMessagesView
+              ? "overflow-hidden px-2 py-2 pb-1 sm:px-4 sm:py-4 xl:px-8"
+              : "overflow-y-auto px-4 py-4 pb-40 md:px-6 md:pb-36 xl:px-8"
           }`}
         >
           {view === "home" && (
@@ -269,7 +271,7 @@ export default function AppShell() {
 
       <MusicPlayer compact={isMessagesView} />
 
-      <MobileBottomNav
+      {!isMessagesView ? <MobileBottomNav
         activeView={view}
         isSearchActive={query.trim().toLowerCase() !== "starboy"}
         isSearchOpen={mobileSearchOpen}
@@ -281,7 +283,7 @@ export default function AppShell() {
         onSearch={openSearch}
         onLibrary={() => openLibrary()}
         onFriends={() => openSocial("friends")}
-      />
+      /> : null}
 
       <AuthDialog
         open={authDialogOpen}
@@ -291,4 +293,5 @@ export default function AppShell() {
     </div>
   );
 }
+
 
