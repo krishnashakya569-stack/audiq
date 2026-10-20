@@ -7,6 +7,7 @@ type ItunesTrack = {
   collectionId?: number;
   collectionName?: string;
   previewUrl?: string;
+  primaryGenreName?: string;
   trackExplicitness?: string;
   trackId?: number;
   trackName?: string;
@@ -15,6 +16,7 @@ type ItunesTrack = {
 
 type AudiusTrack = {
   access?: { stream?: boolean };
+  description?: string;
   artwork?: {
     "1000x1000"?: string;
     "480x480"?: string;
@@ -25,6 +27,7 @@ type AudiusTrack = {
   id?: string;
   is_stream_gated?: boolean;
   is_streamable?: boolean;
+  tags?: string;
   title?: string;
   user?: { handle?: string; id?: string; name?: string };
 };
@@ -201,6 +204,16 @@ function normalize(value = "") {
     .trim();
 }
 
+const INDIAN_LANGUAGE_SCRIPT = /[\u0900-\u097f\u0980-\u09ff\u0a00-\u0a7f\u0a80-\u0aff\u0b00-\u0b7f\u0b80-\u0bff\u0c00-\u0c7f\u0c80-\u0cff\u0d00-\u0d7f]/;
+const INDIAN_MUSIC_TERMS = /\b(?:indian|bharatiya|desi|bollywood|filmi|hindi|punjabi|tamil|telugu|malayalam|kannada|bengali|bangla|marathi|gujarati|bhojpuri|haryanvi|odia|assamese|rajasthani|konkani|manipuri|sindhi|kashmiri|urdu|qawwali|ghazal|sufi|bhajan|kirtan|bhangra|garba|dandiya|hindustani|carnatic|kollywood|tollywood|mollywood|sandalwood|t-series|saregama|zee music|sony music india|tips official|speed records|white hill music|lahari music|think music india)\b/i;
+
+function indianMusicPreferenceBonus(values: Array<string | null | undefined>) {
+  const text = values.filter(Boolean).join(" ");
+  if (INDIAN_LANGUAGE_SCRIPT.test(text)) return 54;
+  if (INDIAN_MUSIC_TERMS.test(text)) return 36;
+  return 0;
+}
+
 function rank(query: string, track: ItunesTrack, index: number) {
   const q = normalize(query);
   const title = normalize(track.trackName);
@@ -227,6 +240,13 @@ function rank(query: string, track: ItunesTrack, index: number) {
   } else if (duration > 120 && duration < 420) {
     score += 25;
   }
+
+  score += indianMusicPreferenceBonus([
+    track.trackName,
+    track.artistName,
+    track.collectionName,
+    track.primaryGenreName,
+  ]);
 
   return score;
 }
@@ -398,7 +418,26 @@ export async function GET(request: Request) {
           playable: true,
         },
         sourceRank: index,
+        rankScore:
+          Math.max(0, 260 - index * 18) +
+          indianMusicPreferenceBonus([
+            track.title,
+            track.genre,
+            track.tags,
+            track.description,
+            track.user?.name,
+            track.user?.handle,
+          ]),
       };
+    })
+    .sort(
+      (a, b) =>
+        b.rankScore - a.rankScore ||
+        a.sourceRank - b.sourceRank
+    )
+    .map(({ rankScore, ...song }) => {
+      void rankScore;
+      return song;
     });
 
   const seen = new Set<string>();
