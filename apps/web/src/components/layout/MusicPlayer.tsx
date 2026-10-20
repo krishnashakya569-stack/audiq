@@ -37,7 +37,11 @@ function formatTime(seconds: number) {
   return `${minutes}:${remainingSeconds}`;
 }
 
-export default function MusicPlayer() {
+type MusicPlayerProps = {
+  compact?: boolean;
+};
+
+export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
   const {
     currentTrack,
     isPlaying,
@@ -340,13 +344,18 @@ export default function MusicPlayer() {
   const isYouTubeTrack =
     currentTrack?.source === "youtube" && !!currentTrack.videoId;
 
+  // Keep YouTube embeds at their required minimum size; compact direct-audio playback only.
+  const useCompactLayout = compact && !isYouTubeTrack;
+  const layoutClasses = useCompactLayout
+    ? "mx-2 grid-cols-[minmax(0,1fr)_auto] gap-2 px-2 sm:mx-3 sm:px-4 md:mx-5 md:min-h-16 md:grid-cols-[minmax(0,1fr)_1.5fr] md:gap-4 md:px-4"
+    : isYouTubeTrack
+      ? "mx-1 grid-cols-[minmax(0,1fr)_200px] grid-rows-2 gap-1 px-2 md:mx-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] md:grid-rows-none md:gap-4 md:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(250px,1.4fr)_minmax(200px,0.9fr)_minmax(180px,1fr)]"
+      : "mx-2 grid-cols-1 gap-2 px-3 md:mx-5 md:grid-cols-[1fr_1.5fr_1fr] md:gap-4 md:px-6";
+
+
   return (
     <>
-    <footer className={`audiq-player mb-2 grid items-center rounded-[20px] border border-white/10 border-t-2 border-t-[#d6ff36]/75 bg-[#080b09]/95 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-2xl shadow-black/40 backdrop-blur-xl md:mb-3 md:min-h-28 md:py-4 ${
-      isYouTubeTrack
-        ? "mx-1 grid-cols-[minmax(0,1fr)_200px] grid-rows-2 gap-1 px-2 md:mx-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] md:grid-rows-none md:gap-4 md:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(250px,1.4fr)_minmax(200px,0.9fr)_minmax(180px,1fr)]"
-        : "mx-2 grid-cols-1 gap-2 px-3 md:mx-5 md:grid-cols-[1fr_1.5fr_1fr] md:gap-4 md:px-6"
-    }`}>
+    <footer className={`audiq-player mb-2 grid items-center rounded-[20px] border border-white/10 border-t-2 border-t-[#d6ff36]/75 bg-[#080b09]/95 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-2xl shadow-black/40 backdrop-blur-xl md:mb-3 md:min-h-28 md:py-4 ${layoutClasses}`}>
 
       <audio
         ref={audioRef}
@@ -536,7 +545,7 @@ export default function MusicPlayer() {
 
         </div>
 
-        <div className={`mt-1 grid items-center gap-2 text-[11px] text-zinc-500 md:mt-3 md:gap-3 md:text-xs ${isYouTubeTrack ? "grid-cols-1 md:grid-cols-[3rem_1fr_4rem]" : "grid-cols-[2.5rem_1fr_3.5rem] md:grid-cols-[3rem_1fr_4rem]"}`}>
+        <div className={`${useCompactLayout ? "hidden md:grid" : "grid"} mt-1 items-center gap-2 text-[11px] text-zinc-500 md:mt-3 md:gap-3 md:text-xs ${isYouTubeTrack ? "grid-cols-1 md:grid-cols-[3rem_1fr_4rem]" : "grid-cols-[2.5rem_1fr_3.5rem] md:grid-cols-[3rem_1fr_4rem]"}`}>
 
           <span className={isYouTubeTrack ? "hidden md:inline" : ""}>{formatTime(currentTime)}</span>
 
@@ -585,7 +594,7 @@ export default function MusicPlayer() {
         </div>
       ) : null}
 
-      <div className="hidden items-center justify-end gap-4 text-zinc-400 md:flex">
+      <div className={`${useCompactLayout ? "hidden" : "hidden items-center justify-end gap-4 text-zinc-400 md:flex"}`}>
 
         <button
           disabled={!currentTrack}
