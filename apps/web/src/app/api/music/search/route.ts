@@ -24,6 +24,7 @@ type AudiusTrack = {
   genre?: string;
   id?: string;
   is_stream_gated?: boolean;
+  is_streamable?: boolean;
   title?: string;
   user?: { handle?: string; id?: string; name?: string };
 };
@@ -353,7 +354,8 @@ export async function GET(request: Request) {
         track.id &&
         track.title &&
         !track.is_stream_gated &&
-        track.access?.stream !== false
+        track.access?.stream !== false &&
+        track.is_streamable === true
     )
     .slice(0, 40)
     .map((track, index) => {
