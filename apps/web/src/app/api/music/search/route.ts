@@ -401,8 +401,8 @@ export async function GET(request: Request) {
 
   const seen = new Set<string>();
   const results = [
-    ...youtubeTracks,
     ...fullTrackSongs,
+    ...youtubeTracks,
     ...previewSongs,
   ].filter((track) => {
     const title = normalize(track.title);
@@ -415,3 +415,4 @@ export async function GET(request: Request) {
 
   return NextResponse.json(results);
 }
+
