@@ -111,6 +111,8 @@ export default function AppShell() {
     setSidebarOpen(false);
     setMobileSearchOpen(true);
   };
+
+  const isMessagesView = view === "social" && socialTab === "messages";
     return (
     <div className="audiq-shell relative flex h-dvh min-w-0 flex-col overflow-hidden bg-[#050706] text-white">
 
@@ -159,7 +161,7 @@ export default function AppShell() {
 
       {/* Body */}
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
 
         {/* Desktop Sidebar */}
 
@@ -210,18 +212,9 @@ export default function AppShell() {
           transition={{
             duration: 0.25,
           }}
-          className="
-            min-w-0
-            flex-1
-            overflow-y-auto
-            bg-[#050706]
-            px-4
-            py-4
-            pb-40
-            md:px-6
-            md:pb-36
-            xl:px-8
-          "
+          className={`min-h-0 min-w-0 flex-1 bg-[#050706] px-4 py-4 md:px-6 xl:px-8 ${
+            isMessagesView ? "overflow-hidden pb-4" : "overflow-y-auto pb-40 md:pb-36"
+          }`}
         >
           {view === "home" && (
             <HomeFeed
@@ -273,7 +266,7 @@ export default function AppShell() {
 
       {/* Player */}
 
-      <MusicPlayer />
+      <MusicPlayer compact={isMessagesView} />
 
       <MobileBottomNav
         activeView={view}
