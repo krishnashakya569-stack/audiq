@@ -13,6 +13,7 @@ export default function AuthDialog({ open, onClose }: AuthDialogProps) {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [handle, setHandle] = useState("");
   const [notice, setNotice] = useState("");
@@ -91,7 +92,7 @@ export default function AuthDialog({ open, onClose }: AuthDialogProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="auth-dialog-title"
-        className="w-full max-w-md rounded-xl border border-white/10 bg-[#111014] p-6 shadow-2xl"
+        className="w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain rounded-xl border border-white/10 bg-[#111014] p-6 shadow-2xl"
       >
         <div className="mb-6 flex items-start justify-between gap-4">
           <div>
@@ -115,6 +116,7 @@ export default function AuthDialog({ open, onClose }: AuthDialogProps) {
               type="button"
               onClick={() => {
                 setMode(item);
+                setShowPassword(false);
                 setError("");
                 setNotice("");
               }}
@@ -146,11 +148,16 @@ export default function AuthDialog({ open, onClose }: AuthDialogProps) {
             Email
             <input required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} className="mt-1.5 w-full rounded-md border border-white/10 bg-black/30 px-3 py-2.5 text-white outline-none focus:border-[#00796b]/60" />
           </label>
-          <label className="block text-sm text-zinc-300">
-            Password
-            <input required type="password" minLength={8} autoComplete={mode === "signin" ? "current-password" : "new-password"} value={password} onChange={(event) => setPassword(event.target.value)} className="mt-1.5 w-full rounded-md border border-white/10 bg-black/30 px-3 py-2.5 text-white outline-none focus:border-[#00796b]/60" />
+          <div className="block text-sm text-zinc-300">
+            <label htmlFor="auth-password">Password</label>
+            <span className="mt-1.5 flex items-center rounded-md border border-white/10 bg-black/30 focus-within:border-[#00796b]/60">
+              <input id="auth-password" required type={showPassword ? "text" : "password"} minLength={8} autoComplete={mode === "signin" ? "current-password" : "new-password"} value={password} onChange={(event) => setPassword(event.target.value)} className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-white outline-none" />
+              <button type="button" aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} aria-controls="auth-password" onClick={() => setShowPassword((visible) => !visible)} className="shrink-0 rounded px-3 py-2.5 text-xs font-bold text-[#80cbc4] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#80cbc4]">
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </span>
             {mode === "signup" ? <span className="mt-1 block text-xs text-zinc-500">Use at least 8 characters.</span> : null}
-          </label>
+          </div>
 
           {notice ? <p role="status" className="rounded-md border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm text-emerald-200">{notice}</p> : null}
           {error ? <p role="alert" className="rounded-md border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-200">{error}</p> : null}
