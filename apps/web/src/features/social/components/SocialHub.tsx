@@ -168,6 +168,7 @@ export default function SocialHub({
     setMessages((data ?? []) as ChatMessageRow[]);
   }, [supabase, user, activeFriendId]);
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Clear listener-backed state as the Supabase session changes. */
   useEffect(() => {
     if (!supabase || !user) {
       setRelationships([]);
@@ -195,10 +196,13 @@ export default function SocialHub({
       void supabase.removeChannel(channel);
     };
   }, [supabase, user, refreshRelationships, refreshMessages]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Keep the open chat synchronized with the selected friend. */
   useEffect(() => {
     void refreshMessages();
   }, [refreshMessages]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const friends = useMemo(() => {
     if (!user) return [];
@@ -230,12 +234,14 @@ export default function SocialHub({
 
   const activeFriend = friends.find((friend) => friend.id === activeFriendId) ?? friends[0] ?? null;
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Select the first available friend and clear stale selections. */
   useEffect(() => {
     if (!activeFriendId && friends[0]) setActiveFriendId(friends[0].id);
     if (activeFriendId && !friends.some((friend) => friend.id === activeFriendId)) {
       setActiveFriendId(friends[0]?.id ?? null);
     }
   }, [friends, activeFriendId]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   async function handleSearch(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();

@@ -37,6 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Initial auth bootstrap needs to finish when no Supabase client is configured. */
   useEffect(() => {
     if (!supabase) {
       setLoading(false);
@@ -64,7 +65,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       subscription.unsubscribe();
     };
   }, [supabase]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Profile state synchronizes an asynchronous Supabase lookup with the current signed-in user. */
   useEffect(() => {
     if (!supabase || !user) {
       setProfile(null);
@@ -89,6 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       active = false;
     };
   }, [supabase, user]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const signOut = useCallback(async () => {
     if (!supabase) return;
