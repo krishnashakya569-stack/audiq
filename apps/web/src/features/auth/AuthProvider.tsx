@@ -12,7 +12,9 @@ import {
 import type { User } from "@supabase/supabase-js";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { withSignedAvatarUrls } from "@/lib/supabase/avatars";
+import LibraryCloudSync from "@/features/library/LibraryCloudSync";
 import type { AvatarStyle, ChatThemeId } from "./profileAppearance";
+import type { MusicLanguage } from "@/features/settings/musicPreferences";
 
 export type AudiqProfile = {
   id: string;
@@ -24,6 +26,7 @@ export type AudiqProfile = {
   avatar_url: string | null;
   avatar_style: AvatarStyle;
   chat_theme: ChatThemeId;
+  preferred_music_language: MusicLanguage;
 };
 
 type AuthContextValue = {
@@ -87,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id,audiq_id,display_name,handle,avatar_color,avatar_path,avatar_style,chat_theme")
+        .select("id,audiq_id,display_name,handle,avatar_color,avatar_path,avatar_style,chat_theme,preferred_music_language")
         .eq("id", user.id)
         .maybeSingle();
       if (requestId !== profileRequest.current) return;
@@ -124,7 +127,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [user, profile, loading, profileLoading, supabase, refreshProfile, signOut]
   );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      <LibraryCloudSync userId={user?.id ?? null} supabase={supabase} />
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {

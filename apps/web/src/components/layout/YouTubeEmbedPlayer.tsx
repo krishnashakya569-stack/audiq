@@ -54,6 +54,7 @@ export type YouTubeEmbedControls = {
   play: () => void;
   pause: () => void;
   seekTo: (seconds: number) => void;
+  isReady: () => boolean;
 };
 
 type YouTubeEmbedPlayerProps = {
@@ -62,6 +63,7 @@ type YouTubeEmbedPlayerProps = {
   volume: number;
   isMuted: boolean;
   onPlayingChange: (playing: boolean) => void;
+  onReady: () => void;
   onTimeUpdate: (time: number) => void;
   onDurationChange: (duration: number) => void;
   onEnded: () => void;
@@ -114,6 +116,7 @@ const YouTubeEmbedPlayer = forwardRef<
     volume,
     isMuted,
     onPlayingChange,
+    onReady,
     onTimeUpdate,
     onDurationChange,
     onEnded,
@@ -127,6 +130,7 @@ const YouTubeEmbedPlayer = forwardRef<
     volume,
     isMuted,
     onPlayingChange,
+    onReady,
     onTimeUpdate,
     onDurationChange,
     onEnded,
@@ -139,6 +143,7 @@ const YouTubeEmbedPlayer = forwardRef<
     volume,
     isMuted,
     onPlayingChange,
+    onReady,
     onTimeUpdate,
     onDurationChange,
     onEnded,
@@ -150,6 +155,7 @@ const YouTubeEmbedPlayer = forwardRef<
       play: () => playerRef.current?.playVideo(),
       pause: () => playerRef.current?.pauseVideo(),
       seekTo: (seconds) => playerRef.current?.seekTo(seconds, true),
+      isReady: () => Boolean(playerRef.current),
     }),
     []
   );
@@ -198,6 +204,7 @@ const YouTubeEmbedPlayer = forwardRef<
               }
 
               setReady(true);
+              callbacksRef.current.onReady();
               pollTimer = window.setInterval(() => {
                 const current = playerRef.current;
                 if (!current) return;
