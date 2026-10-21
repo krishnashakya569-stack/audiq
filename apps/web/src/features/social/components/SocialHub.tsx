@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   Check,
   Copy,
+  ListMusic,
   MessageCircle,
   Music2,
   Play,
@@ -20,8 +21,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { type AudiqProfile, useAuth } from "@/features/auth/AuthProvider";
 import ProfileAvatar from "@/features/social/components/ProfileAvatar";
 import { getChatTheme } from "@/features/auth/profileAppearance";
+import ListenTogetherControl from "@/features/social/components/ListenTogetherControl";
 import { withSignedAvatarUrls } from "@/lib/supabase/avatars";
 import { usePlayerStore, type Track } from "@/store/player";
+import { usePlaylistStore, type Playlist } from "@/store/playlist";
 
 export type SocialTab = "friends" | "messages";
 
@@ -44,13 +47,25 @@ type SharedSong = {
   externalUrl?: string | null;
 };
 
+type SharedPlaylistTrack = Omit<SharedSong, "source"> & {
+  source?: string | null;
+  duration?: number | null;
+};
+
+type SharedPlaylist = {
+  id: string;
+  name: string;
+  cover: string | null;
+  tracks: SharedPlaylistTrack[];
+};
+
 type ChatMessageRow = {
   id: string;
   sender_id: string;
   receiver_id: string;
   body: string;
-  message_type: "text" | "song";
-  song: SharedSong | null;
+  message_type: "text" | "song" | "playlist";
+  song: SharedSong | SharedPlaylist | null;
   created_at: string;
 };
 
@@ -80,6 +95,7 @@ export default function SocialHub({
   const chatTheme = getChatTheme(profile?.chat_theme);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const playTrack = usePlayerStore((state) => state.playTrack);
+  const playlists = usePlaylistStore((state) => state.playlists);
 
   const [searchId, setSearchId] = useState("");
   const [foundUser, setFoundUser] = useState<AudiqProfile | null>(null);
@@ -94,6 +110,7 @@ export default function SocialHub({
   const [messages, setMessages] = useState<ChatMessageRow[]>([]);
   const [chatSearch, setChatSearch] = useState("");
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
+  const [sharePlaylistOpen, setSharePlaylistOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const refreshRelationships = useCallback(async () => {
@@ -359,15 +376,15 @@ export default function SocialHub({
 
   async function sendChatMessage(
     body: string,
-    song?: SharedSong
+    share?: SharedSong | SharedPlaylist
   ) {
     if (!supabase || !user || !activeFriend) return;
     const { error: sendError } = await supabase.from("chat_messages").insert({
       sender_id: user.id,
       receiver_id: activeFriend.id,
       body,
-      message_type: song ? "song" : "text",
-      song: song ?? null,
+      message_type: !share ? "text" : "tracks" in share ? "playlist" : "song",
+      song: share ?? null,
     });
     if (sendError) {
       setError(sendError.message);
@@ -400,8 +417,65 @@ export default function SocialHub({
     await sendChatMessage(`Shared a song: ${song.title}`, song);
   }
 
+  async function handleSharePlaylist(playlist: Playlist) {
+    const shared: SharedPlaylist = {
+      id: playlist.id,
+      name: playlist.name,
+      cover: playlist.cover || playlist.tracks[0]?.albumArt || null,
+      tracks: playlist.tracks.slice(0, 100).map((track) => ({
+        id: String(track.id),
+        title: track.title,
+        artist: track.artist,
+        albumArt: track.albumArt,
+        source: track.source || "Audiq",
+        videoId: track.videoId || null,
+        audioUrl: track.source === "youtube" ? null : track.audio || null,
+        externalUrl: track.externalUrl || null,
+        duration: track.duration ?? null,
+      })),
+    };
+    if (shared.tracks.length === 0) return;
+    await sendChatMessage(`Shared a playlist: ${shared.name}`, shared);
+    setSharePlaylistOpen(false);
+  }
+
+  function saveSharedPlaylist(message: ChatMessageRow) {
+    if (message.message_type !== "playlist" || !message.song || !("tracks" in message.song) || !message.song.tracks.length) return;
+    const shared = message.song;
+    const baseName = `${shared.name} (shared)`;
+    let name = baseName;
+    let suffix = 2;
+    const existingNames = new Set(usePlaylistStore.getState().playlists.map((playlist) => playlist.name.toLowerCase()));
+    while (existingNames.has(name.toLowerCase())) {
+      name = `${shared.name} (shared ${suffix})`;
+      suffix += 1;
+    }
+
+    const store = usePlaylistStore.getState();
+    store.createPlaylist(name, shared.cover || undefined);
+    const created = usePlaylistStore.getState().playlists.find((playlist) => playlist.name === name);
+    if (!created) {
+      setNotice("Could not save this playlist to your library.");
+      return;
+    }
+    for (const song of shared.tracks) {
+      store.addSongToPlaylist(created.id, {
+        id: song.id,
+        title: song.title,
+        artist: song.artist,
+        albumArt: song.albumArt || "/brand/audiq-vinyl.svg",
+        audio: song.audioUrl || "",
+        source: song.source || undefined,
+        videoId: song.videoId || undefined,
+        externalUrl: song.externalUrl || undefined,
+        duration: song.duration || undefined,
+      });
+    }
+    setNotice(`Saved “${name}” to your Library.`);
+  }
+
   function playSharedSong(message: ChatMessageRow) {
-    if (!message.song) return;
+    if (message.message_type !== "song" || !message.song || "tracks" in message.song) return;
     const song = message.song;
     const track: Track = {
       id: song.id || `shared-${message.id}`,
@@ -415,6 +489,23 @@ export default function SocialHub({
     };
     if (!track.audio && !track.videoId) return;
     playTrack(track);
+  }
+
+  function playSharedPlaylist(message: ChatMessageRow) {
+    if (message.message_type !== "playlist" || !message.song || !("tracks" in message.song)) return;
+    const tracks: Track[] = message.song.tracks.map((song) => ({
+      id: song.id || `shared-${message.id}`,
+      title: song.title,
+      artist: song.artist,
+      albumArt: song.albumArt || "/covers/default.png",
+      audio: song.audioUrl || "",
+      source: song.source || undefined,
+      videoId: song.videoId || undefined,
+      externalUrl: song.externalUrl || undefined,
+      duration: song.duration || undefined,
+    }));
+    const playableTracks = tracks.filter((track) => track.audio || track.videoId);
+    if (playableTracks[0]) playTrack(playableTracks[0], playableTracks);
   }
 
   if (authLoading) {
@@ -440,7 +531,7 @@ export default function SocialHub({
   const myAudiqId = profile?.audiq_id ?? "Creating your Audiq ID…";
 
   return (
-    <section className={`min-h-0 ${activeTab === "messages" ? "flex h-full flex-col gap-4" : "space-y-5 pb-6"}`}>
+    <section className={`min-h-0 ${activeTab === "messages" ? "flex h-full flex-col gap-2" : "space-y-5 pb-6"}`}>
       {activeTab === "friends" ? <div className="overflow-hidden rounded-xl border border-white/10 bg-[linear-gradient(135deg,rgba(0,121,107,.3),rgba(0,121,107,.08),rgba(255,255,255,.04))] p-5 md:p-7">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div>
@@ -467,18 +558,15 @@ export default function SocialHub({
           </div>
         </div>
       </div> : (
-        <div className="flex shrink-0 items-center justify-between gap-4 border-b border-white/10 pb-3">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#80cbc4]">Audiq community</p>
-            <h1 className="mt-1 text-2xl font-black text-white sm:text-3xl">Messages</h1>
-          </div>
+        <div className="flex shrink-0 items-center justify-between gap-3">
+          <h1 className="text-xl font-black text-white">Messages</h1>
           <button type="button" onClick={() => onTabChange("friends")} className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-bold text-zinc-200 transition hover:border-[#00796b]/50 hover:bg-[#00594f]/20">
             Find people
           </button>
         </div>
       )}
 
-      <div className="flex shrink-0 gap-2">
+      {activeTab === "friends" ? <div className="flex shrink-0 gap-2">
         {[
           { id: "friends" as const, label: "Find Friends", icon: UserPlus },
           { id: "messages" as const, label: "Messages", icon: MessageCircle },
@@ -487,7 +575,7 @@ export default function SocialHub({
             <tab.icon className="h-4 w-4" /> {tab.label}
           </button>
         ))}
-      </div>
+      </div> : null}
 
       {error ? <p role="alert" className="rounded-md border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-200">{error}</p> : null}
       {notice ? <p role="status" className="rounded-md border border-white/10 bg-white/[0.04] p-3 text-sm text-zinc-300">{notice}</p> : null}
@@ -616,12 +704,14 @@ export default function SocialHub({
                   <button type="button" onClick={() => setMobileChatOpen(false)} className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-zinc-300 transition hover:bg-white/10 xl:hidden" aria-label="Back to chats"><ArrowLeft className="h-5 w-5" /></button>
                   <AvatarBlock user={activeFriend} />
                   <div className="min-w-0"><h2 className="truncate font-black text-white">{activeFriend.display_name}</h2><p className="truncate text-sm text-zinc-500">{activeFriend.audiq_id}</p></div>
+                  <div className="ml-auto"><ListenTogetherControl key={activeFriend.id} friendId={activeFriend.id} friendName={activeFriend.display_name} /></div>
                 </div>
 
                 <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3 sm:p-5">
                   {messages.length === 0 ? <div className="grid flex-1 place-items-center px-6 text-center text-sm text-zinc-500">Say hello or share the song you are listening to.</div> : messages.map((item) => {
                     const mine = item.sender_id === user.id;
-                    const sharedSong = item.message_type === "song" ? item.song : null;
+                    const sharedSong = item.message_type === "song" && item.song && !("tracks" in item.song) ? item.song : null;
+                    const sharedPlaylist = item.message_type === "playlist" && item.song && "tracks" in item.song ? item.song : null;
                     return (
                       <div key={item.id} className={`flex items-end gap-2 ${mine ? "justify-end" : "justify-start"}`}>
                         {!mine ? <ProfileAvatar profile={activeFriend} className="mb-5 h-7 w-7" /> : null}
@@ -632,6 +722,21 @@ export default function SocialHub({
                             <div className="min-w-0 flex-1"><p className="truncate font-bold">{sharedSong.title}</p><p className="truncate text-xs text-white/65">{sharedSong.artist}</p><p className="mt-1 text-[10px] uppercase tracking-wide text-white/50">Shared from {sharedSong.source}</p></div>
                             {sharedSong.audioUrl || sharedSong.videoId ? <button type="button" onClick={() => playSharedSong(item)} style={{ backgroundColor: chatTheme.color, color: chatTheme.textColor }} className="grid h-9 w-9 shrink-0 place-items-center rounded-full transition hover:scale-105" aria-label={`Play ${sharedSong.title}`} title="Play in Audiq"><Play className="h-4 w-4 fill-current" /></button> : null}
                           </div>
+                        ) : sharedPlaylist ? (
+                          <div className="w-[min(19rem,70vw)] rounded-xl border border-white/10 bg-black/20 p-2">
+                            <div className="flex items-center gap-3">
+                              <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white/10">
+                                <Image src={sharedPlaylist.cover || sharedPlaylist.tracks[0]?.albumArt || "/brand/audiq-vinyl.svg"} alt="" fill sizes="56px" unoptimized className="object-cover" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate font-bold">{sharedPlaylist.name}</p>
+                                <p className="text-xs text-white/65">{sharedPlaylist.tracks.length} songs · Shared playlist</p>
+                              </div>
+                              <button type="button" disabled={!sharedPlaylist.tracks.some((track) => track.audioUrl || track.videoId)} onClick={() => playSharedPlaylist(item)} style={{ backgroundColor: chatTheme.color, color: chatTheme.textColor }} className="grid h-9 w-9 shrink-0 place-items-center rounded-full transition hover:scale-105 disabled:opacity-40" aria-label={`Play ${sharedPlaylist.name}`} title="Play shared playlist"><Play className="h-4 w-4 fill-current" /></button>
+                            </div>
+                            {sharedPlaylist.tracks.slice(0, 3).map((track, index) => <p key={`${track.id}-${index}`} className="mt-2 truncate border-t border-white/5 pt-2 text-xs text-white/60">{index + 1}. {track.title} · {track.artist}</p>)}
+                            <button type="button" onClick={() => saveSharedPlaylist(item)} className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-2.5 py-1.5 text-xs font-bold text-white/80 transition hover:border-white/25 hover:bg-white/10"><Plus className="h-3.5 w-3.5" /> Save to Library</button>
+                          </div>
                         ) : <p className="whitespace-pre-wrap break-words">{item.body}</p>}
                         <p className={`mt-1 text-[10px] text-white/50 ${mine ? "text-right" : "text-left"}`}>{formatTime(item.created_at)}</p>
                         </div>
@@ -641,8 +746,23 @@ export default function SocialHub({
                   <div ref={messagesEndRef} aria-hidden="true" />
                 </div>
 
-                <form className="flex shrink-0 items-center gap-2 border-t border-white/10 bg-[#0a0d0c] px-3 py-3 sm:px-4" onSubmit={(event) => void handleSend(event)}>
+                <form className="relative flex shrink-0 items-center gap-2 border-t border-white/10 bg-[#0a0d0c] px-3 py-3 sm:px-4" onSubmit={(event) => void handleSend(event)}>
                   <input value={messageText} onChange={(event) => setMessageText(event.target.value)} placeholder={`Message ${activeFriend.display_name}`} maxLength={2000} className="min-h-11 min-w-0 flex-1 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-white outline-none transition focus:border-[#00796b]/60 focus:bg-white/[0.06]" />
+                  <div className="relative shrink-0">
+                    <button type="button" onClick={() => setSharePlaylistOpen((open) => !open)} disabled={!playlists.length} title={playlists.length ? "Share a playlist" : "Create a playlist in Library first"} aria-label="Share a playlist" aria-expanded={sharePlaylistOpen} style={{ color: chatTheme.color }} className="grid h-11 w-11 place-items-center rounded-full transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"><ListMusic className="h-5 w-5" /></button>
+                    {sharePlaylistOpen ? (
+                      <div className="absolute bottom-full right-0 z-30 mb-2 max-h-64 w-72 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-xl border border-white/10 bg-[#151917] p-2 shadow-2xl">
+                        <p className="px-2 py-1.5 text-xs font-bold uppercase tracking-wider text-zinc-500">Share a playlist</p>
+                        {playlists.map((playlist) => (
+                          <button key={playlist.id} type="button" disabled={!playlist.tracks.length} onClick={() => void handleSharePlaylist(playlist)} className="flex w-full items-center gap-3 rounded-lg p-2 text-left transition hover:bg-white/[0.07] disabled:cursor-not-allowed disabled:opacity-45">
+                            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md bg-white/10"><Image src={playlist.cover || playlist.tracks[0]?.albumArt || "/brand/audiq-vinyl.svg"} alt="" fill sizes="40px" unoptimized className="object-cover" /></div>
+                            <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold text-white">{playlist.name}</span><span className="block text-xs text-zinc-500">{playlist.tracks.length} songs</span></span>
+                            <Send className="h-4 w-4 shrink-0 text-zinc-500" />
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
                   <button type="button" onClick={() => void handleShareSong()} disabled={!currentTrack} title={currentTrack ? `Share ${currentTrack.title}` : "Play a song to share it"} aria-label={currentTrack ? `Share ${currentTrack.title}` : "Play a song to share it"} style={{ color: chatTheme.color }} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto sm:gap-2 sm:px-3"><Music2 className="h-5 w-5" /><span className="hidden text-sm font-bold sm:inline">Share</span></button>
                   <button type="submit" disabled={!messageText.trim()} aria-label="Send message" style={{ backgroundColor: chatTheme.color, color: chatTheme.textColor }} className="grid h-11 w-11 shrink-0 place-items-center rounded-full transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"><Send className="h-4 w-4" /></button>
                 </form>

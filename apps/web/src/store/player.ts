@@ -23,6 +23,10 @@ type PlayerState = {
 
   isPlaying: boolean;
 
+  playbackPosition: number;
+
+  seekRequest: { position: number; sequence: number; trackKey: string } | null;
+
   isShuffling: boolean;
 
   repeatMode: "off" | "one" | "all";
@@ -37,6 +41,10 @@ type PlayerState = {
   setPlaying: (
     playing: boolean
   ) => void;
+
+  setPlaybackPosition: (position: number) => void;
+
+  requestSeek: (position: number, track: Track) => void;
 
   setQueue: (
     queue: Track[]
@@ -56,6 +64,11 @@ type PlayerState = {
 
   removeFromQueue: (
     queueIndex: number
+  ) => void;
+
+  moveInQueue: (
+    fromIndex: number,
+    toIndex: number
   ) => void;
 
   clearQueue: () => void;
@@ -80,6 +93,10 @@ create<PlayerState>((set) => ({
   currentIndex: -1,
 
   isPlaying: false,
+
+  playbackPosition: 0,
+
+  seekRequest: null,
 
   isShuffling: false,
 
@@ -114,6 +131,7 @@ create<PlayerState>((set) => ({
         queue: activeQueue,
         currentIndex: index,
         isPlaying: true,
+        playbackPosition: 0,
       };
     }),
 
@@ -127,6 +145,27 @@ create<PlayerState>((set) => ({
   setPlaying: (playing) =>
     set({
       isPlaying: playing,
+    }),
+
+  setPlaybackPosition: (position) =>
+    set((state) => {
+      const safePosition = Number.isFinite(position) ? Math.max(0, position) : 0;
+      return Math.abs(state.playbackPosition - safePosition) < 1
+        ? state
+        : { playbackPosition: safePosition };
+    }),
+
+  requestSeek: (position, track) =>
+    set((state) => {
+      const safePosition = Number.isFinite(position) ? Math.max(0, position) : 0;
+      return {
+        playbackPosition: safePosition,
+        seekRequest: {
+          position: safePosition,
+          sequence: (state.seekRequest?.sequence ?? 0) + 1,
+          trackKey: `${track.source ?? ""}:${track.id}:${track.videoId ?? ""}:${track.audio}`,
+        },
+      };
     }),
 
   setQueue: (queue) =>
@@ -171,6 +210,7 @@ create<PlayerState>((set) => ({
         return {
           currentTrack: state.currentTrack,
           isPlaying: true,
+          playbackPosition: 0,
         };
       }
 
@@ -194,6 +234,7 @@ create<PlayerState>((set) => ({
             playableQueue[randomIndex],
           currentIndex: randomIndex,
           isPlaying: true,
+          playbackPosition: 0,
         };
       }
 
@@ -207,6 +248,7 @@ create<PlayerState>((set) => ({
             playableQueue[nextIndex],
           currentIndex: nextIndex,
           isPlaying: true,
+          playbackPosition: 0,
         };
       }
 
@@ -216,6 +258,7 @@ create<PlayerState>((set) => ({
           currentTrack: playableQueue[0],
           currentIndex: 0,
           isPlaying: true,
+          playbackPosition: 0,
         };
       }
 
@@ -263,6 +306,7 @@ create<PlayerState>((set) => ({
             playableQueue[previousIndex],
           currentIndex: previousIndex,
           isPlaying: true,
+          playbackPosition: 0,
         };
       }
 
@@ -276,6 +320,7 @@ create<PlayerState>((set) => ({
             playableQueue[last],
           currentIndex: last,
           isPlaying: true,
+          playbackPosition: 0,
         };
       }
 
@@ -284,6 +329,7 @@ create<PlayerState>((set) => ({
         currentTrack: playableQueue[0],
         currentIndex: 0,
         isPlaying: true,
+          playbackPosition: 0,
       };
     }),
 
@@ -369,6 +415,7 @@ create<PlayerState>((set) => ({
             currentTrack: null,
             currentIndex: -1,
             isPlaying: false,
+            playbackPosition: 0,
           };
         }
 
@@ -382,6 +429,7 @@ create<PlayerState>((set) => ({
           currentTrack:
             updatedQueue[currentIndex],
           currentIndex,
+          playbackPosition: 0,
         };
       }
 
@@ -391,12 +439,47 @@ create<PlayerState>((set) => ({
       };
     }),
 
+  moveInQueue: (fromIndex, toIndex) =>
+    set((state) => {
+      if (
+        fromIndex < 0 ||
+        toIndex < 0 ||
+        fromIndex >= state.queue.length ||
+        toIndex >= state.queue.length ||
+        fromIndex === toIndex
+      ) {
+        return {};
+      }
+
+      const queue = [...state.queue];
+      const [track] = queue.splice(fromIndex, 1);
+      if (!track) return {};
+      queue.splice(toIndex, 0, track);
+
+      let currentIndex = state.currentIndex;
+      if (state.currentIndex === fromIndex) {
+        currentIndex = toIndex;
+      } else if (fromIndex < state.currentIndex && toIndex >= state.currentIndex) {
+        currentIndex -= 1;
+      } else if (fromIndex > state.currentIndex && toIndex <= state.currentIndex) {
+        currentIndex += 1;
+      }
+
+      return { queue, currentIndex };
+    }),
+
   clearQueue: () =>
-    set({
-      queue: [],
-      currentTrack: null,
-      currentIndex: -1,
-      isPlaying: false,
+    set((state) => {
+      if (!state.currentTrack) {
+        return { queue: [], currentIndex: -1, isPlaying: false };
+      }
+      const currentIndex = state.queue.findIndex(
+        (track) => track.id === state.currentTrack?.id && track.videoId === state.currentTrack?.videoId
+      );
+      if (currentIndex < 0) {
+        return { queue: [state.currentTrack], currentIndex: 0 };
+      }
+      return { queue: state.queue.slice(0, currentIndex + 1), currentIndex };
     }),
 
 }));
