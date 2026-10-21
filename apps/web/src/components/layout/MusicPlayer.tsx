@@ -18,7 +18,7 @@ import {
   VolumeX,
 } from "lucide-react";
 import Image from "next/image";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import AddToPlaylistModal from "@/components/library/AddToPlaylistModal";
 import QueuePanel from "@/components/layout/QueuePanel";
 import { usePlayerStore } from "@/store/player";
@@ -41,6 +41,41 @@ function formatTime(seconds: number) {
     .padStart(2, "0");
 
   return `${minutes}:${remainingSeconds}`;
+}
+
+const AUTOPLAY_PREFERENCE_KEY = "audiq-autoplay-radio";
+const AUTOPLAY_PREFERENCE_EVENT = "audiq-autoplay-radio-change";
+let fallbackAutoplayPreference = false;
+
+function subscribeAutoplayPreference(onChange: () => void) {
+  window.addEventListener("storage", onChange);
+  window.addEventListener(AUTOPLAY_PREFERENCE_EVENT, onChange);
+  return () => {
+    window.removeEventListener("storage", onChange);
+    window.removeEventListener(AUTOPLAY_PREFERENCE_EVENT, onChange);
+  };
+}
+
+function getAutoplayPreferenceSnapshot() {
+  try {
+    return window.localStorage.getItem(AUTOPLAY_PREFERENCE_KEY) === "true";
+  } catch {
+    return fallbackAutoplayPreference;
+  }
+}
+
+function getAutoplayPreferenceServerSnapshot() {
+  return false;
+}
+
+function saveAutoplayPreference(enabled: boolean) {
+  fallbackAutoplayPreference = enabled;
+  try {
+    window.localStorage.setItem(AUTOPLAY_PREFERENCE_KEY, String(enabled));
+  } catch {
+    // Keep the preference for the current session if browser storage is unavailable.
+  }
+  window.dispatchEvent(new Event(AUTOPLAY_PREFERENCE_EVENT));
 }
 
 type MusicPlayerProps = {
@@ -90,8 +125,11 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
   const [sleepMenuOpen, setSleepMenuOpen] = useState(false);
   const [sleepTimerMinutes, setSleepTimerMinutes] = useState<number | null>(null);
   const [sleepAtTrackEnd, setSleepAtTrackEnd] = useState(false);
-  const [autoplayEnabled, setAutoplayEnabled] = useState(false);
-  const [autoplayPreferenceLoaded, setAutoplayPreferenceLoaded] = useState(false);
+  const autoplayEnabled = useSyncExternalStore(
+    subscribeAutoplayPreference,
+    getAutoplayPreferenceSnapshot,
+    getAutoplayPreferenceServerSnapshot,
+  );
 
   const cover =
     currentTrack?.albumArt ||
@@ -163,25 +201,6 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
 
     audio.volume = isMuted ? 0 : volume;
   }, [volume, isMuted]);
-
-  useEffect(() => {
-    try {
-      setAutoplayEnabled(window.localStorage.getItem("audiq-autoplay-radio") === "true");
-    } catch {
-      // Keep autoplay disabled when browser storage is unavailable.
-    }
-    setAutoplayPreferenceLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    if (autoplayPreferenceLoaded) {
-      try {
-        window.localStorage.setItem("audiq-autoplay-radio", String(autoplayEnabled));
-      } catch {
-        // The player preference still works for the current session.
-      }
-    }
-  }, [autoplayEnabled, autoplayPreferenceLoaded]);
 
   useEffect(() => {
     if (sleepTimerMinutes === null) return;
@@ -685,7 +704,7 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
 
           <button
             type="button"
-            onClick={() => setAutoplayEnabled((enabled) => !enabled)}
+            onClick={() => saveAutoplayPreference(!autoplayEnabled)}
             aria-label={autoplayEnabled ? "Turn off autoplay radio" : "Turn on autoplay radio"}
             aria-pressed={autoplayEnabled}
             title={autoplayEnabled ? "Autoplay radio on" : "Autoplay radio off"}

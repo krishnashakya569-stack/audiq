@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { AudiqProfile } from "@/features/auth/AuthProvider";
 
 export default function ProfileAvatar({
@@ -10,18 +10,16 @@ export default function ProfileAvatar({
   profile: Pick<AudiqProfile, "display_name" | "avatar_color" | "avatar_style" | "avatar_url"> | null;
   className?: string;
 }) {
-  const [imageFailed, setImageFailed] = useState(false);
+  const [failedAvatarUrl, setFailedAvatarUrl] = useState<string | null>(null);
   const avatarUrl = profile?.avatar_url ?? null;
 
-  useEffect(() => setImageFailed(false), [avatarUrl]);
-
-  if (avatarUrl && !imageFailed) {
+  if (avatarUrl && failedAvatarUrl !== avatarUrl) {
     return (
       <img
         src={avatarUrl}
         alt={`${profile?.display_name || "Audiq user"} profile photo`}
         referrerPolicy="no-referrer"
-        onError={() => setImageFailed(true)}
+        onError={() => setFailedAvatarUrl(avatarUrl)}
         className={`${className} shrink-0 rounded-full border border-white/10 object-cover shadow-sm`}
       />
     );
