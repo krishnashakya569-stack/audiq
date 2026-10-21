@@ -204,9 +204,11 @@ export default function ExploreDashboard() {
   }, [addSearch]);
 
   useEffect(() => {
-    if (activeCategory === "For You") {
+    if (activeCategory !== "For You") return;
+    const timer = window.setTimeout(() => {
       void loadQuery(personalizedQueries[0], false, personalizedQueries.slice(1));
-    }
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [activeCategory, loadQuery, personalizedQueries]);
 
   const selectCategory = (category: (typeof browseCategories)[number]) => {
