@@ -160,7 +160,7 @@ export default function ContinueListening({ query }: ContinueListeningProps) {
                     queue={playableQueue}
                     artistNames={artistNames}
                     byline={byline}
-                    artwork={artwork}
+                    artwork={artwork ?? undefined}
                     canPlay={canPlay}
                   />
                 );
@@ -213,3 +213,4 @@ export default function ContinueListening({ query }: ContinueListeningProps) {
     </section>
   );
 }
+
