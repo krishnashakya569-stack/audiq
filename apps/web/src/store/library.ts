@@ -13,6 +13,7 @@ type Playlist = {
 type LibraryState = {
   likedSongs: Track[];
   recentlyPlayed: Track[];
+  hiddenRecommendations: Track[];
   playlists: Playlist[];
   searchHistory: string[];
 
@@ -21,7 +22,12 @@ type LibraryState = {
   isLiked: (id: Track["id"]) => boolean;
 
   addRecentlyPlayed: (track: Track) => void;
+  replaceRecentlyPlayed: (tracks: Track[]) => void;
   clearRecentlyPlayed: () => void;
+
+  markRecommendationNotInterested: (track: Track) => void;
+  restoreRecommendation: (track: Track) => void;
+  replaceHiddenRecommendations: (tracks: Track[]) => void;
 
   createPlaylist: (name: string) => void;
   deletePlaylist: (id: string) => void;
@@ -42,8 +48,13 @@ type LibraryState = {
   ) => void;
 
   addSearch: (query: string) => void;
+  replaceSearchHistory: (queries: string[]) => void;
   clearSearchHistory: () => void;
 };
+
+export function recommendationTrackKey(track: Track) {
+  return `${track.source ?? "unknown"}:${String(track.id)}:${track.videoId ?? ""}`;
+}
 
 export const useLibraryStore =
   create<LibraryState>((set, get) => ({
@@ -54,6 +65,8 @@ export const useLibraryStore =
       []
     ),
 
+    hiddenRecommendations: load("hiddenRecommendations", []),
+
     playlists: load("playlists", []),
 
     searchHistory: load(
@@ -63,7 +76,7 @@ export const useLibraryStore =
 
     likeSong(track) {
       const exists = get().likedSongs.some(
-        (song) => song.id === track.id
+        (song) => String(song.id) === String(track.id)
       );
 
       if (exists) return;
@@ -81,7 +94,7 @@ export const useLibraryStore =
     unlikeSong(id) {
       const likedSongs =
         get().likedSongs.filter(
-          (song) => song.id !== id
+          (song) => String(song.id) !== String(id)
         );
 
       save("likedSongs", likedSongs);
@@ -91,7 +104,7 @@ export const useLibraryStore =
 
     isLiked(id) {
       return get().likedSongs.some(
-        (song) => song.id === id
+        (song) => String(song.id) === String(id)
       );
     },
 
@@ -99,7 +112,7 @@ export const useLibraryStore =
       const history = [
         track,
         ...get().recentlyPlayed.filter(
-          (song) => song.id !== track.id
+          (song) => String(song.id) !== String(track.id)
         ),
       ].slice(0, 50);
 
@@ -110,12 +123,46 @@ export const useLibraryStore =
       });
     },
 
+    replaceRecentlyPlayed(tracks) {
+      const recentlyPlayed = tracks.slice(0, 50);
+      save("recentlyPlayed", recentlyPlayed);
+      set({ recentlyPlayed });
+    },
+
     clearRecentlyPlayed() {
       save("recentlyPlayed", []);
 
       set({
         recentlyPlayed: [],
       });
+    },
+
+    markRecommendationNotInterested(track) {
+      const key = recommendationTrackKey(track);
+      if (get().hiddenRecommendations.some((item) => recommendationTrackKey(item) === key)) return;
+      const hiddenRecommendations = [track, ...get().hiddenRecommendations].slice(0, 200);
+      save("hiddenRecommendations", hiddenRecommendations);
+      set({ hiddenRecommendations });
+    },
+
+    restoreRecommendation(track) {
+      const key = recommendationTrackKey(track);
+      const hiddenRecommendations = get().hiddenRecommendations.filter((item) => recommendationTrackKey(item) !== key);
+      if (hiddenRecommendations.length === get().hiddenRecommendations.length) return;
+      save("hiddenRecommendations", hiddenRecommendations);
+      set({ hiddenRecommendations });
+    },
+
+    replaceHiddenRecommendations(tracks) {
+      const seen = new Set<string>();
+      const hiddenRecommendations = tracks.filter((track) => {
+        const key = recommendationTrackKey(track);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      }).slice(0, 200);
+      save("hiddenRecommendations", hiddenRecommendations);
+      set({ hiddenRecommendations });
     },
 
     createPlaylist(name) {
@@ -227,7 +274,7 @@ export const useLibraryStore =
     },
 
     addSearch(query) {
-      const value = query.trim();
+      const value = query.trim().slice(0, 120);
 
       if (!value) return;
 
@@ -245,6 +292,22 @@ export const useLibraryStore =
       set({
         searchHistory: history,
       });
+    },
+
+    replaceSearchHistory(queries) {
+      const seen = new Set<string>();
+      const searchHistory = queries
+        .map((query) => query.trim().slice(0, 120))
+        .filter((query) => {
+          const key = query.toLowerCase().replace(/\s+/g, " ");
+          if (!key || seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        })
+        .slice(0, 20);
+
+      save("searchHistory", searchHistory);
+      set({ searchHistory });
     },
 
     clearSearchHistory() {
