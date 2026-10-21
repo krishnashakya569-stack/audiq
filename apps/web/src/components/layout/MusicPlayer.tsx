@@ -2,7 +2,10 @@
 
 import {
   Heart,
- FastForward,
+  FastForward,
+  ListMusic,
+  Moon,
+  Radio,
   Pause,
   Play,
   Plus,
@@ -15,11 +18,14 @@ import {
   VolumeX,
 } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AddToPlaylistModal from "@/components/library/AddToPlaylistModal";
+import QueuePanel from "@/components/layout/QueuePanel";
 import { usePlayerStore } from "@/store/player";
 import { useLibraryStore } from "@/store/library";
 import { resolveMediaUrl } from "@/services/api";
+import { searchMusic } from "@/services/music";
+import { songToTrack } from "@/lib/songAdapter";
 import YouTubeEmbedPlayer, {
   type YouTubeEmbedControls,
 } from "./YouTubeEmbedPlayer";
@@ -44,12 +50,17 @@ type MusicPlayerProps = {
 export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
   const {
     currentTrack,
+    queue,
+    currentIndex,
     isPlaying,
     isShuffling,
+    seekRequest,
     nextTrack,
     previousTrack,
     repeatMode,
     setPlaying,
+    setPlaybackPosition,
+    requestSeek,
     togglePlay,
     toggleRepeat,
     toggleShuffle,
@@ -66,13 +77,21 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
   const youtubePlayerRef = useRef<YouTubeEmbedControls | null>(null);
   const lastTrackKey = useRef<string | null>(null);
   const fallbackKey = useRef<string | null>(null);
+  const pendingSeek = useRef<{ trackKey: string; position: number; source: "audio" | "youtube" } | null>(null);
   const ignoreAudioPause = useRef(false);
+  const radioRequestFor = useRef<string | null>(null);
 
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.72);
   const [isMuted, setMuted] = useState(false);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+  const [queueMenuOpen, setQueueMenuOpen] = useState(false);
+  const [sleepMenuOpen, setSleepMenuOpen] = useState(false);
+  const [sleepTimerMinutes, setSleepTimerMinutes] = useState<number | null>(null);
+  const [sleepAtTrackEnd, setSleepAtTrackEnd] = useState(false);
+  const [autoplayEnabled, setAutoplayEnabled] = useState(false);
+  const [autoplayPreferenceLoaded, setAutoplayPreferenceLoaded] = useState(false);
 
   const cover =
     currentTrack?.albumArt ||
@@ -82,6 +101,31 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
     duration > 0
       ? (currentTime / duration) * 100
       : 0;
+  const upcomingCount = Math.max(0, queue.length - currentIndex - 1);
+
+  const activeTrackKey = currentTrack
+    ? [currentTrack.source, currentTrack.id, currentTrack.videoId, currentTrack.audio].join(":")
+    : "";
+
+  const applyPendingSeek = useCallback((source: "audio" | "youtube") => {
+    const pending = pendingSeek.current;
+    if (!pending || pending.source !== source || pending.trackKey !== activeTrackKey) return;
+
+    if (source === "youtube") {
+      if (!youtubePlayerRef.current?.isReady()) return;
+      youtubePlayerRef.current.seekTo(pending.position);
+    } else {
+      const audio = audioRef.current;
+      if (!audio || audio.readyState < 1) return;
+      const position = Number.isFinite(audio.duration)
+        ? Math.min(pending.position, audio.duration)
+        : pending.position;
+      audio.currentTime = position;
+      setCurrentTime(position);
+      setPlaybackPosition(position);
+    }
+    pendingSeek.current = null;
+  }, [activeTrackKey, setPlaybackPosition]);
 
   const isLiked =
     currentTrack != null &&
@@ -119,6 +163,37 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
 
     audio.volume = isMuted ? 0 : volume;
   }, [volume, isMuted]);
+
+  useEffect(() => {
+    try {
+      setAutoplayEnabled(window.localStorage.getItem("audiq-autoplay-radio") === "true");
+    } catch {
+      // Keep autoplay disabled when browser storage is unavailable.
+    }
+    setAutoplayPreferenceLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (autoplayPreferenceLoaded) {
+      try {
+        window.localStorage.setItem("audiq-autoplay-radio", String(autoplayEnabled));
+      } catch {
+        // The player preference still works for the current session.
+      }
+    }
+  }, [autoplayEnabled, autoplayPreferenceLoaded]);
+
+  useEffect(() => {
+    if (sleepTimerMinutes === null) return;
+    const timer = window.setTimeout(() => {
+      audioRef.current?.pause();
+      youtubePlayerRef.current?.pause();
+      setPlaying(false);
+      setSleepTimerMinutes(null);
+      setSleepAtTrackEnd(false);
+    }, sleepTimerMinutes * 60_000);
+    return () => window.clearTimeout(timer);
+  }, [sleepTimerMinutes, setPlaying]);
 
   useEffect(() => {
     const session = navigator.mediaSession;
@@ -195,8 +270,8 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
     });
     setHandler("seekto", (details) => {
       const audio = audioRef.current;
-      if (audio && details.seekTime !== undefined) {
-        audio.currentTime = details.seekTime;
+      if (audio && currentTrack && details.seekTime !== undefined) {
+        requestSeek(details.seekTime, currentTrack);
       }
     });
 
@@ -215,7 +290,7 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
       session.metadata = null;
       session.playbackState = "none";
     };
-  }, [currentTrack, nextTrack, previousTrack, setPlaying]);
+  }, [currentTrack, nextTrack, previousTrack, requestSeek, setPlaying]);
 
   useEffect(() => {
     if (!navigator.mediaSession || !currentTrack) return;
@@ -241,6 +316,7 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
     if (trackChanged) {
       lastTrackKey.current = trackKey;
       fallbackKey.current = null;
+      if (pendingSeek.current && pendingSeek.current.trackKey !== trackKey) pendingSeek.current = null;
       addRecentlyPlayed(currentTrack);
       setCurrentTime(0);
       setDuration(
@@ -293,17 +369,27 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
     addRecentlyPlayed,
   ]);
 
+  useEffect(() => {
+    if (!currentTrack || !seekRequest) return;
+    const trackKey = [currentTrack.source, currentTrack.id, currentTrack.videoId, currentTrack.audio].join(":");
+    if (seekRequest.trackKey !== trackKey) return;
+    pendingSeek.current = {
+      trackKey,
+      position: Math.max(0, seekRequest.position),
+      source: currentTrack.source === "youtube" ? "youtube" : "audio",
+    };
+    applyPendingSeek(currentTrack.source === "youtube" ? "youtube" : "audio");
+  }, [applyPendingSeek, currentTrack, seekRequest]);
+
   const seekTo = (value: string) => {
     const time = Number(value);
-
-    if (currentTrack?.source === "youtube") {
+    if (!currentTrack) return;
+    if (currentTrack.source === "youtube") {
       youtubePlayerRef.current?.seekTo(time);
-    } else {
-      const audio = audioRef.current;
-      if (!audio) return;
-      audio.currentTime = time;
+    } else if (audioRef.current) {
+      audioRef.current.currentTime = time;
     }
-
+    setPlaybackPosition(time);
     setCurrentTime(time);
   };
 
@@ -320,12 +406,8 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
       duration || audio?.duration || playbackTime + seconds
     );
 
-    if (currentTrack?.source === "youtube") {
-      youtubePlayerRef.current?.seekTo(next);
-    } else if (audio) {
-      audio.currentTime = next;
-    }
-
+    if (!currentTrack) return;
+    requestSeek(next, currentTrack);
     setCurrentTime(next);
   };
 
@@ -339,6 +421,56 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
     }
 
     togglePlay();
+  };
+
+  const handleTrackEnded = () => {
+    if (sleepAtTrackEnd) {
+      setPlaying(false);
+      setSleepAtTrackEnd(false);
+      return;
+    }
+    const state = usePlayerStore.getState();
+    const track = state.currentTrack;
+    const isAtQueueEnd = state.currentIndex >= state.queue.length - 1;
+    if (
+      autoplayEnabled &&
+      track &&
+      isAtQueueEnd &&
+      state.repeatMode === "off"
+    ) {
+      const requestKey = `${track.source ?? ""}:${track.id}:${track.videoId ?? ""}`;
+      if (radioRequestFor.current === requestKey) return;
+      radioRequestFor.current = requestKey;
+      setPlaying(false);
+      void searchMusic(`${track.artist} similar songs`)
+        .then((songs) => {
+          const latestTrack = usePlayerStore.getState().currentTrack;
+          const latestKey = latestTrack ? `${latestTrack.source ?? ""}:${latestTrack.id}:${latestTrack.videoId ?? ""}` : "";
+          if (latestKey !== requestKey) return;
+
+          const latestState = usePlayerStore.getState();
+          const known = new Set(latestState.queue.map((item) => `${item.source ?? ""}:${item.id}:${item.videoId ?? ""}`));
+          known.add(requestKey);
+          const recommendations = songs
+            .map(songToTrack)
+            .filter((item) => !item.isPreview && Boolean(item.audio || (item.source === "youtube" && item.videoId)))
+            .filter((item) => {
+              const key = `${item.source ?? ""}:${item.id}:${item.videoId ?? ""}`;
+              if (known.has(key)) return false;
+              known.add(key);
+              return true;
+            })
+            .slice(0, 12);
+
+          recommendations.forEach((item) => usePlayerStore.getState().addToQueue(item));
+          if (recommendations.length) usePlayerStore.getState().nextTrack();
+          else usePlayerStore.getState().setPlaying(false);
+        })
+        .catch(() => usePlayerStore.getState().setPlaying(false))
+        .finally(() => { radioRequestFor.current = null; });
+      return;
+    }
+    nextTrack();
   };
 
   const isYouTubeTrack =
@@ -355,7 +487,7 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
 
   return (
     <>
-    <footer className={`audiq-player mb-2 grid items-center rounded-[20px] border border-white/10 border-t-2 border-t-[#d6ff36]/75 bg-[#080b09]/95 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-2xl shadow-black/40 backdrop-blur-xl md:mb-3 md:min-h-28 md:py-4 ${layoutClasses}`}>
+    <footer className={`audiq-player relative mb-2 grid items-center rounded-[20px] border border-white/10 border-t-2 border-t-[#d6ff36]/75 bg-[#080b09]/95 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-2xl shadow-black/40 backdrop-blur-xl md:mb-3 md:min-h-28 md:py-4 ${layoutClasses}`}>
 
       <audio
         ref={audioRef}
@@ -400,6 +532,7 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
           setDuration(
             e.currentTarget.duration || 0
           );
+          applyPendingSeek("audio");
         }}
 
         onDurationChange={(e) => {
@@ -407,6 +540,7 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
           setDuration(
             e.currentTarget.duration || 0
           );
+          applyPendingSeek("audio");
         }}
 
         onCanPlay={() => {
@@ -431,13 +565,13 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
 
         onTimeUpdate={(e) => {
           if (currentTrack?.source === "youtube") return;
-          setCurrentTime(
-            e.currentTarget.currentTime
-          );
+          const time = e.currentTarget.currentTime;
+          setCurrentTime(time);
+          setPlaybackPosition(time);
         }}
 
         onEnded={() => {
-          if (currentTrack?.source !== "youtube") nextTrack();
+          if (currentTrack?.source !== "youtube") handleTrackEnded();
         }}
       />
 
@@ -526,6 +660,40 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
             <SkipForward className="h-5 w-5" />
           </button>
 
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setQueueMenuOpen((open) => !open)}
+              aria-label={`Open playback queue, ${upcomingCount} upcoming`}
+              aria-expanded={queueMenuOpen}
+              title={`Queue · ${upcomingCount} upcoming`}
+              className={`relative grid h-8 w-8 place-items-center rounded-md transition hover:bg-white/10 sm:h-9 sm:w-9 ${queueMenuOpen ? "text-[#d6ff36]" : "text-zinc-400 hover:text-white"}`}
+            >
+              <ListMusic aria-hidden="true" className="h-4 w-4" />
+              {upcomingCount > 0 ? (
+                <span className="absolute -right-0.5 -top-0.5 min-w-4 rounded-full bg-[#d6ff36] px-1 text-[9px] font-black leading-4 text-[#07100d]">
+                  {upcomingCount > 99 ? "99+" : upcomingCount}
+                </span>
+              ) : null}
+            </button>
+            {queueMenuOpen ? (
+              <div className="absolute bottom-full right-0 z-[120] mb-3 max-h-[min(60vh,34rem)] w-[min(92vw,28rem)] overflow-y-auto rounded-2xl border border-white/10 bg-[#080b09] p-2 shadow-2xl shadow-black/60 sm:p-3">
+                <QueuePanel />
+              </div>
+            ) : null}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setAutoplayEnabled((enabled) => !enabled)}
+            aria-label={autoplayEnabled ? "Turn off autoplay radio" : "Turn on autoplay radio"}
+            aria-pressed={autoplayEnabled}
+            title={autoplayEnabled ? "Autoplay radio on" : "Autoplay radio off"}
+            className={`grid h-8 w-8 place-items-center rounded-md transition hover:bg-white/10 sm:h-9 sm:w-9 ${autoplayEnabled ? "text-[#d6ff36]" : "text-zinc-400 hover:text-white"}`}
+          >
+            <Radio aria-hidden="true" className="h-4 w-4" />
+          </button>
+
           <button
             onClick={toggleRepeat}
             className={`relative hidden rounded-md p-2 hover:bg-white/10 sm:block ${
@@ -543,6 +711,64 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
             )}
           </button>
 
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setSleepMenuOpen((open) => !open)}
+              disabled={!currentTrack && sleepTimerMinutes === null && !sleepAtTrackEnd}
+              aria-label="Sleep timer options"
+              aria-expanded={sleepMenuOpen}
+              title={sleepTimerMinutes !== null ? `Sleep timer: ${sleepTimerMinutes} minutes` : sleepAtTrackEnd ? "Sleep when this track ends" : "Sleep timer"}
+              className={`grid h-8 w-8 place-items-center rounded-md transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 sm:h-9 sm:w-9 ${sleepTimerMinutes !== null || sleepAtTrackEnd ? "text-[#d6ff36]" : "text-zinc-400 hover:text-white"}`}
+            >
+              <Moon aria-hidden="true" className="h-4 w-4" />
+            </button>
+            {sleepMenuOpen ? (
+              <div className="absolute bottom-full right-0 z-[110] mb-2 w-48 rounded-xl border border-white/10 bg-[#111513] p-2 text-left shadow-2xl">
+                <p className="px-2 py-1.5 text-xs font-bold uppercase tracking-wider text-zinc-500">Sleep timer</p>
+                {[15, 30, 45, 60].map((minutes) => (
+                  <button
+                    key={minutes}
+                    type="button"
+                    onClick={() => {
+                      setSleepTimerMinutes(minutes);
+                      setSleepAtTrackEnd(false);
+                      setSleepMenuOpen(false);
+                    }}
+                    className="block w-full rounded-lg px-2 py-2 text-left text-sm text-zinc-200 hover:bg-white/10"
+                  >
+                    {minutes} minutes
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  disabled={!currentTrack}
+                  onClick={() => {
+                    setSleepTimerMinutes(null);
+                    setSleepAtTrackEnd(true);
+                    setSleepMenuOpen(false);
+                  }}
+                  className="block w-full rounded-lg px-2 py-2 text-left text-sm text-zinc-200 hover:bg-white/10 disabled:opacity-40"
+                >
+                  At end of this track
+                </button>
+                {sleepTimerMinutes !== null || sleepAtTrackEnd ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSleepTimerMinutes(null);
+                      setSleepAtTrackEnd(false);
+                      setSleepMenuOpen(false);
+                    }}
+                    className="mt-1 block w-full rounded-lg border-t border-white/10 px-2 py-2 text-left text-sm text-[#80cbc4] hover:bg-white/5"
+                  >
+                    Turn timer off
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+
         </div>
 
         <div className={`${useCompactLayout ? "hidden md:grid" : "grid"} mt-1 items-center gap-2 text-[11px] text-zinc-500 md:mt-3 md:gap-3 md:text-xs ${isYouTubeTrack ? "grid-cols-1 md:grid-cols-[3rem_1fr_4rem]" : "grid-cols-[2.5rem_1fr_3.5rem] md:grid-cols-[3rem_1fr_4rem]"}`}>
@@ -558,6 +784,12 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
             onChange={(e) =>
               seekTo(e.target.value)
             }
+            onPointerUp={() => {
+              if (currentTrack) requestSeek(currentTime, currentTrack);
+            }}
+            onKeyUp={() => {
+              if (currentTrack) requestSeek(currentTime, currentTrack);
+            }}
             disabled={!currentTrack}
             className="h-2 w-full cursor-pointer accent-[#d6ff36] md:h-1"
             style={{
@@ -586,9 +818,13 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
               volume={volume}
               isMuted={isMuted}
               onPlayingChange={setPlaying}
-              onTimeUpdate={setCurrentTime}
+              onReady={() => applyPendingSeek("youtube")}
+              onTimeUpdate={(time) => {
+                setCurrentTime(time);
+                setPlaybackPosition(time);
+              }}
               onDurationChange={setDuration}
-              onEnded={nextTrack}
+              onEnded={handleTrackEnded}
             />
           </div>
         </div>

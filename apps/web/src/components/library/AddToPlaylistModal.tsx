@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Music2, Plus } from "lucide-react";
+import { Check, X, Music2, Plus } from "lucide-react";
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { Track } from "@/store/player";
@@ -22,9 +22,15 @@ export default function AddToPlaylistModal({
     createPlaylist,
     addSongToPlaylist,
   } = usePlaylistStore();
+  const editablePlaylists = playlists.filter((playlist) =>
+    !playlist.collaborationRole ||
+    playlist.collaborationRole === "owner" ||
+    playlist.collaborationRole === "editor"
+  );
 
   const [playlistName, setPlaylistName] =
     useState("");
+  const [createError, setCreateError] = useState("");
 
   if (!open || typeof document === "undefined") return null;
 
@@ -60,7 +66,7 @@ export default function AddToPlaylistModal({
 
         <div className="max-h-72 overflow-y-auto p-4">
 
-          {playlists.length === 0 ? (
+          {editablePlaylists.length === 0 ? (
 
             <div className="py-10 text-center">
 
@@ -69,9 +75,7 @@ export default function AddToPlaylistModal({
                 className="mx-auto mb-3 text-zinc-500"
               />
 
-              <p className="text-zinc-400">
-                No playlists yet
-              </p>
+              <p className="text-zinc-400">No editable playlists</p>
 
               <p className="mt-1 text-sm text-zinc-500">
                 Create your first playlist below.
@@ -83,39 +87,17 @@ export default function AddToPlaylistModal({
 
             <div className="space-y-2">
 
-              {playlists.map((playlist) => (
-
-                <button
+              {editablePlaylists.map((playlist) => (
+                <PlaylistChoice
                   key={playlist.id}
-                  type="button"
-                  onClick={() => {
-                    addSongToPlaylist(
-                      playlist.id,
-                      track
-                    );
-
+                  name={playlist.name}
+                  songCount={playlist.tracks.length}
+                  alreadyAdded={playlist.tracks.some((song) => String(song.id) === String(track.id))}
+                  onChoose={() => {
+                    addSongToPlaylist(playlist.id, track);
                     onClose();
                   }}
-                  className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3 transition hover:border-[#00796b] hover:bg-[#00796b]/10"
-                >
-                  <div className="grid h-11 w-11 place-items-center rounded-lg bg-[#00594f]">
-                    <Music2 size={18} />
-                  </div>
-
-                  <div className="flex-1 text-left">
-
-                    <p className="font-medium text-white">
-                      {playlist.name}
-                    </p>
-
-                    <p className="text-xs text-zinc-500">
-                      {playlist.tracks.length} songs
-                    </p>
-
-                  </div>
-
-                </button>
-
+                />
               ))}
 
             </div>
@@ -138,37 +120,73 @@ export default function AddToPlaylistModal({
           <button
             type="button"
             onClick={() => {
-              if (!playlistName.trim()) return;
+              const name = playlistName.trim();
+              if (!name) return;
 
-              createPlaylist(playlistName);
+              const existingIds = new Set(usePlaylistStore.getState().playlists.map((playlist) => playlist.id));
+              createPlaylist(name);
 
-              const created =
-                usePlaylistStore
-                  .getState()
-                  .playlists.at(-1);
+              const created = usePlaylistStore.getState().playlists.find(
+                (playlist) => !existingIds.has(playlist.id) && playlist.name.toLowerCase() === name.toLowerCase()
+              );
 
-              if (created) {
-                addSongToPlaylist(
-                  created.id,
-                  track
-                );
+              if (!created) {
+                setCreateError("A playlist with that name already exists, or the name is empty.");
+                return;
               }
+              addSongToPlaylist(created.id, track);
 
               setPlaylistName("");
-
+              setCreateError("");
               onClose();
             }}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#00796b] to-[#00594f] py-3 font-semibold text-white transition hover:scale-[1.02]"
+            disabled={!playlistName.trim()}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#00796b] to-[#00594f] py-3 font-semibold text-white transition hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Plus size={18} />
 
             Create Playlist
           </button>
+          {createError ? <p role="alert" className="mt-2 text-sm text-red-300">{createError}</p> : null}
 
         </div>
 
       </div>
     </div>,
     document.body
+  );
+}
+
+function PlaylistChoice({
+  name,
+  songCount,
+  alreadyAdded,
+  onChoose,
+}: {
+  name: string;
+  songCount: number;
+  alreadyAdded: boolean;
+  onChoose: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onChoose}
+      disabled={alreadyAdded}
+      className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3 text-left transition hover:border-[#00796b] hover:bg-[#00796b]/10 disabled:cursor-default disabled:opacity-70"
+    >
+                  <div className="grid h-11 w-11 place-items-center rounded-lg bg-[#00594f]">
+                    <Music2 size={18} />
+                  </div>
+
+                  <div className="flex-1 text-left">
+                    <p className="font-medium text-white">{name}</p>
+                    <p className="text-xs text-zinc-500">
+                      {alreadyAdded ? "Already in this playlist" : `${songCount} songs`}
+                    </p>
+                  </div>
+
+      {alreadyAdded ? <Check aria-hidden="true" className="h-4 w-4 text-[#80cbc4]" /> : <Plus aria-hidden="true" className="h-4 w-4 text-zinc-400" />}
+    </button>
   );
 }

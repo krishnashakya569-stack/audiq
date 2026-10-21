@@ -21,6 +21,7 @@ import { AVATAR_STYLE_OPTIONS, CHAT_THEME_OPTIONS, type AvatarStyle, type ChatTh
 import { useAudiqTheme, type AudiqTheme } from "@/features/settings/ThemeProvider";
 import { AVATAR_BUCKET } from "@/lib/supabase/avatars";
 import { useLibraryStore } from "@/store/library";
+import { MUSIC_LANGUAGE_OPTIONS, type MusicLanguage } from "@/features/settings/musicPreferences";
 
 type SettingsDashboardProps = {
   onOpenAuth: () => void;
@@ -73,7 +74,7 @@ export default function SettingsDashboard({ onOpenAuth }: SettingsDashboardProps
   };
 
   async function updateProfilePreference(
-    values: Partial<Pick<NonNullable<typeof profile>, "avatar_style" | "chat_theme">>,
+    values: Partial<Pick<NonNullable<typeof profile>, "avatar_style" | "chat_theme" | "preferred_music_language">>,
     successMessage: string
   ) {
     if (!user || !supabase) return;
@@ -218,6 +219,30 @@ export default function SettingsDashboard({ onOpenAuth }: SettingsDashboardProps
                 );
               })}
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 sm:p-6">
+        <div className="flex items-start gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#00594f]/20 text-[#80cbc4]"><Search aria-hidden="true" className="h-5 w-5" /></span>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg font-bold text-white">Music recommendations</h2>
+            <p className="mt-1 text-sm text-zinc-400">Choose the language that should guide your For You picks. Audiq keeps India as the default catalog region.</p>
+            {user ? (
+              <label className="mt-4 block max-w-md text-sm text-zinc-300">
+                Preferred music language
+                <select
+                  value={profile?.preferred_music_language ?? "auto"}
+                  onChange={(event) => void updateProfilePreference({ preferred_music_language: event.target.value as MusicLanguage }, "Music preference saved to your account.")}
+                  disabled={profileBusy || !profile}
+                  className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#0b0d0c] px-3 py-2.5 text-white outline-none focus:border-[#80cbc4]/60 disabled:opacity-50"
+                >
+                  {MUSIC_LANGUAGE_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                </select>
+                <span className="mt-1 block text-xs text-zinc-500">Saved to your Audiq account and used to shape Explore recommendations.</span>
+              </label>
+            ) : <p className="mt-4 text-sm text-zinc-500">Sign in to save a music language preference across devices.</p>}
           </div>
         </div>
       </section>

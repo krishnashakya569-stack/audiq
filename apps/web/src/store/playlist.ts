@@ -10,6 +10,9 @@ export type Playlist = {
   cover?: string;
   createdAt: number;
   tracks: Track[];
+  visibility: "private" | "public";
+  ownerId?: string;
+  collaborationRole?: "owner" | "editor" | "viewer" | "pending";
 };
 
 type PlaylistState = {
@@ -27,6 +30,11 @@ type PlaylistState = {
   renamePlaylist: (
     id: string,
     name: string
+  ) => void;
+
+  setPlaylistVisibility: (
+    id: string,
+    visibility: "private" | "public"
   ) => void;
 
   addSongToPlaylist: (
@@ -62,7 +70,7 @@ cover
 
 set((state) => {
 
-const trimmed = name.trim();
+const trimmed = name.trim().slice(0, 100);
 
 if (!trimmed) return {};
 
@@ -84,6 +92,7 @@ name: trimmed,
 cover,
 createdAt: Date.now(),
 tracks: [],
+visibility: "private",
 },
 ],
 };
@@ -110,11 +119,18 @@ p.id === id
 ? {
 ...p,
 name:
-name.trim() ||
+name.trim().slice(0, 100) ||
 p.name,
 }
 : p
 ),
+})),
+
+setPlaylistVisibility: (id, visibility) =>
+set((state) => ({
+playlists: state.playlists.map((playlist) => playlist.id === id
+  ? { ...playlist, visibility }
+  : playlist),
 })),
 
 addSongToPlaylist: (
@@ -134,9 +150,9 @@ return playlist;
 
 const alreadyExists =
 playlist.tracks.some(
-(song) =>
-song.id ===
-track.id
+                        (song) =>
+                            String(song.id) ===
+                            String(track.id)
 );
 
 if (alreadyExists)
