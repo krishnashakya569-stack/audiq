@@ -94,7 +94,8 @@ export default function PlaylistCollaborationPanel({ playlist }: Props) {
   }, [isOwner, playlist.id, supabase, user]);
 
   useEffect(() => {
-    void refresh();
+    const timer = window.setTimeout(() => { void refresh(); }, 0);
+    return () => window.clearTimeout(timer);
   }, [refresh]);
 
   const ownInvitation = useMemo(
