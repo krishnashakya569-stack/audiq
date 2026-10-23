@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ChevronDown,
   Heart,
   FastForward,
   ListMusic,
@@ -18,6 +19,7 @@ import {
   VolumeX,
 } from "lucide-react";
 import Image from "next/image";
+import { createPortal } from "react-dom";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import AddToPlaylistModal from "@/components/library/AddToPlaylistModal";
 import QueuePanel from "@/components/layout/QueuePanel";
@@ -125,11 +127,28 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
   const [sleepMenuOpen, setSleepMenuOpen] = useState(false);
   const [sleepTimerMinutes, setSleepTimerMinutes] = useState<number | null>(null);
   const [sleepAtTrackEnd, setSleepAtTrackEnd] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const autoplayEnabled = useSyncExternalStore(
     subscribeAutoplayPreference,
     getAutoplayPreferenceSnapshot,
     getAutoplayPreferenceServerSnapshot,
   );
+
+  useEffect(() => {
+    if (!isExpanded) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsExpanded(false);
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isExpanded]);
 
   const cover =
     currentTrack?.albumArt ||
@@ -594,7 +613,14 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
         }}
       />
 
-    <div className="flex min-w-0 items-center gap-2 md:gap-3">
+    <button
+      type="button"
+      onClick={() => currentTrack && setIsExpanded(true)}
+      disabled={!currentTrack}
+      aria-label={currentTrack ? "Open full screen player for " + currentTrack.title : "No track is playing"}
+      title={currentTrack ? "Open Now Playing" : undefined}
+      className="flex min-w-0 items-center gap-2 rounded-xl text-left transition hover:bg-white/[0.04] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#d6ff36] disabled:cursor-default md:gap-3"
+    >
               <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md bg-gradient-to-br from-[#00594f] via-[#00332d] to-black sm:h-12 sm:w-12 md:h-16 md:w-16">
           <Image
             src={cover}
@@ -619,11 +645,11 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
             {sourceLabel}
           </p>
         </div>
-      </div>
+    </button>
 
       <div className={`min-w-0 ${isYouTubeTrack ? "col-start-1 row-start-2 md:col-auto md:row-auto" : ""}`}>
 
-        <div className={`flex items-center justify-center text-zinc-300 ${isYouTubeTrack ? "gap-0 sm:gap-1 md:gap-4" : "gap-1.5 sm:gap-3 md:gap-4"}`}>
+        <div className={`flex items-center justify-center text-zinc-300 ${isYouTubeTrack ? "gap-0 sm:gap-1 md:gap-4" : "gap-1 sm:gap-2 md:gap-4"}`}>
 
           <button
             onClick={toggleShuffle}
@@ -637,7 +663,8 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
           <button
             onClick={previousTrack}
             disabled={!currentTrack}
-            className={`rounded-md hover:bg-white/10 disabled:opacity-40 ${isYouTubeTrack ? "p-1 sm:p-2" : "p-2"}`}
+            aria-label="Previous track"
+            className="grid h-11 w-11 place-items-center rounded-full transition hover:bg-white/10 disabled:opacity-40"
           >
             <SkipBack className="h-5 w-5" />
           </button>
@@ -645,7 +672,8 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
           <button
             onClick={() => jumpBy(-10)}
             disabled={!currentTrack}
-            className="hidden rounded-md p-2 hover:bg-white/10 disabled:opacity-40 sm:block"
+            aria-label="Seek backward 10 seconds"
+            className="hidden h-11 w-11 place-items-center rounded-full transition hover:bg-white/10 disabled:opacity-40 sm:grid"
           >
             <Rewind className="h-4 w-4" />
           </button>
@@ -654,7 +682,7 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
             onClick={handleTogglePlay}
             disabled={!currentTrack}
             aria-label={isPlaying ? "Pause" : "Play"}
-            className={`grid place-items-center rounded-full bg-[#d6ff36] text-[#07100d] shadow-[0_0_26px_rgba(214,255,54,0.18)] transition hover:scale-105 disabled:opacity-45 ${isYouTubeTrack ? "h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12" : "h-10 w-10 md:h-12 md:w-12"}`}
+            className={`grid place-items-center rounded-full bg-[#d6ff36] text-[#07100d] shadow-[0_0_26px_rgba(214,255,54,0.18)] transition hover:scale-105 disabled:opacity-45 ${isYouTubeTrack ? "h-10 w-10 sm:h-11 sm:w-11 md:h-12 md:w-12" : "h-11 w-11 md:h-12 md:w-12"}`}
           >
             {isPlaying ? (
               <Pause className="h-5 w-5" />
@@ -666,7 +694,8 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
           <button
             onClick={() => jumpBy(10)}
             disabled={!currentTrack}
-            className="hidden rounded-md p-2 hover:bg-white/10 disabled:opacity-40 sm:block"
+            aria-label="Seek forward 10 seconds"
+            className="hidden h-11 w-11 place-items-center rounded-full transition hover:bg-white/10 disabled:opacity-40 sm:grid"
           >
             <FastForward className="h-4 w-4" />
           </button>
@@ -674,7 +703,8 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
           <button
             onClick={nextTrack}
             disabled={!currentTrack}
-            className={`rounded-md hover:bg-white/10 disabled:opacity-40 ${isYouTubeTrack ? "p-1 sm:p-2" : "p-2"}`}
+            aria-label="Next track"
+            className="grid h-11 w-11 place-items-center rounded-full transition hover:bg-white/10 disabled:opacity-40"
           >
             <SkipForward className="h-5 w-5" />
           </button>
@@ -686,7 +716,7 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
               aria-label={`Open playback queue, ${upcomingCount} upcoming`}
               aria-expanded={queueMenuOpen}
               title={`Queue · ${upcomingCount} upcoming`}
-              className={`relative grid h-8 w-8 place-items-center rounded-md transition hover:bg-white/10 sm:h-9 sm:w-9 ${queueMenuOpen ? "text-[#d6ff36]" : "text-zinc-400 hover:text-white"}`}
+              className={`relative hidden h-8 w-8 place-items-center rounded-md transition hover:bg-white/10 sm:grid sm:h-9 sm:w-9 ${queueMenuOpen ? "text-[#d6ff36]" : "text-zinc-400 hover:text-white"}`}
             >
               <ListMusic aria-hidden="true" className="h-4 w-4" />
               {upcomingCount > 0 ? (
@@ -708,7 +738,7 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
             aria-label={autoplayEnabled ? "Turn off autoplay radio" : "Turn on autoplay radio"}
             aria-pressed={autoplayEnabled}
             title={autoplayEnabled ? "Autoplay radio on" : "Autoplay radio off"}
-            className={`grid h-8 w-8 place-items-center rounded-md transition hover:bg-white/10 sm:h-9 sm:w-9 ${autoplayEnabled ? "text-[#d6ff36]" : "text-zinc-400 hover:text-white"}`}
+            className={`hidden h-8 w-8 place-items-center rounded-md transition hover:bg-white/10 sm:grid sm:h-9 sm:w-9 ${autoplayEnabled ? "text-[#d6ff36]" : "text-zinc-400 hover:text-white"}`}
           >
             <Radio aria-hidden="true" className="h-4 w-4" />
           </button>
@@ -738,7 +768,7 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
               aria-label="Sleep timer options"
               aria-expanded={sleepMenuOpen}
               title={sleepTimerMinutes !== null ? `Sleep timer: ${sleepTimerMinutes} minutes` : sleepAtTrackEnd ? "Sleep when this track ends" : "Sleep timer"}
-              className={`grid h-8 w-8 place-items-center rounded-md transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 sm:h-9 sm:w-9 ${sleepTimerMinutes !== null || sleepAtTrackEnd ? "text-[#d6ff36]" : "text-zinc-400 hover:text-white"}`}
+              className={`hidden h-8 w-8 place-items-center rounded-md transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 sm:grid sm:h-9 sm:w-9 ${sleepTimerMinutes !== null || sleepAtTrackEnd ? "text-[#d6ff36]" : "text-zinc-400 hover:text-white"}`}
             >
               <Moon aria-hidden="true" className="h-4 w-4" />
             </button>
@@ -924,6 +954,52 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
       ) : null}
 
     </footer>
+    {isExpanded && currentTrack && typeof document !== "undefined" ? createPortal(
+      <div role="dialog" aria-modal="true" aria-label={"Now playing " + currentTrack.title} className="fixed inset-0 z-[90] flex h-[100dvh] w-screen flex-col overflow-y-auto bg-[#0b1011] text-white">
+        <div className="mx-auto flex min-h-full w-full max-w-3xl flex-1 flex-col px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-[calc(0.75rem+env(safe-area-inset-top))] sm:px-8">
+          <header className="grid grid-cols-[3rem_1fr_3rem] items-center text-center">
+            <button type="button" onClick={() => setIsExpanded(false)} aria-label="Close Now Playing" className="grid h-12 w-12 place-items-center rounded-full text-white transition hover:bg-white/10"><ChevronDown aria-hidden="true" className="h-7 w-7" /></button>
+            <div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#80cbc4]">Now playing</p><p className="truncate text-sm font-semibold text-zinc-300">Audiq</p></div>
+            <span aria-hidden="true" />
+          </header>
+          <div className="flex flex-1 flex-col justify-center gap-6 py-5 sm:gap-8">
+            <div className="relative mx-auto aspect-square w-[min(82vw,430px)] max-w-full overflow-hidden rounded-xl bg-[#151a1b] shadow-[0_24px_80px_rgba(0,0,0,0.48)]">
+              <Image src={cover} alt={currentTrack.title + " album art"} fill sizes="(max-width: 640px) 82vw, 430px" unoptimized className="object-cover" />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-white/[0.04]" />
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="min-w-0 flex-1"><h1 className="truncate text-2xl font-black tracking-tight sm:text-3xl">{currentTrack.title}</h1><p className="mt-1 truncate text-base text-zinc-300 sm:text-lg">{currentTrack.artist}</p><p className="mt-1 truncate text-xs text-[#80cbc4]">{sourceLabel}</p></div>
+              <button type="button" onClick={() => isLiked ? unlikeSong(currentTrack.id) : likeSong(currentTrack)} aria-label={isLiked ? "Remove from Liked Songs" : "Add to Liked Songs"} aria-pressed={isLiked} className={isLiked ? "grid h-12 w-12 shrink-0 place-items-center rounded-full text-[#d6ff36] transition hover:bg-white/10" : "grid h-12 w-12 shrink-0 place-items-center rounded-full text-zinc-300 transition hover:bg-white/10"}><Heart aria-hidden="true" className="h-6 w-6" fill={isLiked ? "currentColor" : "none"} /></button>
+              <button type="button" onClick={() => { setQueueMenuOpen(false); setSleepMenuOpen(false); setShowPlaylistModal(true); }} aria-label="Add to playlist" className="grid h-12 w-12 shrink-0 place-items-center rounded-full text-zinc-300 transition hover:bg-white/10 hover:text-white"><Plus aria-hidden="true" className="h-7 w-7" /></button>
+            </div>
+            <div>
+              <input type="range" min={0} max={duration || 0} step="0.1" value={Math.min(currentTime, duration)} onChange={(event) => seekTo(event.target.value)} onPointerUp={() => requestSeek(currentTime, currentTrack)} onKeyUp={() => requestSeek(currentTime, currentTrack)} disabled={!currentTrack} aria-label="Track progress" className="h-2 w-full cursor-pointer accent-[#d6ff36]" style={{ background: "linear-gradient(to right,#d6ff36 " + progress + "%,rgb(255 255 255 / 0.18) " + progress + "%)" }} />
+              <div className="mt-1 flex justify-between text-xs tabular-nums text-zinc-400"><span>{formatTime(currentTime)}</span><span>{duration ? formatTime(duration) : "--:--"}</span></div>
+            </div>
+            <div className="flex items-center justify-between gap-1 text-zinc-100 sm:justify-center sm:gap-4">
+              <button type="button" onClick={previousTrack} disabled={!currentTrack} aria-label="Previous track" className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-zinc-300 transition hover:bg-white/10 hover:text-white disabled:opacity-40"><SkipBack aria-hidden="true" className="h-6 w-6" /></button>
+              <button type="button" onClick={() => jumpBy(-10)} disabled={!currentTrack} aria-label="Seek backward 10 seconds" className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-zinc-300 transition hover:bg-white/10 hover:text-white disabled:opacity-40"><Rewind aria-hidden="true" className="h-5 w-5" /></button>
+              <button type="button" onClick={handleTogglePlay} disabled={!currentTrack} aria-label={isPlaying ? "Pause" : "Play"} className="grid h-[68px] w-[68px] shrink-0 place-items-center rounded-full bg-[#d6ff36] text-[#07100d] shadow-[0_0_32px_rgba(214,255,54,0.2)] transition hover:scale-105 disabled:opacity-45">{isPlaying ? <Pause aria-hidden="true" className="h-8 w-8" /> : <Play aria-hidden="true" className="h-8 w-8 fill-current" />}</button>
+              <button type="button" onClick={() => jumpBy(10)} disabled={!currentTrack} aria-label="Seek forward 10 seconds" className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-zinc-300 transition hover:bg-white/10 hover:text-white disabled:opacity-40"><FastForward aria-hidden="true" className="h-5 w-5" /></button>
+              <button type="button" onClick={nextTrack} disabled={!currentTrack} aria-label="Next track" className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-zinc-300 transition hover:bg-white/10 hover:text-white disabled:opacity-40"><SkipForward aria-hidden="true" className="h-6 w-6" /></button>
+            </div>
+            <div className="relative flex items-center justify-center gap-1 border-t border-white/10 pt-3 text-zinc-400 sm:gap-2">
+              <button type="button" onClick={toggleShuffle} aria-label={isShuffling ? "Turn shuffle off" : "Turn shuffle on"} aria-pressed={isShuffling} className={isShuffling ? "grid h-11 w-11 place-items-center rounded-xl text-[#d6ff36] transition hover:bg-white/10" : "grid h-11 w-11 place-items-center rounded-xl transition hover:bg-white/10 hover:text-white"}><Shuffle aria-hidden="true" className="h-5 w-5" /></button>
+              <button type="button" onClick={toggleRepeat} aria-label={repeatMode === "off" ? "Turn repeat on" : repeatMode === "one" ? "Repeat all" : "Turn repeat off"} aria-pressed={repeatMode !== "off"} className={repeatMode !== "off" ? "relative grid h-11 w-11 place-items-center rounded-xl text-[#d6ff36] transition hover:bg-white/10" : "relative grid h-11 w-11 place-items-center rounded-xl transition hover:bg-white/10 hover:text-white"}><Repeat2 aria-hidden="true" className="h-5 w-5" />{repeatMode === "one" ? <span className="absolute right-1 top-1 grid h-3 w-3 place-items-center rounded-full bg-[#d6ff36] text-[8px] font-black text-[#07100d]">1</span> : null}</button>
+              <div className="relative">
+                <button type="button" onClick={() => setQueueMenuOpen((open) => !open)} aria-label={"Playback queue, " + upcomingCount + " upcoming"} aria-expanded={queueMenuOpen} className={queueMenuOpen ? "relative grid h-11 w-11 place-items-center rounded-xl text-[#d6ff36] transition hover:bg-white/10" : "relative grid h-11 w-11 place-items-center rounded-xl transition hover:bg-white/10 hover:text-white"}><ListMusic aria-hidden="true" className="h-5 w-5" />{upcomingCount > 0 ? <span className="absolute right-0 top-0 min-w-4 rounded-full bg-[#d6ff36] px-1 text-[9px] font-black leading-4 text-[#07100d]">{upcomingCount > 99 ? "99+" : upcomingCount}</span> : null}</button>
+                {queueMenuOpen ? <div className="absolute bottom-full left-1/2 z-[120] mb-3 max-h-[min(45dvh,28rem)] w-[min(92vw,28rem)] -translate-x-1/2 overflow-y-auto rounded-2xl border border-white/10 bg-[#080b09] p-2 shadow-2xl shadow-black/60 sm:p-3"><QueuePanel /></div> : null}
+              </div>
+              <button type="button" onClick={() => saveAutoplayPreference(!autoplayEnabled)} aria-label={autoplayEnabled ? "Turn off autoplay radio" : "Turn on autoplay radio"} aria-pressed={autoplayEnabled} className={autoplayEnabled ? "grid h-11 w-11 place-items-center rounded-xl text-[#d6ff36] transition hover:bg-white/10" : "grid h-11 w-11 place-items-center rounded-xl transition hover:bg-white/10 hover:text-white"}><Radio aria-hidden="true" className="h-5 w-5" /></button>
+              <div className="relative">
+                <button type="button" onClick={() => setSleepMenuOpen((open) => !open)} aria-label="Sleep timer options" aria-expanded={sleepMenuOpen} className={sleepTimerMinutes !== null || sleepAtTrackEnd ? "grid h-11 w-11 place-items-center rounded-xl text-[#d6ff36] transition hover:bg-white/10" : "grid h-11 w-11 place-items-center rounded-xl transition hover:bg-white/10 hover:text-white"}><Moon aria-hidden="true" className="h-5 w-5" /></button>
+                {sleepMenuOpen ? <div className="absolute bottom-full right-0 z-[120] mb-3 w-48 rounded-xl border border-white/10 bg-[#111513] p-2 text-left shadow-2xl"><p className="px-2 py-1.5 text-xs font-bold uppercase tracking-wider text-zinc-500">Sleep timer</p>{[15, 30, 45, 60].map((minutes) => <button key={minutes} type="button" onClick={() => { setSleepTimerMinutes(minutes); setSleepAtTrackEnd(false); setSleepMenuOpen(false); }} className="block w-full rounded-lg px-2 py-2 text-left text-sm text-zinc-200 hover:bg-white/10">{minutes} minutes</button>)}<button type="button" disabled={!currentTrack} onClick={() => { setSleepTimerMinutes(null); setSleepAtTrackEnd(true); setSleepMenuOpen(false); }} className="block w-full rounded-lg px-2 py-2 text-left text-sm text-zinc-200 hover:bg-white/10 disabled:opacity-40">At end of this track</button>{sleepTimerMinutes !== null || sleepAtTrackEnd ? <button type="button" onClick={() => { setSleepTimerMinutes(null); setSleepAtTrackEnd(false); setSleepMenuOpen(false); }} className="mt-1 block w-full rounded-lg border-t border-white/10 px-2 py-2 text-left text-sm text-[#80cbc4] hover:bg-white/5">Turn timer off</button> : null}</div> : null}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    , document.body) : null}
     </>
   );
 }
