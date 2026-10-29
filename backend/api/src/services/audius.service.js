@@ -2,6 +2,7 @@ import { publicUrl } from "../utils/publicUrl.js";
 
 const AUDIUS_API = process.env.AUDIUS_API_URL || "https://discoveryprovider.audius.co/v1";
 const AUDIUS_APP_NAME = process.env.AUDIUS_APP_NAME || "Audiq";
+const MIN_FULL_TRACK_SECONDS = 60;
 
 function getArtwork(track) {
   return (
@@ -39,6 +40,10 @@ export async function searchAudiusTracks(query) {
       (track) =>
         track.id &&
         track.title &&
+        Number(track.duration) >= MIN_FULL_TRACK_SECONDS &&
+        track.is_streamable !== false &&
+        track.is_preview !== true &&
+        track.is_preview_only !== true &&
         !track.is_stream_gated &&
         track.access?.stream !== false
     )

@@ -99,19 +99,18 @@ export function recommendationsForYou(
   const recentSearch = searchHistory.find((query) => query.trim().length > 1)?.trim();
   const regionalQuery = `popular ${getMusicLanguageSearchTerm(language)} songs`;
   const trendingRegionalQuery = `trending ${getMusicLanguageSearchTerm(language)} songs`;
-  const queries = artists.length
-    ? [
-        `${artists[0]} similar songs`,
-        artists[1] ? `${artists[1]} popular songs` : recentSearch ? `${recentSearch} similar songs` : regionalQuery,
-        recentSearch && normalizeTrackText(recentSearch) !== normalizeTrackText(artists[0])
-          ? `${recentSearch} similar songs`
-          : artists[2] ? `${artists[2]} similar songs` : trendingRegionalQuery,
-      ]
-    : recentSearch
-      ? [`${recentSearch} similar songs`, regionalQuery, "trending Indian indie songs"]
-      : language === "auto"
-        ? [regionalQuery, "trending Indian indie songs", "popular Punjabi songs"]
-        : [regionalQuery, "trending Indian indie songs", trendingRegionalQuery];
+  const queries = [
+    ...(artists.length
+      ? [
+          `${artists[0]} songs`,
+          artists[1] ? `${artists[1]} songs` : recentSearch ? `${recentSearch} songs` : regionalQuery,
+        ]
+      : recentSearch
+        ? [`${recentSearch} songs`]
+        : []),
+    regionalQuery,
+    language === "auto" ? "trending Indian indie songs" : trendingRegionalQuery,
+  ];
 
   const seen = new Set<string>();
   return queries.filter((query) => {

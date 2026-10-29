@@ -1,13 +1,11 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import axios from "axios";
 import { searchAudiusTracks } from "./audius.service.js";
 import { searchJioSaavnTracks } from "./jiosaavn.service.js";
 import { searchYouTubeVideos } from "./youtube.service.js";
 import { publicUrl } from "../utils/publicUrl.js";
 
-const API = "https://itunes.apple.com/search";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const MEDIA_DIR = path.resolve(__dirname, "../../media");
@@ -44,8 +42,6 @@ function sourceWeight(source) {
       return 125;
     case "jiosaavn":
       return 55;
-    case "itunes":
-      return 45;
     case "audius":
       return 20;
     default:
@@ -130,35 +126,9 @@ async function getLocalSongs(query) {
   }
 }
 
-async function searchPreviewSongs(query) {
-  const { data } = await axios.get(API, {
-    params: {
-      term: query,
-      media: "music",
-      limit: 20,
-    },
-  });
-
-  return data.results.map((song) => ({
-    id: song.trackId,
-    title: song.trackName,
-    artist: {
-      name: song.artistName,
-    },
-    album: {
-      title: song.collectionName,
-      cover_medium: song.artworkUrl100.replace("100x100", "600x600"),
-    },
-    preview: song.previewUrl,
-    duration: Math.floor(song.trackTimeMillis / 1000),
-    isPreview: true,
-    source: "itunes",
-  }));
-}
-
 export async function searchSongs(query) {
   const searchQuery = getSearchQuery(query);
-  const [localSongs, jioSaavnSongs, audiusSongs, youtubeSongs, previewSongs] = await Promise.all([
+  const [localSongs, jioSaavnSongs, audiusSongs, youtubeSongs] = await Promise.all([
     getLocalSongs(searchQuery),
     searchJioSaavnTracks(searchQuery).catch((error) => {
       console.error("JioSaavn search failed", error);
@@ -172,10 +142,9 @@ export async function searchSongs(query) {
       console.error("YouTube search failed", error);
       return [];
     }),
-    searchPreviewSongs(searchQuery),
   ]);
 
-  return [...localSongs, ...jioSaavnSongs, ...audiusSongs, ...youtubeSongs, ...previewSongs].sort(
+  return [...localSongs, ...jioSaavnSongs, ...audiusSongs, ...youtubeSongs].sort(
     (first, second) => relevanceScore(second, searchQuery) - relevanceScore(first, searchQuery),
   );
 }

@@ -26,7 +26,15 @@ class ProviderManager {
 
     const merged = results
       .filter((r) => r.status === "fulfilled")
-      .flatMap((r) => r.value);
+      .flatMap((r) => r.value)
+      .filter((song) => song.isPreview !== true)
+      .filter((song) => {
+        if (song.provider === "audius" || song.provider === "youtube") {
+          return Number(song.duration) >= 60;
+        }
+
+        return true;
+      });
     
     const filtered = filterSearch(
       query,

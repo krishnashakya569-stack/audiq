@@ -1,18 +1,6 @@
 import { NextResponse } from "next/server";
 
-type ItunesTrack = {
-  artistId?: number;
-  artistName?: string;
-  artworkUrl100?: string;
-  collectionId?: number;
-  collectionName?: string;
-  previewUrl?: string;
-  primaryGenreName?: string;
-  trackExplicitness?: string;
-  trackId?: number;
-  trackName?: string;
-  trackTimeMillis?: number;
-};
+const MIN_FULL_TRACK_SECONDS = 60;
 
 type AudiusTrack = {
   access?: { stream?: boolean };
@@ -27,6 +15,8 @@ type AudiusTrack = {
   id?: string;
   is_stream_gated?: boolean;
   is_streamable?: boolean;
+  is_preview?: boolean;
+  is_preview_only?: boolean;
   tags?: string;
   title?: string;
   user?: { handle?: string; id?: string; name?: string };
@@ -67,15 +57,23 @@ function youtubeDuration(value = "") {
   );
 }
 
+function cleanYouTubeQuery(query: string) {
+  const cleaned = query
+    .replace(/\b(?:similar(?:\s+to)?\s+songs?|songs?\s+(?:like|by)|more\s+for\s+you)\b/gi, " ")
+    .replace(/\b(?:popular|trending|top|best)\b/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return cleaned || query.trim();
+}
+
 async function searchYouTube(query: string, key: string) {
   const searchParams = new URLSearchParams({
     key,
     part: "snippet",
-    q: `${query} official song`,
+    q: cleanYouTubeQuery(query),
     type: "video",
-    videoCategoryId: "10",
     videoEmbeddable: "true",
-    videoSyndicated: "true",
     regionCode: process.env.YOUTUBE_REGION_CODE || "IN",
     maxResults: "25",
   });
@@ -140,7 +138,7 @@ async function searchYouTube(query: string, key: string) {
       details.contentDetails?.regionRestriction?.blocked?.includes(
         process.env.YOUTUBE_REGION_CODE || "IN"
       ) ||
-      duration < 45
+      duration < MIN_FULL_TRACK_SECONDS
     ) {
       return [];
     }
@@ -189,10 +187,6 @@ async function searchYouTube(query: string, key: string) {
   });
 }
 
-function artwork(url = "") {
-  return url ? url.replace("100x100", "600x600") : null;
-}
-
 function normalize(value = "") {
   return value
     .toLowerCase()
@@ -214,43 +208,6 @@ function indianMusicPreferenceBonus(values: Array<string | null | undefined>) {
   return 0;
 }
 
-function rank(query: string, track: ItunesTrack, index: number) {
-  const q = normalize(query);
-  const title = normalize(track.trackName);
-  const artist = normalize(track.artistName);
-
-  let score = Math.max(0, 260 - index * 18);
-
-  if (title === q) {
-    score += 140;
-  } else if (title.startsWith(q)) {
-    score += 120;
-  } else if (title.includes(q)) {
-    score += 80;
-  }
-
-  if (artist.includes(q)) {
-    score += 80;
-  }
-
-  const duration = Math.floor((track.trackTimeMillis || 0) / 1000);
-
-  if (duration < 45) {
-    score -= 200;
-  } else if (duration > 120 && duration < 420) {
-    score += 25;
-  }
-
-  score += indianMusicPreferenceBonus([
-    track.trackName,
-    track.artistName,
-    track.collectionName,
-    track.primaryGenreName,
-  ]);
-
-  return score;
-}
-
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q")?.trim();
@@ -262,14 +219,6 @@ export async function GET(request: Request) {
     );
   }
 
-  const params = new URLSearchParams({
-    term: query,
-    media: "music",
-    entity: "song",
-    limit: "50",
-    country: process.env.ITUNES_COUNTRY || process.env.YOUTUBE_REGION_CODE || "IN",
-  });
-
   const audiusAppName = process.env.AUDIUS_APP_NAME || "Audiq";
   const youtubeApiKey = process.env.YOUTUBE_API_KEY;
   const audiusParams = new URLSearchParams({
@@ -280,9 +229,6 @@ export async function GET(request: Request) {
 
   const [providerResults, youtubeResult] = await Promise.all([
     Promise.allSettled([
-      fetch(`https://itunes.apple.com/search?${params.toString()}`, {
-        next: { revalidate: 300 },
-      }),
       fetch(
         `https://discoveryprovider.audius.co/v1/tracks/search?${audiusParams.toString()}`,
         { next: { revalidate: 300 } }
@@ -295,15 +241,7 @@ export async function GET(request: Request) {
         )
       : Promise.resolve({ status: "fulfilled" as const, value: [] }),
   ]);
-  const [itunesResult, audiusResult] = providerResults;
-
-  let itunesTracks: ItunesTrack[] = [];
-  if (itunesResult.status === "fulfilled" && itunesResult.value.ok) {
-    const payload = (await itunesResult.value.json()) as {
-      results?: ItunesTrack[];
-    };
-    itunesTracks = payload.results || [];
-  }
+  const [audiusResult] = providerResults;
 
   let audiusTracks: AudiusTrack[] = [];
   if (audiusResult.status === "fulfilled" && audiusResult.value.ok) {
@@ -319,63 +257,17 @@ export async function GET(request: Request) {
     console.error("YouTube search failed:", youtubeResult.reason);
   }
 
-  const previewSongs = itunesTracks
-    .filter((track) => track.trackId && track.trackName && track.previewUrl)
-    .map((track, index) => ({
-      id: `itunes:${track.trackId}`,
-      provider: "itunes",
-      title: track.trackName || "Unknown Title",
-      artists: [
-        {
-          id: String(track.artistId || "itunes"),
-          name: track.artistName || "iTunes Artist",
-        },
-      ],
-      album: {
-        id: String(track.collectionId || "itunes"),
-        title: track.collectionName || "iTunes",
-      },
-      artwork: {
-        small: track.artworkUrl100 || null,
-        medium: artwork(track.artworkUrl100),
-        large: artwork(track.artworkUrl100),
-      },
-      duration: Math.floor((track.trackTimeMillis || 0) / 1000),
-      playable: true,
-      streamUrl: null,
-      previewUrl: track.previewUrl || null,
-      isPreview: true,
-      explicit: track.trackExplicitness === "explicit",
-      lyricsAvailable: false,
-      language: null,
-      providers: [
-        {
-          provider: "itunes",
-          id: `itunes:${track.trackId}`,
-          playable: true,
-        },
-      ],
-      preferredProvider: {
-        provider: "itunes",
-        id: `itunes:${track.trackId}`,
-        playable: true,
-      },
-      score: rank(query, track, index) - 80,
-    }))
-    .sort((a, b) => b.score - a.score)
-    .map(({ score, ...song }) => {
-      void score;
-      return song;
-    });
-
   const fullTrackSongs = audiusTracks
     .filter(
       (track) =>
         track.id &&
         track.title &&
+        !track.is_preview &&
+        !track.is_preview_only &&
+        Number(track.duration) >= MIN_FULL_TRACK_SECONDS &&
         !track.is_stream_gated &&
         track.access?.stream !== false &&
-        track.is_streamable === true
+        track.is_streamable !== false
     )
     .slice(0, 40)
     .map((track, index) => {
@@ -444,7 +336,6 @@ export async function GET(request: Request) {
   const results = [
     ...youtubeTracks,
     ...fullTrackSongs,
-    ...previewSongs,
   ].filter((track) => {
     const title = normalize(track.title);
     const artist = normalize(track.artists[0]?.name || "");

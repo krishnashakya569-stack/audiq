@@ -2,6 +2,17 @@ import { publicUrl } from "../utils/publicUrl.js";
 
 const YOUTUBE_SEARCH_API = "https://www.googleapis.com/youtube/v3/search";
 const YOUTUBE_VIDEOS_API = "https://www.googleapis.com/youtube/v3/videos";
+const MIN_FULL_TRACK_SECONDS = 60;
+
+function cleanYouTubeQuery(query = "") {
+  const cleaned = query
+    .replace(/\b(?:similar(?:\s+to)?\s+songs?|songs?\s+(?:like|by)|more\s+for\s+you)\b/gi, " ")
+    .replace(/\b(?:popular|trending|top|best)\b/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return cleaned || query.trim();
+}
 
 export async function searchYouTubeVideos(query) {
   const key = process.env.YOUTUBE_API_KEY;
@@ -14,12 +25,10 @@ export async function searchYouTubeVideos(query) {
     key,
     maxResults: "8",
     part: "snippet",
-    q: `${query} official song`,
+    q: cleanYouTubeQuery(query),
     safeSearch: "none",
     type: "video",
-    videoCategoryId: "10",
     videoEmbeddable: "true",
-    videoSyndicated: "true",
   });
   const response = await fetch(`${YOUTUBE_SEARCH_API}?${params.toString()}`);
 
@@ -70,7 +79,7 @@ export async function searchYouTubeVideos(query) {
         details?.status?.privacyStatus === "public" &&
         details?.status?.uploadStatus === "processed" &&
         !details?.contentDetails?.regionRestriction?.blocked?.includes("IN") &&
-        toSeconds(details?.contentDetails?.duration) > 45
+        toSeconds(details?.contentDetails?.duration) >= MIN_FULL_TRACK_SECONDS
       );
     })
     .map((item) => {
