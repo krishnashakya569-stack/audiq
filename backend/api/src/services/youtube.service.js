@@ -4,16 +4,6 @@ const YOUTUBE_SEARCH_API = "https://www.googleapis.com/youtube/v3/search";
 const YOUTUBE_VIDEOS_API = "https://www.googleapis.com/youtube/v3/videos";
 const MIN_FULL_TRACK_SECONDS = 60;
 
-function cleanYouTubeQuery(query = "") {
-  const cleaned = query
-    .replace(/\b(?:similar(?:\s+to)?\s+songs?|songs?\s+(?:like|by)|more\s+for\s+you)\b/gi, " ")
-    .replace(/\b(?:popular|trending|top|best)\b/gi, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
-  return cleaned || query.trim();
-}
-
 export async function searchYouTubeVideos(query) {
   const key = process.env.YOUTUBE_API_KEY;
 
@@ -25,10 +15,12 @@ export async function searchYouTubeVideos(query) {
     key,
     maxResults: "8",
     part: "snippet",
-    q: cleanYouTubeQuery(query),
+    q: `${query} official song`,
     safeSearch: "none",
     type: "video",
+    videoCategoryId: "10",
     videoEmbeddable: "true",
+    videoSyndicated: "true",
   });
   const response = await fetch(`${YOUTUBE_SEARCH_API}?${params.toString()}`);
 

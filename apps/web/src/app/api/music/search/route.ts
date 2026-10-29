@@ -57,23 +57,15 @@ function youtubeDuration(value = "") {
   );
 }
 
-function cleanYouTubeQuery(query: string) {
-  const cleaned = query
-    .replace(/\b(?:similar(?:\s+to)?\s+songs?|songs?\s+(?:like|by)|more\s+for\s+you)\b/gi, " ")
-    .replace(/\b(?:popular|trending|top|best)\b/gi, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
-  return cleaned || query.trim();
-}
-
 async function searchYouTube(query: string, key: string) {
   const searchParams = new URLSearchParams({
     key,
     part: "snippet",
-    q: cleanYouTubeQuery(query),
+    q: `${query} official song`,
     type: "video",
+    videoCategoryId: "10",
     videoEmbeddable: "true",
+    videoSyndicated: "true",
     regionCode: process.env.YOUTUBE_REGION_CODE || "IN",
     maxResults: "25",
   });
