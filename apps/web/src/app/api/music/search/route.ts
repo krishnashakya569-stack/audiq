@@ -89,7 +89,7 @@ async function searchYouTube(query: string, key: string) {
     .map((video) => video.id?.videoId)
     .filter((id): id is string => Boolean(id));
 
-  if (videoIds.length === 0) return [];
+  if (videoIds.length === 0) return { tracks: [], candidates: videos.length, details: 0 };
 
   const detailsParams = new URLSearchParams({
     key,
@@ -112,7 +112,7 @@ async function searchYouTube(query: string, key: string) {
     (detailsPayload.items || []).map((video) => [video.id, video])
   );
 
-  return videos.flatMap((video, index) => {
+  const tracks = videos.flatMap((video, index) => {
     const videoId = video.id?.videoId;
     if (!videoId) return [];
 
@@ -177,6 +177,7 @@ async function searchYouTube(query: string, key: string) {
       sourceRank: index,
     }];
   });
+  return { tracks, candidates: videos.length, details: detailsById.size };
 }
 
 function normalize(value = "") {
@@ -231,7 +232,7 @@ export async function GET(request: Request) {
           (tracks) => ({ status: "fulfilled" as const, value: tracks }),
           (reason: unknown) => ({ status: "rejected" as const, reason })
         )
-      : Promise.resolve({ status: "fulfilled" as const, value: [] }),
+      : Promise.resolve({ status: "fulfilled" as const, value: { tracks: [], candidates: 0, details: 0 } }),
   ]);
   const [audiusResult] = providerResults;
 
@@ -244,7 +245,7 @@ export async function GET(request: Request) {
   }
 
   const youtubeTracks =
-    youtubeResult.status === "fulfilled" ? youtubeResult.value : [];
+    youtubeResult.status === "fulfilled" ? youtubeResult.value.tracks : [];
   if (youtubeResult.status === "rejected") {
     console.error("YouTube search failed:", youtubeResult.reason);
   }
@@ -337,6 +338,19 @@ export async function GET(request: Request) {
     return true;
   });
 
-  return NextResponse.json(results);
+  const youtubeErrorCode =
+    youtubeResult.status === "rejected" && youtubeResult.reason instanceof Error
+      ? youtubeResult.reason.message.match(/\\((\\d{3})\\)/)?.[1] || "unknown"
+      : "unknown";
+  const youtubeDiagnostic = !youtubeApiKey
+    ? "key-missing"
+    : youtubeResult.status === "rejected"
+      ? `api-error-${youtubeErrorCode}`
+      : `candidates-${youtubeResult.value.candidates}-details-${youtubeResult.value.details}-tracks-${youtubeTracks.length}`;
+  const response = NextResponse.json(results);
+  if (searchParams.get("diagnostics") === "1") {
+    response.headers.set("x-audiq-youtube-search", youtubeDiagnostic);
+  }
+  return response;
 }
 
