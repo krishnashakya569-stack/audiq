@@ -347,6 +347,19 @@ export async function GET(request: Request) {
     : youtubeResult.status === "rejected"
       ? `api-error-${youtubeErrorCode}`
       : `candidates-${youtubeResult.value.candidates}-details-${youtubeResult.value.details}-tracks-${youtubeTracks.length}`;
+  if (searchParams.get("diagnostics") === "1") {
+    return NextResponse.json({
+      youtubeSearch: {
+        status: youtubeDiagnostic,
+        candidates:
+          youtubeResult.status === "fulfilled" ? youtubeResult.value.candidates : null,
+        details:
+          youtubeResult.status === "fulfilled" ? youtubeResult.value.details : null,
+        acceptedTracks: youtubeTracks.length,
+      },
+      totalResults: results.length,
+    });
+  }
   const response = NextResponse.json(results);
   if (searchParams.get("diagnostics") === "1") {
     response.headers.set("x-audiq-youtube-search", youtubeDiagnostic);
