@@ -147,7 +147,7 @@ export default function ContinueListening({ query }: ContinueListeningProps) {
                   song.album?.title && song.album.title.toLowerCase() !== song.provider.toLowerCase()
                     ? song.album.title
                     : null;
-                const previewLabel = song.isPreview || song.provider === "itunes" ? "30s preview" : null;
+                const previewLabel = song.provider === "youtube" ? "YouTube · Full video" : song.isPreview || song.provider === "itunes" ? "30s preview" : null;
                 const byline = [artistNames, albumName, previewLabel].filter(Boolean).join(" · ");
                 const artwork = song.artwork?.small || song.artwork?.medium || song.artwork?.large;
                 const canPlay = !!track.audio || (track.source === "youtube" && !!track.videoId);
