@@ -442,8 +442,8 @@ export async function GET(request: Request) {
 
   const seen = new Set<string>();
   const results = [
-    ...fullTrackSongs,
     ...youtubeTracks,
+    ...fullTrackSongs,
     ...previewSongs,
   ].filter((track) => {
     const title = normalize(track.title);
