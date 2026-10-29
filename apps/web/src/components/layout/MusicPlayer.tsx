@@ -111,7 +111,7 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
   } = useLibraryStore();
 
   const audioRef = useRef<HTMLAudioElement>(null);
-  const youtubePlayerRef = useRef<YouTubeEmbedControls | null>(null);
+  const youtubePlayerRef = useRef<YouTubeEmbedControls | null>(null); const isSeekingRef = useRef(false); const expectedYoutubeSeek = useRef<{ position: number; startedAt: number } | null>(null);
   const lastTrackKey = useRef<string | null>(null);
   const fallbackKey = useRef<string | null>(null);
   const pendingSeek = useRef<{ trackKey: string; position: number; source: "audio" | "youtube" } | null>(null);
@@ -119,7 +119,7 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
   const radioRequestFor = useRef<string | null>(null);
 
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
+  const [duration, setDuration] = useState(0); const [seekDraft, setSeekDraft] = useState<number | null>(null);
   const [volume, setVolume] = useState(0.72);
   const [isMuted, setMuted] = useState(false);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
@@ -154,9 +154,9 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
     currentTrack?.albumArt ||
     "/brand/audiq-vinyl.svg";
 
-  const progress =
+  const displayedTime = seekDraft ?? currentTime; const progress =
     duration > 0
-      ? (currentTime / duration) * 100
+      ? (displayedTime / duration) * 100
       : 0;
   const upcomingCount = Math.max(0, queue.length - currentIndex - 1);
 
@@ -170,7 +170,7 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
 
     if (source === "youtube") {
       if (!youtubePlayerRef.current?.isReady()) return;
-      youtubePlayerRef.current.seekTo(pending.position);
+      expectedYoutubeSeek.current = { position: pending.position, startedAt: Date.now() }; youtubePlayerRef.current.seekTo(pending.position);
     } else {
       const audio = audioRef.current;
       if (!audio || audio.readyState < 1) return;
@@ -353,7 +353,7 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
 
     if (trackChanged) {
       lastTrackKey.current = trackKey;
-      fallbackKey.current = null;
+      fallbackKey.current = null; isSeekingRef.current = false; expectedYoutubeSeek.current = null; setSeekDraft(null);
       if (pendingSeek.current && pendingSeek.current.trackKey !== trackKey) pendingSeek.current = null;
       addRecentlyPlayed(currentTrack);
       setCurrentTime(0);
@@ -423,7 +423,7 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
     const time = Number(value);
     if (!currentTrack) return;
     if (currentTrack.source === "youtube") {
-      youtubePlayerRef.current?.seekTo(time);
+      expectedYoutubeSeek.current = { position: time, startedAt: Date.now() }; if (youtubePlayerRef.current?.isReady()) youtubePlayerRef.current.seekTo(time); else requestSeek(time, currentTrack);
     } else if (audioRef.current) {
       audioRef.current.currentTime = time;
     }
@@ -431,7 +431,7 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
     setCurrentTime(time);
   };
 
-  const jumpBy = (seconds: number) => {
+  const updateSeekDraft = (value: string) => { isSeekingRef.current = true; setSeekDraft(Number(value)); }; const finishSeek = (value: string) => { if (!isSeekingRef.current) return; isSeekingRef.current = false; setSeekDraft(null); seekTo(value); }; const jumpBy = (seconds: number) => {
     const audio = audioRef.current;
     if (currentTrack?.source !== "youtube" && !audio) return;
 
@@ -445,7 +445,7 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
     );
 
     if (!currentTrack) return;
-    requestSeek(next, currentTrack);
+    seekTo(String(next));
     setCurrentTime(next);
   };
 
@@ -822,22 +822,22 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
 
         <div className={`${useCompactLayout ? "hidden md:grid" : "grid"} mt-1 items-center gap-2 text-[11px] text-zinc-500 md:mt-3 md:gap-3 md:text-xs ${isYouTubeTrack ? "grid-cols-1 md:grid-cols-[3rem_1fr_4rem]" : "grid-cols-[2.5rem_1fr_3.5rem] md:grid-cols-[3rem_1fr_4rem]"}`}>
 
-          <span className={isYouTubeTrack ? "hidden md:inline" : ""}>{formatTime(currentTime)}</span>
+          <span className={isYouTubeTrack ? "hidden md:inline" : ""}>{formatTime(displayedTime)}</span>
 
           <input
             type="range"
             min={0}
             max={duration || 0}
-            step="0.1"
-            value={Math.min(currentTime, duration)}
+            step="0.1" onPointerDown={() => { isSeekingRef.current = true; setSeekDraft(currentTime); }} onPointerCancel={(event) => finishSeek(event.currentTarget.value)} onBlur={(event) => finishSeek(event.currentTarget.value)}
+            value={Math.min(displayedTime, duration)}
             onChange={(e) =>
-              seekTo(e.target.value)
+              updateSeekDraft(e.target.value)
             }
-            onPointerUp={() => {
-              if (currentTrack) requestSeek(currentTime, currentTrack);
+            onPointerUp={(event) => {
+              if (currentTrack) finishSeek(event.currentTarget.value);
             }}
-            onKeyUp={() => {
-              if (currentTrack) requestSeek(currentTime, currentTrack);
+            onKeyUp={(event) => {
+              if (currentTrack) finishSeek(event.currentTarget.value);
             }}
             disabled={!currentTrack}
             className="h-2 w-full cursor-pointer accent-[#d6ff36] md:h-1"
@@ -868,7 +868,7 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
               isMuted={isMuted}
               onPlayingChange={setPlaying}
               onReady={() => applyPendingSeek("youtube")}
-              onTimeUpdate={(time) => {
+              onTimeUpdate={(time) => { if (isSeekingRef.current) return; const expected = expectedYoutubeSeek.current; if (expected && Math.abs(time - expected.position) > 2 && Date.now() - expected.startedAt < 5000) return; expectedYoutubeSeek.current = null;
                 setCurrentTime(time);
                 setPlaybackPosition(time);
               }}
@@ -973,8 +973,8 @@ export default function MusicPlayer({ compact = false }: MusicPlayerProps) {
               <button type="button" onClick={() => { setQueueMenuOpen(false); setSleepMenuOpen(false); setShowPlaylistModal(true); }} aria-label="Add to playlist" className="grid h-12 w-12 shrink-0 place-items-center rounded-full text-zinc-300 transition hover:bg-white/10 hover:text-white"><Plus aria-hidden="true" className="h-7 w-7" /></button>
             </div>
             <div>
-              <input type="range" min={0} max={duration || 0} step="0.1" value={Math.min(currentTime, duration)} onChange={(event) => seekTo(event.target.value)} onPointerUp={() => requestSeek(currentTime, currentTrack)} onKeyUp={() => requestSeek(currentTime, currentTrack)} disabled={!currentTrack} aria-label="Track progress" className="h-2 w-full cursor-pointer accent-[#d6ff36]" style={{ background: "linear-gradient(to right,#d6ff36 " + progress + "%,rgb(255 255 255 / 0.18) " + progress + "%)" }} />
-              <div className="mt-1 flex justify-between text-xs tabular-nums text-zinc-400"><span>{formatTime(currentTime)}</span><span>{duration ? formatTime(duration) : "--:--"}</span></div>
+              <input type="range" min={0} max={duration || 0} step="0.1" onPointerDown={() => { isSeekingRef.current = true; setSeekDraft(currentTime); }} onPointerCancel={(event) => finishSeek(event.currentTarget.value)} onBlur={(event) => finishSeek(event.currentTarget.value)} value={Math.min(displayedTime, duration)} onChange={(event) => updateSeekDraft(event.target.value)} onPointerUp={(event) => finishSeek(event.currentTarget.value)} onKeyUp={(event) => finishSeek(event.currentTarget.value)} disabled={!currentTrack} aria-label="Track progress" className="h-2 w-full cursor-pointer accent-[#d6ff36]" style={{ background: "linear-gradient(to right,#d6ff36 " + progress + "%,rgb(255 255 255 / 0.18) " + progress + "%)" }} />
+              <div className="mt-1 flex justify-between text-xs tabular-nums text-zinc-400"><span>{formatTime(displayedTime)}</span><span>{duration ? formatTime(duration) : "--:--"}</span></div>
             </div>
             <div className="flex items-center justify-between gap-1 text-zinc-100 sm:justify-center sm:gap-4">
               <button type="button" onClick={previousTrack} disabled={!currentTrack} aria-label="Previous track" className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-zinc-300 transition hover:bg-white/10 hover:text-white disabled:opacity-40"><SkipBack aria-hidden="true" className="h-6 w-6" /></button>
