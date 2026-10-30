@@ -97,6 +97,8 @@ function SearchResultRow({
 
 export default function ContinueListening({ query }: ContinueListeningProps) {
   const { data: songs = [], isLoading, isError } = useMusic(query);
+  const youtubeSearchStatus = (songs as Song[] & { youtubeSearchStatus?: string }).youtubeSearchStatus;
+  const youtubeRateLimited = youtubeSearchStatus?.startsWith("api-error-429") ?? false;
   const hasLiveSongs = !isError && songs.length > 0;
   const isSearch = query.trim().length > 0;
   const displayedSongs = hasLiveSongs ? songs.slice(0, 4) : fallbackSongs;
@@ -168,8 +170,22 @@ export default function ContinueListening({ query }: ContinueListeningProps) {
             </div>
           </div>
         ) : !isLoading ? (
-          <div className="rounded-lg border border-white/10 bg-white/[0.035] p-4 text-sm text-zinc-500">
-            No songs found for this search.
+          <div className="flex flex-col items-start gap-3 rounded-lg border border-white/10 bg-white/[0.035] p-4 text-sm text-zinc-400 sm:flex-row sm:items-center sm:justify-between">
+            <p>
+              {youtubeRateLimited
+                ? "YouTube is temporarily rate-limiting searches. Try again later, or open this search on YouTube."
+                : "No songs found for this search."}
+            </p>
+            {youtubeRateLimited ? (
+              <a
+                href={"https://www.youtube.com/results?search_query=" + encodeURIComponent(query)}
+                target="_blank"
+                rel="noreferrer"
+                className="shrink-0 rounded-full bg-[#00594f] px-4 py-2 font-bold text-white transition hover:bg-[#00695c]"
+              >
+                Open on YouTube
+              </a>
+            ) : null}
           </div>
         ) : null}
       </section>

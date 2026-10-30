@@ -360,9 +360,7 @@ export async function GET(request: Request) {
     });
   }
   const response = NextResponse.json(results);
-  if (searchParams.get("diagnostics") === "1") {
-    response.headers.set("x-audiq-youtube-search", youtubeDiagnostic);
-  }
+  response.headers.set("x-audiq-youtube-search", youtubeDiagnostic);
   return response;
 }
 
