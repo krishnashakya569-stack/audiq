@@ -27,12 +27,8 @@ export async function searchYouTube(query) {
   const searchParams = new URLSearchParams({
   key,
   part: "snippet",
-  q: `${query} official song`,
-  type: "video",
-  videoCategoryId: "10",
-  videoEmbeddable: "true",
-  videoSyndicated: "true",
-  maxResults: "8",
+  q: query,
+  type: "video",  videoEmbeddable: "true",  maxResults: "8",
 });
 
   const searchResponse = await fetch(
