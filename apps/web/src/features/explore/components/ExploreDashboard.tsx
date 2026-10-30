@@ -180,7 +180,7 @@ export default function ExploreDashboard() {
     if (saveToHistory) addSearch(normalized);
 
     try {
-      const responses = await Promise.allSettled(queries.map((value) => searchMusic(value)));
+      const responses = await Promise.allSettled(queries.map((value, index) => searchMusic(value, { includeYouTube: index === 0 })));
       if (currentRequest !== requestId.current) return;
       const songGroups = responses.map((response) => response.status === "fulfilled" ? response.value : []);
       const mergedSongs = interleave(songGroups);

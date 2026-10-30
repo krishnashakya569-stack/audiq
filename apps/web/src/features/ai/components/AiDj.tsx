@@ -143,12 +143,12 @@ export default function AiDj() {
         recentlyPlayed: recentlyPlayed.slice(0, 8),
       }).catch(() => null);
 
-      const baseResponses = await Promise.allSettled(baseQueries.map((query) => searchMusic(query)));
+      const baseResponses = await Promise.allSettled(baseQueries.map((query, index) => searchMusic(query, { includeYouTube: index === 0 })));
       const plan = await planRequest;
       const extraQueries = uniqueQueries(plan?.queries ?? [])
         .filter((query) => !baseQueries.some((baseQuery) => baseQuery.toLowerCase() === query.toLowerCase()))
         .slice(0, 2);
-      const extraResponses = await Promise.allSettled(extraQueries.map((query) => searchMusic(query)));
+      const extraResponses = await Promise.allSettled(extraQueries.map((query) => searchMusic(query, { includeYouTube: false })));
       const allResponses = [...baseResponses, ...extraResponses];
       const songs = allResponses.flatMap((response) => response.status === "fulfilled" ? response.value : []);
       const realTracks = uniqueTracks(songs.map(songToTrack)).slice(0, 24);
