@@ -54,14 +54,6 @@ export default function Navbar({
   const mobileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      onSearch(term.trim() || "starboy");
-    }, 450);
-
-    return () => window.clearTimeout(timer);
-  }, [term, onSearch]);
-
-  useEffect(() => {
     if (mobileSearchOpen) {
       mobileInputRef.current?.focus();
     }
@@ -129,11 +121,14 @@ export default function Navbar({
         className="hidden md:flex w-[min(42vw,520px)] items-center gap-3 rounded-full border border-white/10 bg-white/[0.045] px-4 py-1.5 transition focus-within:border-[#d6ff36]/40 focus-within:bg-white/[0.07]"
         onSubmit={(e) => {
           e.preventDefault();
-          onSearch(term.trim() || "starboy");
+          const submittedQuery = term.trim();
+          if (submittedQuery) onSearch(submittedQuery);
         }}
       >
 
-        <Search className="h-5 w-5 text-[#d6ff36]" />
+        <button type="submit" aria-label="Search songs" className="grid h-9 w-8 shrink-0 place-items-center text-[#d6ff36] transition hover:text-white">
+          <Search className="h-5 w-5" />
+        </button>
 
         <Input
           value={term}
@@ -261,7 +256,9 @@ export default function Navbar({
             onMobileSearchOpenChange(false);
           }}
         >
-          <Search className="h-5 w-5 shrink-0 text-[#d6ff36]" />
+          <button type="submit" aria-label="Search songs" className="grid h-9 w-8 shrink-0 place-items-center text-[#d6ff36] transition hover:text-white">
+            <Search className="h-5 w-5" />
+          </button>
           <Input
             ref={mobileInputRef}
             value={term}

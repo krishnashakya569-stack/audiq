@@ -209,7 +209,8 @@ export async function GET(request: Request) {
   }
 
   const audiusAppName = process.env.AUDIUS_APP_NAME || "Audiq";
-  const youtubeApiKey = process.env.YOUTUBE_API_KEY;
+  const youtubeSearchEnabled = searchParams.get("youtube") !== "0";
+  const youtubeApiKey = youtubeSearchEnabled ? process.env.YOUTUBE_API_KEY : undefined;
   const audiusParams = new URLSearchParams({
     query,
     app_name: audiusAppName,
@@ -338,8 +339,10 @@ export async function GET(request: Request) {
     youtubeResult.status === "rejected" && youtubeResult.reason instanceof Error
       ? youtubeResult.reason.message.match(/\((\d{3})\)/)?.[1] || "unknown"
       : "unknown";
-  const youtubeDiagnostic = !youtubeApiKey
-    ? "key-missing"
+  const youtubeDiagnostic = !youtubeSearchEnabled
+    ? "skipped"
+    : !youtubeApiKey
+      ? "key-missing"
     : youtubeResult.status === "rejected"
       ? `api-error-${youtubeErrorCode}`
       : `candidates-${youtubeResult.value.candidates}-details-${youtubeResult.value.details}-tracks-${youtubeTracks.length}`;

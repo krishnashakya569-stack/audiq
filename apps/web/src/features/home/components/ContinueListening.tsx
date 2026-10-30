@@ -98,7 +98,7 @@ function SearchResultRow({
 export default function ContinueListening({ query }: ContinueListeningProps) {
   const { data: songs = [], isLoading, isError } = useMusic(query);
   const hasLiveSongs = !isError && songs.length > 0;
-  const isSearch = query.trim().toLowerCase() !== "starboy";
+  const isSearch = query.trim().length > 0;
   const displayedSongs = hasLiveSongs ? songs.slice(0, 4) : fallbackSongs;
   const title = isSearch ? "Search results for " + query : "On repeat for you";
   const playableQueue = useMemo(

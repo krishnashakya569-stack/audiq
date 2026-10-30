@@ -11,7 +11,7 @@ type HomeFeedProps = {
 };
 
 export default function HomeFeed({ query, onExplore, onCreateMix }: HomeFeedProps) {
-  if (query.trim().toLowerCase() !== "starboy") {
+  if (query.trim()) {
     return <ContinueListening query={query} />;
   }
 
@@ -21,7 +21,6 @@ export default function HomeFeed({ query, onExplore, onCreateMix }: HomeFeedProp
       <ForYouPreview onExplore={onExplore} />
       <AIPicks onOpenAi={onCreateMix} />
       <Trending onExplore={onExplore} />
-      <ContinueListening query={query} />
     </>
   );
 }

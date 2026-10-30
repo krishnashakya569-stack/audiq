@@ -6,10 +6,14 @@ const api = axios.create({
   baseURL: API_BASE_URL,
 });
 
-export async function searchMusic(query: string): Promise<Song[]> {
+export async function searchMusic(
+  query: string,
+  options: { includeYouTube?: boolean } = {},
+): Promise<Song[]> {
   const { data } = await api.get("/music/search", {
     params: {
       q: query,
+      ...(options.includeYouTube === false ? { youtube: "0" } : {}),
     },
   });
 

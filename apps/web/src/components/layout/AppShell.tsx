@@ -35,8 +35,8 @@ const EDGE_SWIPE_ZONE = 24;
 
 export default function AppShell() {
   const { user, profile, signOut } = useAuth();
-  const [query, setQuery] = useState("starboy");
-  const [searchTerm, setSearchTerm] = useState("starboy");
+  const [query, setQuery] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
 
@@ -273,11 +273,11 @@ export default function AppShell() {
 
       {!isMessagesView ? <MobileBottomNav
         activeView={view}
-        isSearchActive={query.trim().toLowerCase() !== "starboy"}
+        isSearchActive={Boolean(query.trim())}
         isSearchOpen={mobileSearchOpen}
         onHome={() => {
-          setQuery("starboy");
-          setSearchTerm("starboy");
+          setQuery("");
+          setSearchTerm("");
           changeView("home");
         }}
         onSearch={openSearch}

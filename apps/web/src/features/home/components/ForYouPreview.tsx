@@ -53,7 +53,7 @@ export default function ForYouPreview({ onExplore }: ForYouPreviewProps) {
       setLoading(true);
       setMessage("");
       try {
-        const responses = await Promise.allSettled(queries.map((query) => searchMusic(query)));
+        const responses = await Promise.allSettled(queries.map((query) => searchMusic(query, { includeYouTube: false })));
         if (!active) return;
         const songs = interleave(responses.map((response) => response.status === "fulfilled" ? response.value : []));
         const nextTracks = uniquePlayableTracks(songs);
