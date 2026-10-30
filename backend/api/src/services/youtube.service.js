@@ -15,12 +15,10 @@ export async function searchYouTubeVideos(query) {
     key,
     maxResults: "8",
     part: "snippet",
-    q: `${query} official song`,
+    q: query,
     safeSearch: "none",
     type: "video",
-    videoCategoryId: "10",
     videoEmbeddable: "true",
-    videoSyndicated: "true",
   });
   const response = await fetch(`${YOUTUBE_SEARCH_API}?${params.toString()}`);
 
