@@ -252,7 +252,8 @@ export default function Navbar({
           className="mt-3 flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.06] px-3 py-1.5 md:hidden"
           onSubmit={(e) => {
             e.preventDefault();
-            onSearch(term.trim() || "starboy");
+            const submittedQuery = term.trim();
+            if (submittedQuery) onSearch(submittedQuery);
             onMobileSearchOpenChange(false);
           }}
         >
