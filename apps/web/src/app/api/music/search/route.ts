@@ -336,7 +336,7 @@ export async function GET(request: Request) {
 
   const youtubeErrorCode =
     youtubeResult.status === "rejected" && youtubeResult.reason instanceof Error
-      ? youtubeResult.reason.message.match(/\\((\\d{3})\\)/)?.[1] || "unknown"
+      ? youtubeResult.reason.message.match(/\((\d{3})\)/)?.[1] || "unknown"
       : "unknown";
   const youtubeDiagnostic = !youtubeApiKey
     ? "key-missing"
